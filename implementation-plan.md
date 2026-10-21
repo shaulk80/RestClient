@@ -18,7 +18,7 @@ These apply to every milestone. They come from the rules in `~/.claude/` and are
 ## 2. Solution Structure
 
 ```
-RestClient.sln
+RestClient.slnx
 Directory.Build.props          (shared settings: nullable, analyzers, warnings)
 Directory.Packages.props       (central package versions)
 src/
@@ -35,6 +35,8 @@ tests/
 scripts/
   build.ps1                    (restore, build, test with coverage, publish both targets)
 ```
+
+The solution uses the `.slnx` format, the default in the .NET 10 SDK.
 
 Dependency rules:
 
@@ -199,7 +201,7 @@ Deliverables: the solution builds and runs an empty window. The data folder and 
 
 Tests: `ResultTests`, `DataFolderLocatorTests`, `SqliteMigratorTests`.
 
-Manual checks: the published executable runs from a folder with no write access elsewhere, and creates `data/` beside itself. Repeat on Linux.
+Manual checks: the published executable runs from a folder with no write access elsewhere, and creates `data/` beside itself. The Linux repeat is deferred to the Linux verification stage (section 8.1).
 
 ### M1 Request Builder and Sending
 
@@ -316,16 +318,31 @@ Manual checks: edit two tabs without saving, close the app, reopen it, and confi
 
 ### M7 Polish and Release
 
-**Goal:** a first packaged release for Windows and Linux.
+**Goal:** a first packaged release for Windows. Linux follows in the Linux verification stage (section 8.1).
 
 Tasks:
 1. Accessibility pass: keyboard navigation through every control, automation names on controls, check light and dark themes.
-2. Portability smoke test, recorded as a checklist in `docs/`: on each target, unzip, run, send a request, create a collection, restart, and confirm `data/` is beside the executable.
+2. Portability smoke test, recorded as a checklist in `docs/`: on Windows, unzip, run, send a request, create a collection, restart, and confirm `data/` is beside the executable. The Linux run is part of the Linux verification stage (section 8.1).
 3. `scripts/build.ps1` publishes the release zips with SHA-256 checksums.
 4. Release notes and a short README covering the data folder, the `--data-dir` option, and the SmartScreen warning for unsigned builds.
 5. Signing is out of this milestone. It happens at the first public release (Q7 in the architecture plan).
 
 Tests: the full suite runs green on both targets. Coverage gate holds.
+
+### 8.1 Release Order and Linux Verification (Amended)
+
+No Linux machine is available during the Windows phase, so the Linux work is separated from the milestones and runs after the Windows release. The milestone checklists above cover Windows only.
+
+1. **Windows release.** `scripts/build.ps1` produces `dist/RestClient-win-x64.zip`. Its smoke test runs against the extracted zip, the artifact a user receives. The Windows release is verified before any Linux work starts.
+2. **Linux verification.** When a Linux machine is available, run the `linux-x64` build from `dist/RestClient-linux-x64.zip` and check the following:
+   - Unzip to a new folder, run, and confirm `data/app.db` and a log file are created beside the executable.
+   - The SQLite native library loads from the single-file publish (the risk in section 11).
+   - The `--data-dir` argument and the `RESTCLIENT_DATA_DIR` variable redirect the data folder.
+   - From M1 onward: send a request, create a collection, restart, and confirm the state is kept.
+3. **Fixes.** Linux issues found in step 2 are fixed in the codebase, then the milestone's Windows checks are rerun so the fix does not break Windows. Linux fixes are tracked in `implementation-progress.txt`.
+4. **Linux release.** When the Linux checks pass, the same build script produces the Linux zip for release.
+
+Linux verification adds no features. Its output is fixes and a verified Linux zip.
 
 ## 9. Parameter Defaults (Proposed)
 
@@ -350,7 +367,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 - **Integration tests:** in-process Kestrel server. These cover real HTTP behavior: redirects, timeouts, cancellation, and large bodies.
 - **UI tests:** view models in plain NUnit. Avalonia.Headless (`Avalonia.Headless.NUnit`, verify the package at M0) for a small number of smoke tests.
 - **Coverage gate:** coverlet with the threshold properties of `coverlet.msbuild`, set to 80% line coverage. The gate covers `RestClient.Domain` and `RestClient.Application` only. Infrastructure and UI are reported, not gated.
-- **Portability checks:** `build.ps1` publishes both targets on every run. Manual smoke tests on each OS as in M0 and M7.
+- **Portability checks:** `build.ps1` publishes both targets on every run. Manual smoke tests on Windows as in M0 and M7. Linux smoke tests follow section 8.1.
 
 ## 11. Risks
 
@@ -361,12 +378,12 @@ These values are proposed here and are easy to change in settings or code. Confi
 | Connect timing unavailable for some proxy setups | Missing timing values | Show "n/a" and keep total and TTFB. |
 | Large responses slow the UI | Poor UX | Preview cap, spill to disk, background reading (M1, M4). |
 | Master password forgotten | Secrets unrecoverable | State this clearly in the setup dialog. There is no recovery in v1. |
-| Linux desktop differences (fonts, drag-and-drop, file pickers) | Visual or behavior bugs | Manual Linux checks in every milestone's checklist. |
+| Linux desktop differences (fonts, drag-and-drop, file pickers) | Visual or behavior bugs | Linux verification after the Windows release (section 8.1), then fixes. |
 
 ## 12. Open Items Before Starting M0
 
 1. **CI host.** The repo has no remote. `scripts/build.ps1` runs locally. A CI pipeline needs a host choice.
-2. **Linux test machine.** Manual checks need a Linux environment. Confirm whether one is available.
+2. **Linux test machine.** Not available for now. Linux verification is deferred until after the Windows release (section 8.1), when a machine is available.
 3. **Parameter defaults** in section 9. Confirm or change.
 4. **Commit message convention.** The Jira prefix rule was removed from `CLAUDE.md`, so commits need a new convention. Until one is set, commits will not be made automatically.
 5. **Warnings as errors.** Proposed on in `Directory.Build.props`. Confirm.

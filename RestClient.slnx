@@ -1,0 +1,20 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/RestClient.Application/RestClient.Application.csproj" />
+    <Project Path="src/RestClient.Domain/RestClient.Domain.csproj" />
+    <Project Path="src/RestClient.Infrastructure/RestClient.Infrastructure.csproj" />
+    <Project Path="src/RestClient.UI/RestClient.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RestClient.Application.Tests/RestClient.Application.Tests.csproj" />
+    <Project Path="tests/RestClient.Domain.Tests/RestClient.Domain.Tests.csproj" />
+    <Project Path="tests/RestClient.Infrastructure.Tests/RestClient.Infrastructure.Tests.csproj" />
+    <Project Path="tests/RestClient.Integration.Tests/RestClient.Integration.Tests.csproj" />
+    <Project Path="tests/RestClient.UI.Tests/RestClient.UI.Tests.csproj" />
+  </Folder>
+</Solution>

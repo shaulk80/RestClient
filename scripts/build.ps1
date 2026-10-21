@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$solution = Join-Path $root 'RestClient.sln'
+$solution = Join-Path $root 'RestClient.slnx'
 $uiProject = Join-Path $root 'src/RestClient.UI/RestClient.UI.csproj'
 $distRoot = Join-Path $root 'dist'
 $runtimes = @('win-x64', 'linux-x64')
@@ -68,16 +68,20 @@ function Test-PublishedApp {
     }
 }
 
-if (Test-Path $distRoot) {
-    Remove-Item $distRoot -Recurse -Force
-}
-
 Invoke-DotNet @('restore', $solution)
 Invoke-DotNet @('build', $solution, '-c', $Configuration, '--no-restore')
 Invoke-DotNet @('test', $solution, '-c', $Configuration, '--no-build')
 
 foreach ($runtime in $runtimes) {
+    # Clean only this runtime, so a release zip for another runtime survives.
     $publishDir = Join-Path $distRoot $runtime
+    $zipPath = Join-Path $distRoot "RestClient-$runtime.zip"
+    foreach ($stale in @($publishDir, $zipPath)) {
+        if (Test-Path $stale) {
+            Remove-Item $stale -Recurse -Force
+        }
+    }
+
     Invoke-DotNet @(
         'publish', $uiProject,
         '-c', $Configuration,
@@ -88,13 +92,20 @@ foreach ($runtime in $runtimes) {
         '-o', $publishDir
     )
 
-    $zipPath = Join-Path $distRoot "RestClient-$runtime.zip"
     New-ReleaseZip -SourceDir $publishDir -ZipPath $zipPath
 
     $isHostWindows = $env:OS -eq 'Windows_NT'
     if (-not $SkipSmokeTest -and $isHostWindows -and $runtime -eq 'win-x64') {
-        if (-not (Test-PublishedApp -PublishDir $publishDir)) {
-            throw "Smoke test failed for ${runtime}: the app did not create data/app.db and a log file beside the executable."
+        # Smoke-test the extracted zip, the same artifact a user receives.
+        $smokeDir = Join-Path $distRoot "smoke-$runtime"
+        Expand-Archive -Path $zipPath -DestinationPath $smokeDir -Force
+        try {
+            if (-not (Test-PublishedApp -PublishDir $smokeDir)) {
+                throw "Smoke test failed for ${runtime}: the app did not create data/app.db and a log file beside the executable."
+            }
+        }
+        finally {
+            Remove-Item $smokeDir -Recurse -Force -ErrorAction SilentlyContinue
         }
         Write-Host "Smoke test passed for $runtime."
     }

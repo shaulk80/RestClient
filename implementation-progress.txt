@@ -6,8 +6,15 @@ Updated:   2026-10-21
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M0 Foundations   (committed on branch m0, commit 5d92d24)
-NEXT STAGE:    M1 Request Builder and Sending   (not started)
+CURRENT STAGE: M0 Foundations, Windows release   (branch m0; M0 committed as 5d92d24)
+NEXT STAGE:    Linux verification of the release (section 8.1 of the plan), then M1
+               Request Builder and Sending.
+
+PLAN CHANGE (2026-10-21)
+    No Linux machine is available now. Order is amended (plan section 8.1):
+    1. Windows release first. Verified on Windows; zip is dist\RestClient-win-x64.zip.
+    2. Linux verification later, when a machine is available. Fix whatever it finds,
+       then produce the Linux zip. Linux checks are no longer part of milestone DoDs.
 
 
 MILESTONES
@@ -37,10 +44,11 @@ MILESTONES
         [x] Windows: published win-x64 exe creates data/ and app.db beside itself (smoke test)
         [x] --data-dir override verified on Windows
         [ ] Windows: run from a folder with no write access elsewhere
-        [ ] Linux: run linux-x64 build, create data/ beside the executable (no Linux machine yet)
+        [x] Windows release zip smoke-tested (extracted zip: data/app.db and logs created beside the exe)
+        Linux run: deferred to Linux verification (plan section 8.1)
 
     Deviations from plan (see commit message and session notes):
-    - Classic .sln used instead of .slnx (SDK 10 default)
+    - Solution file is RestClient.slnx (SDK 10 default); plan section 2 updated to match
     - AvaloniaEdit package id is Avalonia.AvaloniaEdit (plan name stops at 0.10.12)
     - NUnit 4.5.1 (matches Avalonia.Headless.NUnit dependency)
     - CA1716 and CA1000 suppressed in Domain project only
@@ -48,7 +56,7 @@ MILESTONES
 
     Open items from plan section 12:
     [ ] CI host (no remote yet)
-    [ ] Linux test machine
+    [ ] Linux test machine (deferred; needed for Linux verification)
     [x] Parameter defaults (section 9): proposed values used
     [ ] Commit message convention (no commits beyond M0 until set)
     [x] Warnings as errors: on
@@ -82,8 +90,20 @@ MILESTONES
     Goal: a first packaged release for Windows and Linux.
 
 
+LINUX VERIFICATION (deferred, plan section 8.1)
+-----------------------------------------------
+[ ] Unzip dist\RestClient-linux-x64.zip to a new folder; run; data/app.db and log created beside it
+[ ] SQLite native library loads from the single-file publish
+[ ] --data-dir and RESTCLIENT_DATA_DIR redirect the data folder
+[ ] From M1: send request, create collection, restart, state kept
+[ ] Fixes for issues found, Windows checks rerun
+[ ] Linux zip produced for release
+
+
 KNOWN ISSUES AND NOTES
 ----------------------
+- The release zips include .pdb files (about 100 MB uncompressed). Consider
+  DebugType=none for release publishes; not changed yet.
 - Startup errors (data folder cannot be created, migration fails) are written to
   stderr only. The Windows build is a GUI app with no console, so the user sees
   nothing. Replace with a visible error dialog before M1 ships anything users rely on.
