@@ -1,0 +1,91 @@
+REST CLIENT - IMPLEMENTATION PROGRESS
+=====================================
+
+Plan:      implementation-plan.md (section 8 milestones)
+Updated:   2026-10-21
+
+Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
+
+CURRENT STAGE: M0 Foundations   (committed on branch m0, commit 5d92d24)
+NEXT STAGE:    M1 Request Builder and Sending   (not started)
+
+
+MILESTONES
+----------
+
+[~] M0 Foundations
+    Goal: a running empty shell with the architecture in place, and CI-ready scripts.
+
+    Tasks:
+    [x] 1.  Solution, four src projects, five test projects
+    [x] 2.  Directory.Build.props and Directory.Packages.props
+    [x] 3.  Result types with unit tests
+    [x] 4.  DataFolderLocator with tests
+    [x] 5.  LoggingSetup (Serilog to file in data/logs/)
+    [x] 6.  SqliteConnectionFactory, SqliteMigrator, IMigration with in-memory tests
+    [x] 7.  Migration0001Settings
+    [x] 8.  SystemClock and IdGenerator with interfaces
+    [x] 9.  Avalonia shell (App, MainWindow, Program.cs composition root)
+    [x] 10. scripts/build.ps1 (restore, build, test with coverage, publish both targets)
+    [x] 11. Package versions pinned (Avalonia 12.1.4, Avalonia.AvaloniaEdit 12.0.0, NUnit 4.5.1, etc.)
+
+    Definition of Done:
+    [x] All tests pass (30 tests: Domain 20, Infrastructure 9, Application 1)
+    [x] Coverage gate holds (Domain 100%, Application 100%)
+    [x] Solution builds with no warnings (warnings as errors on)
+    [~] Manual checks:
+        [x] Windows: published win-x64 exe creates data/ and app.db beside itself (smoke test)
+        [x] --data-dir override verified on Windows
+        [ ] Windows: run from a folder with no write access elsewhere
+        [ ] Linux: run linux-x64 build, create data/ beside the executable (no Linux machine yet)
+
+    Deviations from plan (see commit message and session notes):
+    - Classic .sln used instead of .slnx (SDK 10 default)
+    - AvaloniaEdit package id is Avalonia.AvaloniaEdit (plan name stops at 0.10.12)
+    - NUnit 4.5.1 (matches Avalonia.Headless.NUnit dependency)
+    - CA1716 and CA1000 suppressed in Domain project only
+    - Application gate needed one extra test (AddApplication)
+
+    Open items from plan section 12:
+    [ ] CI host (no remote yet)
+    [ ] Linux test machine
+    [x] Parameter defaults (section 9): proposed values used
+    [ ] Commit message convention (no commits beyond M0 until set)
+    [x] Warnings as errors: on
+
+[ ] M1 Request Builder and Sending
+    Depends on: M0
+    Goal: type a URL, choose a method, send, and see the response. No collections yet.
+
+[ ] M2 Collections
+    Depends on: M1
+    Goal: organize requests into collections, folders, and subfolders, persisted in SQLite.
+
+[ ] M3 History
+    Depends on: M2
+    Goal: every send is recorded. History can be searched and restored.
+
+[ ] M4 Body Editor and Syntax Highlighting
+    Depends on: M1
+    Goal: comfortable body editing with highlighting and formatting.
+
+[ ] M5 Environments, Variables, Secrets, Auth
+    Depends on: M1, M2
+    Goal: reuse values across requests, keep secrets encrypted, and send authenticated requests.
+
+[ ] M6 Tabs, Autosave, Settings, Shortcuts
+    Depends on: M1, M2
+    Goal: a working multi-tab editor that survives restarts, with configurable transport settings.
+
+[ ] M7 Polish and Release
+    Depends on: all others
+    Goal: a first packaged release for Windows and Linux.
+
+
+KNOWN ISSUES AND NOTES
+----------------------
+- Startup errors (data folder cannot be created, migration fails) are written to
+  stderr only. The Windows build is a GUI app with no console, so the user sees
+  nothing. Replace with a visible error dialog before M1 ships anything users rely on.
+- Integration and UI test projects are empty until M1 and M6. dotnet test reports
+  "No test is available" for them but exits 0.
