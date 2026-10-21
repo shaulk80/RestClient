@@ -1,0 +1,9 @@
+bin/
+obj/
+artifacts/
+dist/
+data/
+TestResults/
+.vs/
+.idea/
+*.user

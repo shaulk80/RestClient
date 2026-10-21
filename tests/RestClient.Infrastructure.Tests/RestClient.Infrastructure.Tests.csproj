@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Include>[RestClient.Infrastructure]*</Include>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RestClient.Infrastructure\RestClient.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
