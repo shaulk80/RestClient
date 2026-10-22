@@ -196,6 +196,8 @@ Tasks:
 9. Create the Avalonia shell: `App`, an empty `MainWindow`, and the composition root in `Program.cs`.
 10. Write `scripts/build.ps1`: restore, build, test with coverage, and publish `win-x64` and `linux-x64` as single-file, self-contained zips.
 11. Pin Avalonia, AvaloniaEdit, and test package versions, after checking the current stable releases.
+12. Add `LICENSE` (full Apache-2.0 text) and `NOTICE` at the repository root (Q10).
+13. Add a dependency license check to `scripts/build.ps1`. It lists the licenses of all NuGet packages and fails the build on any license outside the allowed set (MIT, Apache-2.0, BSD, ISC, public domain). The check runs in the same build on both targets.
 
 Deliverables: the solution builds and runs an empty window. The data folder and log file are created. The coverage gate runs (passes on the Result types).
 
@@ -324,8 +326,9 @@ Tasks:
 1. Accessibility pass: keyboard navigation through every control, automation names on controls, check light and dark themes.
 2. Portability smoke test, recorded as a checklist in `docs/`: on Windows, unzip, run, send a request, create a collection, restart, and confirm `data/` is beside the executable. The Linux run is part of the Linux verification stage (section 8.1).
 3. `scripts/build.ps1` publishes the release zips with SHA-256 checksums.
-4. Release notes and a short README covering the data folder, the `--data-dir` option, and the SmartScreen warning for unsigned builds.
-5. Signing is out of this milestone. It happens at the first public release (Q7 in the architecture plan).
+4. Release notes and a short README covering the data folder, the `--data-dir` option, the SmartScreen warning for unsigned builds, and the Apache-2.0 license.
+5. Signing is out of this milestone. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
+6. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
 
 Tests: the full suite runs green on both targets. Coverage gate holds.
 
@@ -379,13 +382,16 @@ These values are proposed here and are easy to change in settings or code. Confi
 | Large responses slow the UI | Poor UX | Preview cap, spill to disk, background reading (M1, M4). |
 | Master password forgotten | Secrets unrecoverable | State this clearly in the setup dialog. There is no recovery in v1. |
 | Linux desktop differences (fonts, drag-and-drop, file pickers) | Visual or behavior bugs | Linux verification after the Windows release (section 8.1), then fixes. |
+| Smart App Control blocks unsigned builds on Windows 11 | Windows 11 users cannot run the release | Test on a clean Windows 11 install in M7. If blocked, revisit Q7 before release. |
+| SignPath application declined or delayed | First releases stay unsigned | Unsigned fallback with checksums and SmartScreen notes (M7). Reapply at later releases. |
 
 ## 12. Open Items Before Starting M0
 
-1. **CI host.** The repo has no remote. `scripts/build.ps1` runs locally. A CI pipeline needs a host choice.
+1. **CI host.** The repo has no remote. `scripts/build.ps1` runs locally. A CI pipeline needs a host choice. SignPath (Q7) signs from an automated build, so this choice also affects signing and should be settled before the first public release.
 2. **Linux test machine.** Not available for now. Linux verification is deferred until after the Windows release (section 8.1), when a machine is available.
 3. **Parameter defaults** in section 9. Confirm or change.
 4. **Commit message convention.** The Jira prefix rule was removed from `CLAUDE.md`, so commits need a new convention. Until one is set, commits will not be made automatically.
 5. **Warnings as errors.** Proposed on in `Directory.Build.props`. Confirm.
+6. **SignPath eligibility.** SignPath requires a project that is already released in signable form. Confirm with SignPath whether an earlier pre-release is enough to qualify, or whether the first public release ships unsigned (Q7).
 
 Once these are settled, M0 is the first implementation step. No code is written until this plan is approved.

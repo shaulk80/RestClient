@@ -1,6 +1,6 @@
 # REST Client: Architectural Plan (High-Level)
 
-Status: **Stack and storage decided; detailed implementation plan pending.** Q10 (license) remains open and does not block implementation planning. Section 6 records all decisions.
+Status: **Stack, storage, license, and signing approach decided; detailed implementation plan pending.** Section 6 records all decisions.
 
 ## 1. Goal
 
@@ -86,7 +86,7 @@ The app is a single program, so one language covers the whole application.
 - Data folder: `./data/` next to the executable, created on first run. An optional `--data-dir` argument or environment variable overrides it, so the app can run from a read-only location.
 - The whole state (settings, collections, history) is one SQLite file in the data folder. Copying the folder moves all state.
 - Build mechanism for Option A: self-contained single-file publish per runtime identifier.
-- Signing is deferred until the first public release (Q7). Until then, builds are unsigned.
+- Signing: apply to SignPath Foundation's free open-source program before the first public release (Q7). Internal builds are unsigned until then.
 
 ### 3.3 Storage (Decided: single SQLite database)
 
@@ -183,10 +183,10 @@ Rules:
 | Q4 | Postman import/export | Not related to this project. Out of scope. | Decided |
 | Q5 | Secrets | Encrypted at rest with a master password, using AES-GCM and PBKDF2. | Decided |
 | Q6 | OAuth2 | Not in v1. Basic, Bearer and API key only. | Decided |
-| Q7 | Code signing | Deferred until the first public release. Then sign the Windows executable with an Authenticode certificate. Internal builds stay unsigned, with a note on the SmartScreen bypass. macOS is out of scope. | Decided (deferred) |
+| Q7 | Code signing | Apply for free signing through SignPath Foundation's open-source program before the first public release. SignPath requires the project to be already released in signable form, so the first public release may ship unsigned, and signing starts with the next release. If SignPath declines, ship unsigned, with SHA-256 checksums and a note on the SmartScreen bypass. Test Windows 11 Smart App Control on a clean install before release (M7). macOS is out of scope. | Decided (apply before first public release) |
 | Q8 | Scripting and tests | Pre-request and post-response scripts are out of v1 (see 6.1). Unit tests are in v1 (section 5.1). | Decided |
 | Q9 | Large responses | Stream to disk above 5 MB, show a truncated preview. | Decided |
-| Q10 | Application license | Open. Affects only the app's own license; all libraries are permissive. | Open |
+| Q10 | Application license | Apache-2.0. Full text in `LICENSE`, attribution in `NOTICE`. OSI-approved, so eligible for SignPath (Q7). All planned dependencies are permissive; a license check runs in CI from M0. | Decided |
 | Q11 | Target OS versions | Windows 10 22H2+ and Windows 11, Ubuntu 22.04+ and equivalent. macOS is out of scope. | Decided |
 | Q12 | Weighting of selection criteria | Irrelevant now that Q1 is decided. | Resolved |
 
@@ -217,6 +217,6 @@ Each milestone includes its unit tests. The 80% coverage gate applies from M0 on
 
 ## 8. Next Steps
 
-1. Confirm the proposed 80% coverage target (section 5.1). Q10 can stay open until before the first public release.
+1. Confirm the proposed 80% coverage target (section 5.1). Q10 is decided (Apache-2.0); the license files are added in M0.
 2. Draft the detailed implementation plan: class-level design, file layout, and per-milestone task breakdown.
 3. No code is written until the implementation plan is approved.
