@@ -33,7 +33,7 @@ tests/
   RestClient.Integration.Tests/  (in-process Kestrel server, real HttpClient)
   RestClient.UI.Tests/           (view models, Avalonia.Headless smoke tests)
 scripts/
-  build.ps1                    (restore, build, test with coverage, publish both targets)
+  build.ps1                    (restore, build, test with coverage, publish win-x64; linux-x64 deferred)
 ```
 
 The solution uses the `.slnx` format, the default in the .NET 10 SDK.
@@ -181,7 +181,7 @@ ViewModels contain no Avalonia types where possible, so they can be tested with 
 
 Dependencies: M0 → M1 → M2 → M3. M4 needs M1. M5 needs M1 and M2. M6 needs M1 and M2. M7 needs all others.
 
-Each milestone ends with the **Definition of Done**: all tests pass, the coverage gate holds (section 10), the solution builds with no warnings on both targets, and the milestone's manual checks are done.
+Each milestone ends with the **Definition of Done**: all tests pass, the coverage gate holds (section 10), the solution builds with no warnings on Windows, and the milestone's manual checks are done.
 
 ### M0 Foundations
 
@@ -197,10 +197,10 @@ Tasks:
 7. Implement the SQL-script migrations: `MigrationScripts/0001/0001_create_settings.sql` (the `settings` table), with the source, builder, and migrator tests (discovery, ordering, gaps, multi-statement scripts, rollback).
 8. Implement `SystemClock` and `IdGenerator`, plus their interfaces.
 9. Create the Avalonia shell: `App`, an empty `MainWindow`, and the composition root in `Program.cs`.
-10. Write `scripts/build.ps1`: restore, build, test with coverage, and publish `win-x64` and `linux-x64` as single-file, self-contained zips.
+10. Write `scripts/build.ps1`: restore, build, test with coverage, and publish `win-x64` as a single-file, self-contained zip. The `linux-x64` publish is deferred to a later version (section 8.1).
 11. Pin Avalonia, AvaloniaEdit, and test package versions, after checking the current stable releases.
 12. Add `LICENSE` (full Apache-2.0 text) and `NOTICE` at the repository root (Q10).
-13. Add a dependency license check to `scripts/build.ps1`. It lists the licenses of all NuGet packages and fails the build on any license outside the allowed set (MIT, Apache-2.0, BSD, ISC, public domain). The check runs in the same build on both targets.
+13. Add a dependency license check to `scripts/build.ps1`. It lists the licenses of all NuGet packages and fails the build on any license outside the allowed set (MIT, Apache-2.0, BSD, ISC, public domain). The check runs in the same build.
 
 Deliverables: the solution builds and runs an empty window. The data folder and log file are created. The coverage gate runs (passes on the Result types).
 
@@ -333,11 +333,11 @@ Tasks:
 5. Signing is out of this milestone. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
 6. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
 
-Tests: the full suite runs green on both targets. Coverage gate holds.
+Tests: the full suite runs green on Windows. Coverage gate holds.
 
 ### 8.1 Release Order and Linux Verification (Amended)
 
-No Linux machine is available during the Windows phase, so the Linux work is separated from the milestones and runs after the Windows release. The milestone checklists above cover Windows only.
+No Linux machine is available during the Windows phase, so the Linux work is separated from the milestones and runs after the Windows release. The milestone checklists above cover Windows only. Linux is deferred to a later version: there is no `linux-x64` publish and no Linux CI job until that stage starts. `scripts/build.ps1 -Runtimes win-x64,linux-x64` re-enables the Linux publish.
 
 1. **Windows release.** `scripts/build.ps1` produces `dist/RestClient-win-x64.zip`. Its smoke test runs against the extracted zip, the artifact a user receives. The Windows release is verified before any Linux work starts.
 2. **Linux verification.** When a Linux machine is available, run the `linux-x64` build from `dist/RestClient-linux-x64.zip` and check the following:
@@ -373,7 +373,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 - **Integration tests:** in-process Kestrel server. These cover real HTTP behavior: redirects, timeouts, cancellation, and large bodies.
 - **UI tests:** view models in plain NUnit. Avalonia.Headless (`Avalonia.Headless.NUnit`, verify the package at M0) for a small number of smoke tests.
 - **Coverage gate:** coverlet with the threshold properties of `coverlet.msbuild`, set to 80% line coverage. The gate covers `RestClient.Domain` and `RestClient.Application` only. Infrastructure and UI are reported, not gated.
-- **Portability checks:** `build.ps1` publishes both targets on every run. Manual smoke tests on Windows as in M0 and M7. Linux smoke tests follow section 8.1.
+- **Portability checks:** `build.ps1` publishes win-x64 on every run. Manual smoke tests on Windows as in M0 and M7. Linux smoke tests follow section 8.1 in a later version.
 
 ## 11. Risks
 
@@ -390,7 +390,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 
 ## 12. Open Items Before Starting M0
 
-1. **CI host.** The repo has no remote. `scripts/build.ps1` runs locally. A CI pipeline needs a host choice. SignPath (Q7) signs from an automated build, so this choice also affects signing and should be settled before the first public release.
+1. **CI host.** Decided 2026-10-23: GitHub Actions, Windows job only (`.github/workflows/ci.yml`). The job runs `scripts/build.ps1` and uploads the win-x64 zip. The Linux CI job waits for the Linux stage (section 8.1). SignPath (Q7) signs from an automated build, so this choice also affects signing and should be settled before the first public release.
 2. **Linux test machine.** Not available for now. Linux verification is deferred until after the Windows release (section 8.1), when a machine is available.
 3. **Parameter defaults** in section 9. Confirm or change.
 4. **Commit message convention.** The Jira prefix rule was removed from `CLAUDE.md`, so commits need a new convention. Until one is set, commits will not be made automatically.

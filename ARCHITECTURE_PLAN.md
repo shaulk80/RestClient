@@ -171,7 +171,7 @@ Rules:
 - **Integration tests:** RequestSender against a local test server. Covers timeouts, redirects, cancellation, and TLS toggles.
 - **Repository tests:** round-trip tests for the SQLite repositories, including schema migration.
 - **UI tests:** key flows only: create a collection, send a request, reopen from history. Use headless test support (Avalonia.Headless under Option A).
-- **Portability checks:** CI builds both targets. A smoke test runs each published executable on its OS and verifies the data folder is created beside it.
+- **Portability checks:** CI builds Windows now. The Linux CI job is added in the Linux stage. A smoke test runs each published executable on its OS and verifies the data folder is created beside it.
 
 ## 6. Decisions and Open Questions
 
@@ -204,7 +204,7 @@ Dropping collection sharing removes the main reason for JSON files. The single S
 
 | Milestone | Content |
 |---|---|
-| M0 | Project skeleton, layering, dependency injection, logging, data-folder locator, SQLite and migrations, unit test project with coverage reporting, CI build for both targets, portability smoke test. |
+| M0 | Project skeleton, layering, dependency injection, logging, data-folder locator, SQLite and migrations, unit test project with coverage reporting, CI build for Windows (Linux later), portability smoke test. |
 | M1 | Request builder and RequestSender: send, cancel, response viewer, timing, large-response streaming. |
 | M2 | Collections tree with folders and subfolders, SQLite persistence. |
 | M3 | History: list, search, restore, retention. |

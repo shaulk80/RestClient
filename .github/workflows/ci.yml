@@ -1,0 +1,43 @@
+# Windows only. The Linux job and the linux-x64 publish wait for the Linux stage (plan section 8.1).
+name: CI
+
+on:
+  push:
+    branches: [main, m0]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows build, test and release zip
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Restore, build with warnings as errors, test with coverage, publish win-x64, and smoke-test the zip.
+      - name: Build, test and publish
+        shell: pwsh
+        run: ./scripts/build.ps1
+
+      - name: Upload win-x64 release zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: RestClient-win-x64
+          path: dist/RestClient-win-x64.zip
+          if-no-files-found: error
+          retention-days: 14

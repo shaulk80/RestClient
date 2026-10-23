@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
     [string] $Configuration = 'Release',
+    # linux-x64 is deferred to a later version (plan section 8.1). Pass -Runtimes win-x64,linux-x64 once that stage starts.
+    [string[]] $Runtimes = @('win-x64'),
     [switch] $SkipSmokeTest
 )
 
@@ -10,7 +12,6 @@ $root = Split-Path -Parent $PSScriptRoot
 $solution = Join-Path $root 'RestClient.slnx'
 $uiProject = Join-Path $root 'src/RestClient.UI/RestClient.UI.csproj'
 $distRoot = Join-Path $root 'dist'
-$runtimes = @('win-x64', 'linux-x64')
 
 function Invoke-DotNet {
     param([string[]] $Arguments)

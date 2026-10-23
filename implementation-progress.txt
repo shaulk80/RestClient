@@ -7,14 +7,18 @@ Updated:   2026-10-23
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
 CURRENT STAGE: M0 Foundations, Windows release   (branch m0; M0 committed as 5d92d24)
-NEXT STAGE:    Linux verification of the release (section 8.1 of the plan), then M1
-               Request Builder and Sending.
+NEXT STAGE:    M1 Request Builder and Sending. Linux verification is deferred to a later version.
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
     1. Windows release first. Verified on Windows; zip is dist\RestClient-win-x64.zip.
     2. Linux verification later, when a machine is available. Fix whatever it finds,
        then produce the Linux zip. Linux checks are no longer part of milestone DoDs.
+
+PLAN CHANGE (2026-10-23)
+    Linux is deferred to a later version. CI and scripts/build.ps1 cover Windows only:
+    - build.ps1 publishes win-x64 by default. -Runtimes win-x64,linux-x64 re-enables Linux.
+    - CI is GitHub Actions (.github/workflows/ci.yml), Windows job only. No Linux job yet.
 
 
 MILESTONES
@@ -33,7 +37,7 @@ MILESTONES
     [x] 7.  SQL-script migrations (MigrationScripts/0001/0001_create_settings.sql)
     [x] 8.  SystemClock and IdGenerator with interfaces
     [x] 9.  Avalonia shell (App, MainWindow, Program.cs composition root)
-    [x] 10. scripts/build.ps1 (restore, build, test with coverage, publish both targets)
+    [x] 10. scripts/build.ps1 (restore, build, test with coverage, publish win-x64; linux-x64 deferred)
     [x] 11. Package versions pinned (Avalonia 12.1.4, Avalonia.AvaloniaEdit 12.0.0, NUnit 4.5.1, etc.)
 
     Definition of Done:
@@ -57,7 +61,7 @@ MILESTONES
     - Application gate needed one extra test (AddApplication)
 
     Open items from plan section 12:
-    [ ] CI host (no remote yet)
+    [~] CI host: GitHub Actions, Windows job (.github/workflows/ci.yml drafted; not yet run on GitHub)
     [ ] Linux test machine (deferred; needed for Linux verification)
     [x] Parameter defaults (section 9): proposed values used
     [ ] Commit message convention (no commits beyond M0 until set)
@@ -89,11 +93,11 @@ MILESTONES
 
 [ ] M7 Polish and Release
     Depends on: all others
-    Goal: a first packaged release for Windows and Linux.
+    Goal: a first packaged release for Windows. Linux follows in a later version.
 
 
-LINUX VERIFICATION (deferred, plan section 8.1)
------------------------------------------------
+LINUX VERIFICATION (deferred to a later version, plan section 8.1)
+------------------------------------------------------------------
 [ ] Unzip dist\RestClient-linux-x64.zip to a new folder; run; data/app.db and log created beside it
 [ ] SQLite native library loads from the single-file publish
 [ ] --data-dir and RESTCLIENT_DATA_DIR redirect the data folder
