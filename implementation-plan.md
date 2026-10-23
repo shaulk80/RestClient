@@ -332,6 +332,7 @@ Tasks:
 4. Release notes and a short README covering the data folder, the `--data-dir` option, the SmartScreen warning for unsigned builds, and the Apache-2.0 license.
 5. Signing is out of this milestone. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
 6. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
+7. Switch commit messages to Conventional Commits (`type(scope): summary`), as decided in section 12, item 4. Record the switch in the progress tracker.
 
 Tests: the full suite runs green on Windows. Coverage gate holds.
 
@@ -393,7 +394,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 1. **CI host.** Decided 2026-10-23: GitHub Actions, Windows job only (`.github/workflows/ci.yml`). The job runs `scripts/build.ps1` and uploads the win-x64 zip. The Linux CI job waits for the Linux stage (section 8.1). SignPath (Q7) signs from an automated build, so this choice also affects signing and should be settled before the first public release.
 2. **Linux test machine.** Not available for now. Linux verification is deferred until after the Windows release (section 8.1), when a machine is available.
 3. **Parameter defaults** in section 9. Confirm or change.
-4. **Commit message convention.** The Jira prefix rule was removed from `CLAUDE.md`, so commits need a new convention. Until one is set, commits will not be made automatically.
+4. **Commit message convention.** Decided 2026-10-23. Until M7, use plain imperative subjects of 72 characters or fewer, starting with a capital letter and with no period. When a commit completes or changes a milestone task, name the milestone in the subject, for example "M1: add RequestBuilder". Wrap the body at 72 characters and explain why. Leave out `Co-Authored-By` lines, per `CLAUDE.md`. Keep one logical change per commit. From M7, switch to Conventional Commits (`type(scope): summary`), as M7 task 7 sets out.
 5. **Warnings as errors.** Proposed on in `Directory.Build.props`. Confirm.
 6. **SignPath eligibility.** SignPath requires a project that is already released in signable form. Confirm with SignPath whether an earlier pre-release is enough to qualify, or whether the first public release ships unsigned (Q7).
 
