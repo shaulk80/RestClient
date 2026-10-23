@@ -39,7 +39,7 @@ MILESTONES
     [x] 9.  Avalonia shell (App, MainWindow, Program.cs composition root)
     [x] 10. scripts/build.ps1 (restore, build, test with coverage, publish win-x64; linux-x64 deferred)
     [x] 11. Package versions pinned (Avalonia 12.1.4, Avalonia.AvaloniaEdit 12.0.0, NUnit 4.5.1, etc.)
-    [x] 13. Dependency license check (scripts/LicenseCheck.ps1, run after restore; first CI run pending)
+    [x] 13. Dependency license check (scripts/LicenseCheck.ps1, run after restore; passed in CI on main)
 
     Definition of Done:
     [x] All tests pass (49 tests: Domain 20, Infrastructure 28, Application 1)
@@ -63,7 +63,7 @@ MILESTONES
     - Application gate needed one extra test (AddApplication)
 
     Open items from plan section 12:
-    [~] CI host: GitHub Actions, Windows job (.github/workflows/ci.yml drafted; not yet run on GitHub)
+    [x] CI host: GitHub Actions, Windows job (.github/workflows/ci.yml; first run on main passed)
     [ ] Linux test machine (deferred; needed for Linux verification)
     [x] Parameter defaults (section 9): proposed values used
     [ ] Commit message convention (no commits beyond M0 until set)
@@ -106,6 +106,31 @@ LINUX VERIFICATION (deferred to a later version, plan section 8.1)
 [ ] From M1: send request, create collection, restart, state kept
 [ ] Fixes for issues found, Windows checks rerun
 [ ] Linux zip produced for release
+
+
+CI (GitHub Actions, .github/workflows/ci.yml)
+---------------------------------------------
+Triggers:  push to main; pull requests into main; manual run.
+Job:       windows-latest, runs scripts/build.ps1 (restore, license check, build,
+           test, win-x64 publish, smoke test). Linux job deferred (plan section 8.1).
+Artifact:  RestClient-win-x64, uploaded from main runs only.
+Permissions: read-only token (contents: read).
+
+Results:
+[x] Run 39956447707, main, commit 2e4d85c (2026-10-23): success
+    - License check: 81 packages passed
+    - Tests: Domain 20, Application 1, Infrastructure 28, all passed
+    - Smoke test passed; RestClient-win-x64 uploaded (73 MB)
+[x] Run 39953965742, m0, commit 4fd9c6d (2026-10-23): success (before the
+    license check and the main-only artifact step)
+
+Open:
+[ ] Branch protection on main (requires the CI check to pass before merge)
+[ ] Pull request run not yet exercised (no PR opened yet)
+[ ] actions/checkout, setup-dotnet and upload-artifact (all @v4) run on Node 24
+    with a Node 20 deprecation warning. Upgrade when newer majors are released.
+[ ] Linux CI job and linux-x64 publish (deferred to a later version)
+[ ] SignPath signing (separate setup; needs a released project first)
 
 
 KNOWN ISSUES AND NOTES
