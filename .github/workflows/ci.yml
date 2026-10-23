@@ -3,7 +3,7 @@ name: CI
 
 on:
   push:
-    branches: [main, m0]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -35,6 +35,7 @@ jobs:
         run: ./scripts/build.ps1
 
       - name: Upload win-x64 release zip
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: RestClient-win-x64
