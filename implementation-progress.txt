@@ -45,7 +45,7 @@ MILESTONES
         [x] --data-dir override verified on Windows
         [ ] Windows: run from a folder with no write access elsewhere
         [x] Windows release zip smoke-tested (extracted zip: data/app.db and logs created beside the exe)
-        [ ] Windows release zip contains MigrationScripts\0001 beside the exe (not checked since the SQL-script change)
+        [x] Windows release zip contains MigrationScripts\0001 beside the exe (checked 2026-10-23 via scripts\build.ps1)
         Linux run: deferred to Linux verification (plan section 8.1)
 
     Deviations from plan (see commit message and session notes):

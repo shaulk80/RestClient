@@ -29,9 +29,26 @@ function New-ReleaseZip {
     )
 
     # Antivirus or indexing can briefly lock a freshly published executable, so retry before failing.
+    # Entry names are written with forward slashes. Windows PowerShell 5.1 (.NET Framework) and
+    # Compress-Archive use backslashes, which Linux unzip tools extract as literal file names.
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $sourceRoot = (Resolve-Path $SourceDir).Path.TrimEnd('\')
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
         try {
-            Compress-Archive -Path (Join-Path $SourceDir '*') -DestinationPath $ZipPath -Force
+            if (Test-Path $ZipPath) {
+                Remove-Item $ZipPath -Force
+            }
+            $zip = [System.IO.Compression.ZipFile]::Open($ZipPath, 'Create')
+            try {
+                Get-ChildItem $sourceRoot -Recurse -File | ForEach-Object {
+                    $entryName = $_.FullName.Substring($sourceRoot.Length + 1).Replace('\', '/')
+                    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $entryName) | Out-Null
+                }
+            }
+            finally {
+                $zip.Dispose()
+            }
             return
         }
         catch {
