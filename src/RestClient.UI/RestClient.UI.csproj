@@ -14,6 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\RestClient.Infrastructure\Persistence\MigrationScripts\0001\0001_create_settings.sql"
+          Link="MigrationScripts\0001\0001_create_settings.sql"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RestClient.Application\RestClient.Application.csproj" />
     <ProjectReference Include="..\RestClient.Infrastructure\RestClient.Infrastructure.csproj" />
   </ItemGroup>

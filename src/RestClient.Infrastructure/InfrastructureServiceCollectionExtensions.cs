@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using RestClient.Application.Abstractions;
 using RestClient.Infrastructure.Logging;
 using RestClient.Infrastructure.Persistence;
-using RestClient.Infrastructure.Persistence.Migrations;
 using RestClient.Infrastructure.Services;
 using Serilog;
 
@@ -13,6 +12,7 @@ namespace RestClient.Infrastructure;
 public static class InfrastructureServiceCollectionExtensions
 {
     private const string DatabaseFileName = "app.db";
+    private const string MigrationScriptsFolderName = "MigrationScripts";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, InfrastructureOptions options)
     {
@@ -23,7 +23,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IIdGenerator, IdGenerator>();
 
         services.AddSingleton(CreateConnectionFactory(options.DataFolder));
-        services.AddSingleton<IMigration, Migration0001Settings>();
+        services.AddSingleton<IMigrationSource>(provider => new SqlScriptMigrationSource(
+            Path.Combine(AppContext.BaseDirectory, MigrationScriptsFolderName),
+            provider.GetRequiredService<ILogger<SqlScriptMigrationSource>>()));
+        services.AddSingleton<IMigrationSource, CodeMigrationSource>();
+        services.AddSingleton<MigrationSetBuilder>();
         services.AddSingleton<SqliteMigrator>();
 
         return services;

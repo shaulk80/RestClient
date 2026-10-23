@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FakeItEasy" />
     <ProjectReference Include="..\..\src\RestClient.Infrastructure\RestClient.Infrastructure.csproj" />
   </ItemGroup>
 

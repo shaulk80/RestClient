@@ -2,7 +2,7 @@ REST CLIENT - IMPLEMENTATION PROGRESS
 =====================================
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-21
+Updated:   2026-10-23
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
@@ -30,14 +30,14 @@ MILESTONES
     [x] 4.  DataFolderLocator with tests
     [x] 5.  LoggingSetup (Serilog to file in data/logs/)
     [x] 6.  SqliteConnectionFactory, SqliteMigrator, IMigration with in-memory tests
-    [x] 7.  Migration0001Settings
+    [x] 7.  SQL-script migrations (MigrationScripts/0001/0001_create_settings.sql)
     [x] 8.  SystemClock and IdGenerator with interfaces
     [x] 9.  Avalonia shell (App, MainWindow, Program.cs composition root)
     [x] 10. scripts/build.ps1 (restore, build, test with coverage, publish both targets)
     [x] 11. Package versions pinned (Avalonia 12.1.4, Avalonia.AvaloniaEdit 12.0.0, NUnit 4.5.1, etc.)
 
     Definition of Done:
-    [x] All tests pass (30 tests: Domain 20, Infrastructure 9, Application 1)
+    [x] All tests pass (49 tests: Domain 20, Infrastructure 28, Application 1)
     [x] Coverage gate holds (Domain 100%, Application 100%)
     [x] Solution builds with no warnings (warnings as errors on)
     [~] Manual checks:
@@ -45,10 +45,12 @@ MILESTONES
         [x] --data-dir override verified on Windows
         [ ] Windows: run from a folder with no write access elsewhere
         [x] Windows release zip smoke-tested (extracted zip: data/app.db and logs created beside the exe)
+        [ ] Windows release zip contains MigrationScripts\0001 beside the exe (not checked since the SQL-script change)
         Linux run: deferred to Linux verification (plan section 8.1)
 
     Deviations from plan (see commit message and session notes):
     - Solution file is RestClient.slnx (SDK 10 default); plan section 2 updated to match
+    - Migrations are SQL scripts in MigrationScripts\NNNN\ (plan section 6), not one C# class per version; uncommitted as of 2026-10-23
     - AvaloniaEdit package id is Avalonia.AvaloniaEdit (plan name stops at 0.10.12)
     - NUnit 4.5.1 (matches Avalonia.Headless.NUnit dependency)
     - CA1716 and CA1000 suppressed in Domain project only

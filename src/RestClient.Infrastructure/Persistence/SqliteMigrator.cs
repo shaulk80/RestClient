@@ -15,40 +15,47 @@ public sealed class SqliteMigrator
         "Database migration failed");
 
     private readonly SqliteConnectionFactory _connectionFactory;
-    private readonly IEnumerable<IMigration> _migrations;
+    private readonly MigrationSetBuilder _migrationSetBuilder;
     private readonly ILogger<SqliteMigrator> _logger;
 
-    public SqliteMigrator(SqliteConnectionFactory connectionFactory, IEnumerable<IMigration> migrations, ILogger<SqliteMigrator> logger)
+    public SqliteMigrator(SqliteConnectionFactory connectionFactory, MigrationSetBuilder migrationSetBuilder, ILogger<SqliteMigrator> logger)
     {
         _connectionFactory = connectionFactory;
-        _migrations = migrations;
+        _migrationSetBuilder = migrationSetBuilder;
         _logger = logger;
     }
 
     public async Task<Result> MigrateAsync(CancellationToken cancellationToken)
     {
+        var migrationSet = _migrationSetBuilder.Build();
+        if (migrationSet.Error is { } setError)
+        {
+            return Result.Failure(setError);
+        }
+
         try
         {
             await using var connection = _connectionFactory.CreateConnection();
             await connection.OpenAsync(cancellationToken);
 
             var currentVersion = await ReadVersionAsync(connection, cancellationToken);
-            var pending = _migrations
-                .Where(migration => migration.Version > currentVersion)
-                .OrderBy(migration => migration.Version);
-
-            foreach (var migration in pending)
+            foreach (var migration in SelectPending(migrationSet.Value ?? [], currentVersion))
             {
                 await ApplyAsync(connection, migration, cancellationToken);
             }
 
             return Result.Success();
         }
-        catch (SqliteException exception)
+        catch (Exception exception)
         {
             MigrationFailed(_logger, exception);
-            return Result.Failure(new Error(ErrorCategory.Storage, "The database could not be migrated.", exception.Message));
+            return Result.Failure(new Error(ErrorCategory.Storage, "The database could not be migrated.", exception.ToString()));
         }
+    }
+
+    private static List<IMigration> SelectPending(IReadOnlyList<IMigration> migrations, int currentVersion)
+    {
+        return migrations.Where(migration => migration.Version > currentVersion).ToList();
     }
 
     private static async Task<int> ReadVersionAsync(SqliteConnection connection, CancellationToken cancellationToken)

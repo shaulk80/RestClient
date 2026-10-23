@@ -153,7 +153,10 @@ Grouped by folder. Every type is a separate file.
 
 ## 6. Infrastructure Layer
 
-- **Persistence:** `SqliteConnectionFactory` (Microsoft.Data.Sqlite), `SqliteMigrator`, `IMigration`. Each migration is one class: `Migration0001Settings`, `Migration0002Collections`, `Migration0003History`, `Migration0004Environments`, `Migration0005OpenTabs`. The schema version is kept in `PRAGMA user_version`.
+- **Persistence:** `SqliteConnectionFactory` (Microsoft.Data.Sqlite), `SqliteMigrator`, `MigrationSetBuilder`, `IMigrationSource` (`SqlScriptMigrationSource` reads scripts, `CodeMigrationSource` wraps code migrations), `IMigration` (`SqlScriptMigration` applies one version's scripts; code migrations are possible but unused).
+    - **Schema scripts:** `Persistence/MigrationScripts/NNNN/`, one folder per version. The folder name is a four-digit version of 1 or more. Each folder holds one or more `.sql` files, run in filename order (for example `0001_create_settings.sql`). The folder is copied to the output as `MigrationScripts/NNNN/`, with copy-if-newer.
+    - **Versions:** planned versions are `0002` Collections, `0003` History, `0004` Environments, `0005` Open tabs. Gaps are allowed. Each version runs in its own transaction, with its `PRAGMA user_version` update in the same transaction. After a run the stored version is the highest applied version.
+    - **Conventions, not validation:** scripts are not checked. Never edit a script that has shipped, and never add a version below the current one, because it would never run. Invalid folder names and empty folders are logged and skipped. A duplicate version or a failed script stops startup with the full exception in the error details.
 - **DTOs and mappers:** `CollectionDto`, `FolderDto`, `RequestDto`, `BodyDto`, `AuthDto`, `EnvironmentDto`, `VariableDto`, `RequestSnapshotDto`. Mappers convert between DTOs and domain records, one mapper class per aggregate.
 - **Repositories:** `SqliteCollectionRepository`, `SqliteEnvironmentRepository`, `SqliteHistoryRepository`, `SqliteSettingsStore`, `SqliteOpenTabsStore`. Each write runs in a transaction. Exceptions become `Storage` errors and are logged.
 - **HTTP:** `RequestHttpClientFactory` builds an `HttpClient` from `AppSettings` (timeouts, redirects, SSL verification, proxy). `HttpRequestExecutor` implements `IHttpExecutor`. `ResponseBodyReader` keeps the first 1 MB as a preview and spills larger bodies to a temp file in the data folder.
@@ -191,7 +194,7 @@ Tasks:
 4. Implement `DataFolderLocator` with its tests (argument, environment variable, and default paths).
 5. Implement `LoggingSetup` (Serilog to file) and confirm the log file is created in the data folder.
 6. Implement `SqliteConnectionFactory`, `SqliteMigrator`, and `IMigration`. Tests run migrations against an in-memory SQLite database.
-7. Implement `Migration0001Settings` (the `settings` table).
+7. Implement the SQL-script migrations: `MigrationScripts/0001/0001_create_settings.sql` (the `settings` table), with the source, builder, and migrator tests (discovery, ordering, gaps, multi-statement scripts, rollback).
 8. Implement `SystemClock` and `IdGenerator`, plus their interfaces.
 9. Create the Avalonia shell: `App`, an empty `MainWindow`, and the composition root in `Program.cs`.
 10. Write `scripts/build.ps1`: restore, build, test with coverage, and publish `win-x64` and `linux-x64` as single-file, self-contained zips.
