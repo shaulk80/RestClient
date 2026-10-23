@@ -13,6 +13,17 @@ $solution = Join-Path $root 'RestClient.slnx'
 $uiProject = Join-Path $root 'src/RestClient.UI/RestClient.UI.csproj'
 $distRoot = Join-Path $root 'dist'
 
+# Licenses accepted without review, as SPDX identifiers. "Public domain" from plan section 8 maps to Unlicense and CC0-1.0.
+$allowedLicenses = @('MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC', 'Unlicense', 'CC0-1.0')
+
+# Packages whose nuspec names a license file instead of an SPDX expression. Each entry was checked by reading the file.
+# Keyed by id and version, so an upgrade needs a new review.
+$reviewedLicenses = @{
+    'Avalonia.Angle.Windows.Natives/2.1.27548.20260419' = 'BSD-3-Clause'
+}
+
+. (Join-Path $PSScriptRoot 'LicenseCheck.ps1')
+
 function Invoke-DotNet {
     param([string[]] $Arguments)
 
@@ -87,6 +98,7 @@ function Test-PublishedApp {
 }
 
 Invoke-DotNet @('restore', $solution)
+Test-DependencyLicenses -Root $root -AllowedLicenses $allowedLicenses -ReviewedLicenses $reviewedLicenses
 Invoke-DotNet @('build', $solution, '-c', $Configuration, '--no-restore')
 Invoke-DotNet @('test', $solution, '-c', $Configuration, '--no-build')
 

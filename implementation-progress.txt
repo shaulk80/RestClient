@@ -39,6 +39,7 @@ MILESTONES
     [x] 9.  Avalonia shell (App, MainWindow, Program.cs composition root)
     [x] 10. scripts/build.ps1 (restore, build, test with coverage, publish win-x64; linux-x64 deferred)
     [x] 11. Package versions pinned (Avalonia 12.1.4, Avalonia.AvaloniaEdit 12.0.0, NUnit 4.5.1, etc.)
+    [x] 13. Dependency license check (scripts/LicenseCheck.ps1, run after restore; first CI run pending)
 
     Definition of Done:
     [x] All tests pass (49 tests: Domain 20, Infrastructure 28, Application 1)
@@ -55,6 +56,7 @@ MILESTONES
     Deviations from plan (see commit message and session notes):
     - Solution file is RestClient.slnx (SDK 10 default); plan section 2 updated to match
     - Migrations are SQL scripts in MigrationScripts\NNNN\ (plan section 6), not one C# class per version; uncommitted as of 2026-10-23
+    - License check functions live in scripts\LicenseCheck.ps1, dot-sourced by build.ps1, so the failure paths can be tested (plan section 8, task 13)
     - AvaloniaEdit package id is Avalonia.AvaloniaEdit (plan name stops at 0.10.12)
     - NUnit 4.5.1 (matches Avalonia.Headless.NUnit dependency)
     - CA1716 and CA1000 suppressed in Domain project only
