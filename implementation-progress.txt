@@ -6,8 +6,8 @@ Updated:   2026-10-24
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M2 Collections complete (branch m2). All manual checks confirmed by user.
-NEXT STAGE:    M3 History (depends on M2, now closed).
+CURRENT STAGE: M2 Collections closed (2026-10-24). Its open items moved to M5, M6 and M7.
+NEXT STAGE:    M3 History (depends on M2, closed).
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -55,7 +55,7 @@ MILESTONES
 
     Deviations from plan (see commit message and session notes):
     - Solution file is RestClient.slnx (SDK 10 default); plan section 2 updated to match
-    - Migrations are SQL scripts in MigrationScripts\NNNN\ (plan section 6), not one C# class per version; uncommitted as of 2026-10-23
+    - Migrations are SQL scripts in MigrationScripts\NNNN\ (plan section 6), not one C# class per version.
     - License check functions live in scripts\LicenseCheck.ps1, dot-sourced by build.ps1, so the failure paths can be tested (plan section 8, task 13)
     - AvaloniaEdit package id is Avalonia.AvaloniaEdit (plan name stops at 0.10.12)
     - NUnit 4.5.1 (matches Avalonia.Headless.NUnit dependency)
@@ -145,6 +145,8 @@ MILESTONES
         cause was a drag starting from the chevron, and a guard was added. Re-check in the
         running app. Confirmed by user.
 
+    Closed 2026-10-24. Open items moved to M5, M6 and M7.
+
     Deviations from plan and open points:
     - Migration 0002 is a SQL script folder (MigrationScripts\0002), as M0 decided, not a
       C# migration class. Tables: collections, folders (parent link + position), requests
@@ -163,13 +165,8 @@ MILESTONES
       form and multipart bodies, and auth. Their editors come in M4 and M5.
     - Every request lives in a collection. There are no unsaved scratch tabs, and the app
       starts with no tab open.
-    - Deleting a request, folder or collection closes its open tab, and unsaved edits in that
-      tab are lost. No delete confirmation yet (dialog service comes in M5).
-    - Tab strip has no close button and Ctrl+S is not bound. Both come in M6.
     - Headless UI tests (Avalonia.Headless) cover the context menu and expander clicks. They
       do not drive the OS drag loop, so they cannot show drag-related expander problems.
-    - After New folder or New collection the rename box does not take focus, so the user must
-      click it. Not fixed yet.
 
 [ ] M3 History
     Depends on: M2
@@ -182,14 +179,28 @@ MILESTONES
 [ ] M5 Environments, Variables, Secrets, Auth
     Depends on: M1, M2
     Goal: reuse values across requests, keep secrets encrypted, and send authenticated requests.
+    Carried from M2:
+    - Delete confirmation. Deleting a request, folder or collection closes its open tab and
+      discards unsaved edits. Ask first, through the dialog service.
 
 [ ] M6 Tabs, Autosave, Settings, Shortcuts
     Depends on: M1, M2
     Goal: a working multi-tab editor that survives restarts, with configurable transport settings.
+    Carried from M2:
+    - Tab strip close button.
+    - Ctrl+S saves the active tab.
 
 [ ] M7 Polish and Release
     Depends on: all others
     Goal: a first packaged release for Windows. Linux follows in a later version.
+    Carried from M2:
+    - After New folder or New collection, the rename box takes focus (today the user must click it).
+    - Escape closes the tree context menu (today only a click elsewhere closes it).
+    - Decide whether a left-click on a row under an open menu should activate the menu item
+      (today it does, which is standard behavior).
+    - Infrastructure test for delete cascade: after deleting a folder or collection and saving,
+      its requests are gone after reload (plan M2 test list; the application tests cover the
+      in-memory delete only).
 
 
 LINUX VERIFICATION (deferred to a later version, plan section 8.1)
