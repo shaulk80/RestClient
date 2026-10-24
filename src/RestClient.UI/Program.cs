@@ -16,7 +16,6 @@ internal sealed class Program
         new EventId(1, nameof(StartupStarted)),
         "Starting REST Client with data folder {DataFolder}");
 
-    [STAThread]
     public static async Task<int> Main(string[] args)
     {
         var environmentValue = Environment.GetEnvironmentVariable(DataFolderLocator.DataDirEnvironmentVariable);
@@ -43,12 +42,31 @@ internal sealed class Program
             return 1;
         }
 
-        return BuildAvaloniaApp(host.Services).StartWithClassicDesktopLifetime(args);
+        return RunUiOnStaThread(host.Services, args);
     }
 
     public static AppBuilder BuildAvaloniaApp(IServiceProvider services)
     {
         return AppBuilder.Configure(() => new App(services)).UsePlatformDetect();
+    }
+
+    // The clipboard needs an STA thread. An async Main resumes on an MTA thread after its first await,
+    // so the UI runs on a dedicated STA thread instead.
+    private static int RunUiOnStaThread(IServiceProvider services, string[] args)
+    {
+        var exitCode = 0;
+        var uiThread = new Thread(() =>
+        {
+            exitCode = BuildAvaloniaApp(services).StartWithClassicDesktopLifetime(args);
+        });
+        if (OperatingSystem.IsWindows())
+        {
+            uiThread.SetApartmentState(ApartmentState.STA);
+        }
+
+        uiThread.Start();
+        uiThread.Join();
+        return exitCode;
     }
 
     private static void ReportStartupError(string? message, string? details)
