@@ -15,6 +15,7 @@
     <Project Path="tests/RestClient.Domain.Tests/RestClient.Domain.Tests.csproj" />
     <Project Path="tests/RestClient.Infrastructure.Tests/RestClient.Infrastructure.Tests.csproj" />
     <Project Path="tests/RestClient.Integration.Tests/RestClient.Integration.Tests.csproj" />
+    <Project Path="tests/RestClient.SampleApi/RestClient.SampleApi.csproj" />
     <Project Path="tests/RestClient.UI.Tests/RestClient.UI.Tests.csproj" />
   </Folder>
 </Solution>
