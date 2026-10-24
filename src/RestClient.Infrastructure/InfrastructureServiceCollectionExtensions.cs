@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RestClient.Application.Abstractions;
+using RestClient.Infrastructure.Http;
 using RestClient.Infrastructure.Logging;
 using RestClient.Infrastructure.Persistence;
 using RestClient.Infrastructure.Services;
@@ -29,6 +30,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IMigrationSource, CodeMigrationSource>();
         services.AddSingleton<MigrationSetBuilder>();
         services.AddSingleton<SqliteMigrator>();
+
+        services.AddSingleton(options);
+        services.AddSingleton(new HttpTransportOptions(FollowRedirects: true, MaxRedirects: 10));
+        services.AddSingleton<ResponseBodyReader>();
+        services.AddSingleton<IHttpExecutor, HttpRequestExecutor>();
 
         return services;
     }
