@@ -6,8 +6,8 @@ Updated:   2026-10-24
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M1 Request Builder and Sending (branch m1). Code and automated checks done;
-               manual checks pending. Changes are uncommitted.
+CURRENT STAGE: M1 Request Builder and Sending (branch m1). Code, automated checks and manual
+               checks done. Changes are uncommitted; M1 closes after commit.
 NEXT STAGE:    M2 Collections, after M1 manual checks and commit.
 
 PLAN CHANGE (2026-10-21)
@@ -88,9 +88,9 @@ MILESTONES
     [x] Solution builds with no warnings (warnings as errors on)
     [x] scripts/build.ps1 passes: license check (81 packages), tests, win-x64 publish, smoke test
     [x] Published app starts and stays up; data/app.db and log created (checked 2026-10-24)
-    [ ] Manual: send GET and POST to a public echo endpoint
-    [ ] Manual: cancel a slow request
-    [ ] Manual: UI stays responsive during a large download
+    [x] Manual: send GET and POST to a public echo endpoint (confirmed by user, 2026-10-24)
+    [x] Manual: cancel a slow request (confirmed by user, 2026-10-24)
+    [x] Manual: UI stays responsive during a large download (confirmed by user, 2026-10-24)
 
     Deviations from plan and open points:
     - Domain body and auth types are all defined now (plan section 4). The builder returns a
@@ -102,11 +102,15 @@ MILESTONES
       Connection reuse is not in M1.
     - Spill threshold is 1 MB, not 5 MB (decided 2026-10-24). Bodies up to 1 MB are kept in
       memory in full. Larger bodies are written to a file, and the preview is their first 1 MB.
-      Plan section 9 and architecture Q9 still say 5 MB and need updating.
+      Plan section 9 is updated. Architecture plan Q9 still says 5 MB.
     - Spilled bodies go to data/temp/ and are not cleaned up yet.
     - UI has a Content-Type box, which the plan does not list. Headers and query params are
       supported by RequestBuilder but have no editor in M1.
     - RequestSender does not record history (M3).
+    - Sample API for tests: tests/RestClient.SampleApi (ASP.NET Core minimal API on
+      http://localhost:5080). GET /api/hello returns a fixed text response. POST /api/echo
+      returns the request body with its Content-Type. Not production code. It will be extended
+      for fine-grained tests.
 
 [ ] M2 Collections
     Depends on: M1

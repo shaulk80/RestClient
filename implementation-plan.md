@@ -159,7 +159,7 @@ Grouped by folder. Every type is a separate file.
     - **Conventions, not validation:** scripts are not checked. Never edit a script that has shipped, and never add a version below the current one, because it would never run. Invalid folder names and empty folders are logged and skipped. A duplicate version or a failed script stops startup with the full exception in the error details.
 - **DTOs and mappers:** `CollectionDto`, `FolderDto`, `RequestDto`, `BodyDto`, `AuthDto`, `EnvironmentDto`, `VariableDto`, `RequestSnapshotDto`. Mappers convert between DTOs and domain records, one mapper class per aggregate.
 - **Repositories:** `SqliteCollectionRepository`, `SqliteEnvironmentRepository`, `SqliteHistoryRepository`, `SqliteSettingsStore`, `SqliteOpenTabsStore`. Each write runs in a transaction. Exceptions become `Storage` errors and are logged.
-- **HTTP:** `RequestHttpClientFactory` builds an `HttpClient` from `AppSettings` (timeouts, redirects, SSL verification, proxy). `HttpRequestExecutor` implements `IHttpExecutor`. `ResponseBodyReader` keeps the first 1 MB as a preview and spills larger bodies to a temp file in the data folder.
+- **HTTP:** `RequestHttpClientFactory` builds an `HttpClient` from `AppSettings` (timeouts, redirects, SSL verification, proxy). `HttpRequestExecutor` implements `IHttpExecutor`. `ResponseBodyReader` keeps bodies up to 1 MB in memory and spills larger bodies to a temp file in the data folder. The preview is the first 1 MB of the body.
 - **Security:** `AesGcmSecretCipher` (AES-256-GCM, 12-byte nonce, 16-byte tag, `System.Security.Cryptography`). `Pbkdf2KeyDeriver` (PBKDF2-HMAC-SHA256, 600,000 iterations, 16-byte salt).
 - **Services:** `SystemClock`, `IdGenerator`, `LocalFileReader`.
 
@@ -215,7 +215,7 @@ Manual checks: the published executable runs from a folder with no write access 
 Tasks:
 1. Domain: `RequestDefinition`, `KeyValueEntry`, `RequestMethod`, body and auth types (section 4), with `RequestValidator`.
 2. Application: `VariableResolver` (no secrets yet), `RequestBuilder` (params, headers, raw body, no auth), `OutgoingRequest`, `RequestSender`.
-3. Infrastructure: `RequestHttpClientFactory`, `HttpRequestExecutor` (maps `HttpRequestException`, `TaskCanceledException`, and timeouts to `Network`, `Timeout`, `Cancelled` errors, and logs them), `ResponseBodyReader` (1 MB preview, spill above 5 MB).
+3. Infrastructure: `RequestHttpClientFactory`, `HttpRequestExecutor` (maps `HttpRequestException`, `TaskCanceledException`, and timeouts to `Network`, `Timeout`, `Cancelled` errors, and logs them), `ResponseBodyReader` (1 MB preview, spill above 1 MB).
 4. Connect timing via the socket connect callback. TTFB and total via `HttpCompletionOption.ResponseHeadersRead`.
 5. UI: `MainWindow` shows one request tab. `RequestBuilderView` has method, URL, Send, Cancel. `ResponseView` shows status, time, size, headers, and body. Body input is a plain multi-line text box until M4.
 6. Show errors through `ErrorMessageFormatter`.
@@ -357,8 +357,8 @@ These values are proposed here and are easy to change in settings or code. Confi
 
 | Parameter | Proposed value | Source |
 |---|---|---|
-| Body preview limit | 1 MB | Architecture plan Q9 (threshold 5 MB for spill) |
-| Spill-to-disk threshold | 5 MB | Architecture plan Q9 |
+| Body preview limit | 1 MB | Architecture plan Q9 |
+| Spill-to-disk threshold | 1 MB, same as the preview limit. Bodies up to 1 MB are kept in full; larger bodies are written to disk and the preview is their first 1 MB. Decided 2026-10-24, replacing the earlier 5 MB value. | Architecture plan Q9 (decision recorded in implementation-progress.txt) |
 | History retention | 1000 entries or 30 days | Architecture plan 3.3 |
 | PBKDF2 iterations | 600,000 (SHA-256) | Proposed; follows current OWASP guidance |
 | AES-GCM key size | 256 bits | Proposed |
