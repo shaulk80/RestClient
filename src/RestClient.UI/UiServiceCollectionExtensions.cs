@@ -7,7 +7,8 @@ public static class UiServiceCollectionExtensions
 {
     public static IServiceCollection AddUi(this IServiceCollection services)
     {
-        services.AddTransient<RequestTabViewModel>();
+        services.AddSingleton<CollectionsTreeViewModel>();
+        services.AddSingleton<MainWindowViewModel>();
 
         return services;
     }

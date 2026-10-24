@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Include="Persistence\MigrationScripts\0001\0001_create_settings.sql" />
+    <None Include="Persistence\MigrationScripts\0002\0002_create_collections.sql" />
   </ItemGroup>
 
   <ItemGroup>

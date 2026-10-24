@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- CA1716: the type name Error is required by the plan. CA1000: static factories on Result<T> are intentional. -->
-    <NoWarn>$(NoWarn);CA1716;CA1000</NoWarn>
+    <!-- CA1716: the type name Error is required by the plan. CA1000: static factories on Result<T> are intentional. CA1711: the type name Collection is required by the plan. -->
+    <NoWarn>$(NoWarn);CA1716;CA1000;CA1711</NoWarn>
   </PropertyGroup>
 
 </Project>

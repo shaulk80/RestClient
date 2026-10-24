@@ -30,6 +30,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IMigrationSource, CodeMigrationSource>();
         services.AddSingleton<MigrationSetBuilder>();
         services.AddSingleton<SqliteMigrator>();
+        services.AddSingleton<ICollectionRepository, SqliteCollectionRepository>();
 
         services.AddSingleton(options);
         services.AddSingleton(new HttpTransportOptions(FollowRedirects: true, MaxRedirects: 10));

@@ -17,6 +17,9 @@
     <None Include="..\RestClient.Infrastructure\Persistence\MigrationScripts\0001\0001_create_settings.sql"
           Link="MigrationScripts\0001\0001_create_settings.sql"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\RestClient.Infrastructure\Persistence\MigrationScripts\0002\0002_create_collections.sql"
+          Link="MigrationScripts\0002\0002_create_collections.sql"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

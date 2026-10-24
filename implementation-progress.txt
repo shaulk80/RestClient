@@ -6,8 +6,9 @@ Updated:   2026-10-24
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M1 closed (branch m1). All changes committed.
-NEXT STAGE:    M2 Collections (depends on M1, now closed).
+CURRENT STAGE: M2 Collections implemented on branch m2. Changes are NOT committed yet.
+               Waiting for the manual checks in M2 below.
+NEXT STAGE:    M3 History (after M2 manual checks pass).
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -111,9 +112,54 @@ MILESTONES
       returns the request body with its Content-Type. Not production code. It will be extended
       for fine-grained tests.
 
-[ ] M2 Collections
+[~] M2 Collections
     Depends on: M1
     Goal: organize requests into collections, folders, and subfolders, persisted in SQLite.
+
+    Tasks:
+    [x] 1.  Domain: Collection, Folder, FolderTree (tree queries and edits), ChildNameRules (sibling names)
+    [x] 2.  Application: CollectionService, FolderService, RequestService, CollectionTreeService
+            (move, reorder, cycle prevention), ICollectionRepository, CollectionWorkspace
+    [x] 3.  Infrastructure: migration 0002 (SQL script), CollectionDto/FolderDto/RequestDto/BodyDto/
+            AuthDto and mappers, SqliteCollectionRepository
+    [x] 4.  UI: CollectionsTreeViewModel with node view models, tree view with drag-and-drop,
+            context menu (new collection, new folder, new request, rename, duplicate, delete)
+    [x] 5.  Tabs link to saved requests; edits mark the tab dirty; Save writes back
+    [x] 6.  Duplicate request copies the definition with a new identifier
+
+    Definition of Done:
+    [x] All tests pass (Domain 83, Application 66, Infrastructure 34, UI 28, Integration 11)
+    [x] Coverage gate holds (Domain 95.61%, Application 92.22%)
+    [x] Solution builds with no warnings (warnings as errors on)
+    [x] scripts/build.ps1 passes: license check, tests, win-x64 publish, smoke test
+    [ ] Manual: a three-level folder tree survives an app restart (to be checked by the user)
+    [ ] Manual: drag-and-drop, context menu and inline rename work in the running app
+        (not exercised by automated tests; see open points below)
+
+    Deviations from plan and open points:
+    - Migration 0002 is a SQL script folder (MigrationScripts\0002), as M0 decided, not a
+      C# migration class. Tables: collections, folders (parent link + position), requests
+      (folder link + position + JSON document). Bodies, headers, query params and auth are
+      stored in the JSON document, so M4 and M5 can change them without a new migration.
+    - The plan's FolderService covered requests too. Requests have their own RequestService,
+      and the interfaces are split by responsibility (plan conventions, method size).
+    - The context menu gained "New request" (the plan lists no way to create a request).
+      Duplicate is offered for requests only (plan task 6). Duplicating folders is not in M2.
+    - Each change saves the whole workspace in one transaction. CollectionWorkspace serializes
+      loads and saves. Fine for v1 sizes; revisit if trees get large.
+    - Tests: ChildNameRulesTests and FolderTreeTests cover the sibling-name rule (the plan
+      named it FolderTests).
+    - Domain project suppresses CA1711 for the type name Collection (plan-mandated).
+    - Editor preserves what it does not show yet on save and send: headers, query params,
+      form and multipart bodies, and auth. Their editors come in M4 and M5.
+    - Every request lives in a collection. There are no unsaved scratch tabs, and the app
+      starts with no tab open.
+    - Deleting a request, folder or collection closes its open tab, and unsaved edits in that
+      tab are lost. No delete confirmation yet (dialog service comes in M5).
+    - Tab strip has no close button and Ctrl+S is not bound. Both come in M6.
+    - Not verified by hand (compile and smoke test only): drag-and-drop, flyout menus, double-click
+      to open, tree expansion, and focus in the inline rename box. After New folder or New
+      collection the rename box does not take focus, so the user must click it.
 
 [ ] M3 History
     Depends on: M2

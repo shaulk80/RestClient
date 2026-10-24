@@ -26,7 +26,7 @@ public partial class App : Avalonia.Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = _services.GetRequiredService<RequestTabViewModel>(),
+                DataContext = _services.GetRequiredService<MainWindowViewModel>(),
             };
         }
 

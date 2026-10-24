@@ -9,4 +9,10 @@
     <ProjectReference Include="..\..\src\RestClient.Infrastructure\RestClient.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\src\RestClient.Infrastructure\Persistence\MigrationScripts\**\*.sql"
+          Link="MigrationScripts\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

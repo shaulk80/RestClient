@@ -1,6 +1,7 @@
 using FakeItEasy;
 using NUnit.Framework;
 using RestClient.Application.Abstractions;
+using RestClient.Application.Collections;
 using RestClient.Domain.Bodies;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
@@ -109,9 +110,104 @@ public class RequestTabViewModelTests
         Assert.That(viewModel.Response.ErrorMessage, Is.EqualTo("The request was cancelled."));
     }
 
-    private static RequestTabViewModel CreateViewModel(IRequestSender sender)
+    [Test]
+    public void EditingAFieldMarksTabDirty()
     {
-        return new RequestTabViewModel(sender, A.Fake<IIdGenerator>());
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>());
+
+        viewModel.Url = "https://example.com/changed";
+
+        Assert.That(viewModel.IsDirty, Is.True);
+        Assert.That(viewModel.Header, Is.EqualTo("Login *"));
+    }
+
+    [Test]
+    public void SettingTheSameValueDoesNotMarkTabDirty()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>());
+
+        viewModel.Url = viewModel.Url;
+
+        Assert.That(viewModel.IsDirty, Is.False);
+    }
+
+    [Test]
+    public async Task SaveWritesEditsThroughRequestServiceAndClearsDirty()
+    {
+        var requests = A.Fake<IRequestService>();
+        Func<RequestDefinition, RequestDefinition>? applied = null;
+        A.CallTo(() => requests.UpdateAsync(A<Guid>._, A<Func<RequestDefinition, RequestDefinition>>._, A<CancellationToken>._))
+            .Invokes((Guid _, Func<RequestDefinition, RequestDefinition> change, CancellationToken _) => applied = change)
+            .Returns(Task.FromResult(Result.Success()));
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests);
+        viewModel.Method = RequestMethod.Put;
+        viewModel.Url = " https://example.com/saved ";
+
+        await viewModel.SaveAsync();
+
+        var stored = applied!(CreateDefinition());
+        Assert.That(stored.Method, Is.EqualTo(RequestMethod.Put));
+        Assert.That(stored.Url, Is.EqualTo("https://example.com/saved"));
+        Assert.That(viewModel.IsDirty, Is.False);
+        Assert.That(viewModel.SaveError, Is.Empty);
+    }
+
+    [Test]
+    public async Task SaveKeepsBodyTheEditorDoesNotShowWhenBodyWasNotEdited()
+    {
+        var requests = A.Fake<IRequestService>();
+        Func<RequestDefinition, RequestDefinition>? applied = null;
+        A.CallTo(() => requests.UpdateAsync(A<Guid>._, A<Func<RequestDefinition, RequestDefinition>>._, A<CancellationToken>._))
+            .Invokes((Guid _, Func<RequestDefinition, RequestDefinition> change, CancellationToken _) => applied = change)
+            .Returns(Task.FromResult(Result.Success()));
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests);
+        viewModel.Url = "https://example.com/other";
+
+        await viewModel.SaveAsync();
+
+        var formBody = new FormUrlEncodedBody([new KeyValueEntry("user", "me", true)]);
+        var stored = applied!(CreateDefinition() with { Body = formBody });
+        Assert.That(stored.Body, Is.EqualTo(formBody));
+    }
+
+    [Test]
+    public async Task SaveShowsErrorAndKeepsTabDirtyWhenServiceFails()
+    {
+        var requests = A.Fake<IRequestService>();
+        A.CallTo(() => requests.UpdateAsync(A<Guid>._, A<Func<RequestDefinition, RequestDefinition>>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result.Failure(new Error(ErrorCategory.Storage, "The collections could not be saved."))));
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests);
+        viewModel.Url = "https://example.com/other";
+
+        await viewModel.SaveAsync();
+
+        Assert.That(viewModel.SaveError, Is.EqualTo("The collections could not be saved."));
+        Assert.That(viewModel.IsDirty, Is.True);
+    }
+
+    [Test]
+    public void RenamedTabShowsNewNameInHeader()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>());
+
+        viewModel.Name = "Renamed";
+
+        Assert.That(viewModel.Header, Is.EqualTo("Renamed"));
+    }
+
+    private static RequestTabViewModel CreateViewModel(IRequestSender sender, IRequestService? requests = null)
+    {
+        return new RequestTabViewModel(sender, requests ?? A.Fake<IRequestService>(), CreateDefinition());
+    }
+
+    private static RequestDefinition CreateDefinition()
+    {
+        return new RequestDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "Login",
+            Url = "https://example.com/login",
+        };
     }
 
     private static ResponseSnapshot CreateSnapshot()

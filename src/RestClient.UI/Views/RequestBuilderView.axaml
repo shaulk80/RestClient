@@ -4,7 +4,7 @@
              x:Class="RestClient.UI.Views.RequestBuilderView"
              x:DataType="vm:RequestTabViewModel">
   <StackPanel Margin="12" Spacing="8">
-    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="8">
       <ComboBox Grid.Column="0"
                 MinWidth="110"
                 ItemsSource="{Binding Methods}"
@@ -18,7 +18,13 @@
       <Button Grid.Column="3"
               Content="Cancel"
               Command="{Binding CancelCommand}" />
+      <Button Grid.Column="4"
+              Content="Save"
+              Command="{Binding SaveCommand}" />
     </Grid>
+    <TextBlock Text="{Binding SaveError}"
+               Foreground="Red"
+               TextWrapping="Wrap" />
     <TextBox Text="{Binding ContentType}"
              PlaceholderText="Content-Type, for example application/json" />
     <TextBox Text="{Binding Body}"
