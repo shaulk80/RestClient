@@ -2,12 +2,13 @@ REST CLIENT - IMPLEMENTATION PROGRESS
 =====================================
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-23
+Updated:   2026-10-24
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: none. M0 Foundations is complete (Windows only; Linux deferred to a later version).
-NEXT STAGE:    M1 Request Builder and Sending. Not started; no open blockers.
+CURRENT STAGE: M1 Request Builder and Sending (branch m1). Code and automated checks done;
+               manual checks pending. Changes are uncommitted.
+NEXT STAGE:    M2 Collections, after M1 manual checks and commit.
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -69,9 +70,43 @@ MILESTONES
     [x] Commit message convention: plain imperative subjects until M7, then Conventional Commits (plan section 12, item 4; decided 2026-10-23)
     [x] Warnings as errors: on
 
-[ ] M1 Request Builder and Sending
+[~] M1 Request Builder and Sending
     Depends on: M0
     Goal: type a URL, choose a method, send, and see the response. No collections yet.
+
+    Tasks:
+    [x] 1.  Domain: request, key/value, method, body and auth types; RequestValidator
+    [x] 2.  Application: VariableResolver, RequestBuilder, OutgoingRequest, RequestSender
+    [x] 3.  Infrastructure: RequestHttpClientFactory, HttpRequestExecutor, ResponseBodyReader
+    [x] 4.  Connect timing via the socket connect callback; TTFB and total
+    [x] 5.  UI: MainWindow, RequestBuilderView, ResponseView (plain-text body)
+    [x] 6.  Errors shown through ErrorMessageFormatter
+
+    Definition of Done:
+    [x] All tests pass (Domain 52, Application 30, Infrastructure 28, UI 7, Integration 11)
+    [x] Coverage gate holds (Domain 100%, Application 91.82%)
+    [x] Solution builds with no warnings (warnings as errors on)
+    [x] scripts/build.ps1 passes: license check (81 packages), tests, win-x64 publish, smoke test
+    [x] Published app starts and stays up; data/app.db and log created (checked 2026-10-24)
+    [ ] Manual: send GET and POST to a public echo endpoint
+    [ ] Manual: cancel a slow request
+    [ ] Manual: UI stays responsive during a large download
+
+    Deviations from plan and open points:
+    - Domain body and auth types are all defined now (plan section 4). The builder returns a
+      Validation error for form, multipart, and non-none auth until M4 and M5 implement them.
+    - VariableResolver takes a plain dictionary. Environments and secrets arrive in M5.
+    - Timeout is a fixed 30 s default (RequestBuilder.DefaultTimeout). Settings come in M6.
+    - Redirects are fixed at follow, up to 10, in DI (HttpTransportOptions). Settings come in M6.
+    - Each send creates its own HttpClient so the connect callback always sees a new connection.
+      Connection reuse is not in M1.
+    - Spill threshold is 1 MB, not 5 MB (decided 2026-10-24). Bodies up to 1 MB are kept in
+      memory in full. Larger bodies are written to a file, and the preview is their first 1 MB.
+      Plan section 9 and architecture Q9 still say 5 MB and need updating.
+    - Spilled bodies go to data/temp/ and are not cleaned up yet.
+    - UI has a Content-Type box, which the plan does not list. Headers and query params are
+      supported by RequestBuilder but have no editor in M1.
+    - RequestSender does not record history (M3).
 
 [ ] M2 Collections
     Depends on: M1

@@ -30,6 +30,7 @@ internal sealed class Program
         var builder = Host.CreateApplicationBuilder(args);
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(new InfrastructureOptions(dataFolder));
+        builder.Services.AddUi();
 
         using var host = builder.Build();
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
@@ -42,12 +43,12 @@ internal sealed class Program
             return 1;
         }
 
-        return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        return BuildAvaloniaApp(host.Services).StartWithClassicDesktopLifetime(args);
     }
 
-    public static AppBuilder BuildAvaloniaApp()
+    public static AppBuilder BuildAvaloniaApp(IServiceProvider services)
     {
-        return AppBuilder.Configure<App>().UsePlatformDetect();
+        return AppBuilder.Configure(() => new App(services)).UsePlatformDetect();
     }
 
     private static void ReportStartupError(string? message, string? details)

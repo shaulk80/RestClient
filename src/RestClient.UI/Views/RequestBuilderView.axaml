@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestClient.UI.ViewModels"
+             x:Class="RestClient.UI.Views.RequestBuilderView"
+             x:DataType="vm:RequestTabViewModel">
+  <StackPanel Margin="12" Spacing="8">
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+      <ComboBox Grid.Column="0"
+                MinWidth="110"
+                ItemsSource="{Binding Methods}"
+                SelectedItem="{Binding Method}" />
+      <TextBox Grid.Column="1"
+               Text="{Binding Url}"
+               PlaceholderText="https://example.com/resource" />
+      <Button Grid.Column="2"
+              Content="Send"
+              Command="{Binding SendCommand}" />
+      <Button Grid.Column="3"
+              Content="Cancel"
+              Command="{Binding CancelCommand}" />
+    </Grid>
+    <TextBox Text="{Binding ContentType}"
+             PlaceholderText="Content-Type, for example application/json" />
+    <TextBox Text="{Binding Body}"
+             MinHeight="120"
+             AcceptsReturn="True"
+             TextWrapping="Wrap"
+             PlaceholderText="Request body" />
+  </StackPanel>
+</UserControl>

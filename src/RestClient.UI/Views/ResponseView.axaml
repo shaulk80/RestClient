@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestClient.UI.ViewModels"
+             xmlns:domain="using:RestClient.Domain.Collections"
+             x:Class="RestClient.UI.Views.ResponseView"
+             x:DataType="vm:RequestTabViewModel">
+  <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="8">
+    <StackPanel Grid.Row="0" Spacing="4">
+      <TextBlock Text="{Binding Response.ErrorMessage}"
+                 Foreground="Red"
+                 TextWrapping="Wrap" />
+      <TextBlock Text="{Binding Response.StatusText}" FontWeight="SemiBold" />
+      <TextBlock Text="{Binding Response.TimingText}" />
+      <TextBlock Text="{Binding Response.SizeText}" />
+      <TextBlock Text="{Binding Response.BodyNote}" FontStyle="Italic" />
+    </StackPanel>
+    <ItemsControl Grid.Row="1" ItemsSource="{Binding Response.Headers}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="domain:KeyValueEntry">
+          <TextBlock TextWrapping="Wrap">
+            <Run FontWeight="SemiBold" Text="{Binding Key}" />
+            <Run Text=": " />
+            <Run Text="{Binding Value}" />
+          </TextBlock>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <TextBox Grid.Row="2"
+             Text="{Binding Response.BodyText}"
+             IsReadOnly="True"
+             AcceptsReturn="True"
+             TextWrapping="Wrap"
+             FontFamily="Consolas, Menlo, monospace" />
+  </Grid>
+</UserControl>

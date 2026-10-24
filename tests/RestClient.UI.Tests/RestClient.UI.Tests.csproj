@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="FakeItEasy" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\RestClient.UI\RestClient.UI.csproj" />
   </ItemGroup>
 
