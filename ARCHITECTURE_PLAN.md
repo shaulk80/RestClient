@@ -185,7 +185,7 @@ Rules:
 | Q6 | OAuth2 | Not in v1. Basic, Bearer and API key only. | Decided |
 | Q7 | Code signing | Apply for free signing through SignPath Foundation's open-source program before the first public release. SignPath requires the project to be already released in signable form, so the first public release may ship unsigned, and signing starts with the next release. If SignPath declines, ship unsigned, with SHA-256 checksums and a note on the SmartScreen bypass. Test Windows 11 Smart App Control on a clean install before release (M7). macOS is out of scope. | Decided (apply before first public release) |
 | Q8 | Scripting and tests | Pre-request and post-response scripts are out of v1 (see 6.1). Unit tests are in v1 (section 5.1). | Decided |
-| Q9 | Large responses | Stream to disk above 5 MB, show a truncated preview. | Decided |
+| Q9 | Large responses | Bodies up to 1 MB stay in memory. Larger bodies stream to disk, and the preview is the first 1 MB. Decided 2026-10-24, replacing the earlier 5 MB value. | Decided |
 | Q10 | Application license | Apache-2.0. Full text in `LICENSE`, attribution in `NOTICE`. OSI-approved, so eligible for SignPath (Q7). All planned dependencies are permissive; a license check runs in CI from M0. | Decided |
 | Q11 | Target OS versions | Windows 10 22H2+ and Windows 11, Ubuntu 22.04+ and equivalent. macOS is out of scope. | Decided |
 | Q12 | Weighting of selection criteria | Irrelevant now that Q1 is decided. | Resolved |

@@ -6,9 +6,8 @@ Updated:   2026-10-24
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M1 Request Builder and Sending (branch m1). Code, automated checks and manual
-               checks done. Changes are uncommitted; M1 closes after commit.
-NEXT STAGE:    M2 Collections, after M1 manual checks and commit.
+CURRENT STAGE: M1 closed (branch m1). All changes committed.
+NEXT STAGE:    M2 Collections (depends on M1, now closed).
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -70,7 +69,7 @@ MILESTONES
     [x] Commit message convention: plain imperative subjects until M7, then Conventional Commits (plan section 12, item 4; decided 2026-10-23)
     [x] Warnings as errors: on
 
-[~] M1 Request Builder and Sending
+[x] M1 Request Builder and Sending
     Depends on: M0
     Goal: type a URL, choose a method, send, and see the response. No collections yet.
 
@@ -102,8 +101,8 @@ MILESTONES
       Connection reuse is not in M1.
     - Spill threshold is 1 MB, not 5 MB (decided 2026-10-24). Bodies up to 1 MB are kept in
       memory in full. Larger bodies are written to a file, and the preview is their first 1 MB.
-      Plan section 9 is updated. Architecture plan Q9 still says 5 MB.
-    - Spilled bodies go to data/temp/ and are not cleaned up yet.
+      Plan section 9 and architecture plan Q9 are updated.
+    - Spilled bodies go to data/temp/ and are not cleaned up. Deferred to M3.
     - UI has a Content-Type box, which the plan does not list. Headers and query params are
       supported by RequestBuilder but have no editor in M1.
     - RequestSender does not record history (M3).
@@ -176,8 +175,8 @@ KNOWN ISSUES AND NOTES
 ----------------------
 - The release zips include .pdb files (about 100 MB uncompressed). Consider
   DebugType=none for release publishes; not changed yet.
-- Startup errors (data folder cannot be created, migration fails) are written to
-  stderr only. The Windows build is a GUI app with no console, so the user sees
-  nothing. Replace with a visible error dialog before M1 ships anything users rely on.
-- Integration and UI test projects are empty until M1 and M6. dotnet test reports
-  "No test is available" for them but exits 0.
+- Startup errors (data folder cannot be created, migration fails, or an unhandled exception
+  before the window opens) are written to stderr only. The Windows build is a GUI app with
+  no console, so the user sees nothing. Deferred to M7: show a visible error dialog.
+- Spilled bodies in data/temp/ are never deleted. Deferred to M3 (history owns the files).
+- Integration and UI test projects contain M1 tests. Headless UI smoke tests come with M6.
