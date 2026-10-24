@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using RestClient.UI.ViewModels;
 
 namespace RestClient.UI.Views;
@@ -14,6 +16,7 @@ public partial class CollectionsTreeView : UserControl
     private PointerPressedEventArgs? _pressArgs;
     private TreeNodeViewModel? _pressedNode;
     private Point _pressPoint;
+    private TopLevel? _topLevel;
 
     public CollectionsTreeView()
     {
@@ -25,19 +28,118 @@ public partial class CollectionsTreeView : UserControl
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
         AddHandler(DoubleTappedEvent, OnDoubleTapped);
+        MenuItems.AddHandler(MenuItem.ClickEvent, OnMenuItemClick);
+        MenuItems.AddHandler(PointerPressedEvent, OnMenuPointerPressed, RoutingStrategies.Tunnel);
     }
 
     private CollectionsTreeViewModel? ViewModel => DataContext as CollectionsTreeViewModel;
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _topLevel = TopLevel.GetTopLevel(this);
+        _topLevel?.AddHandler(PointerPressedEvent, OnTopLevelPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _topLevel?.RemoveHandler(PointerPressedEvent, OnTopLevelPointerPressed);
+        _topLevel = null;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    // Any press in the window closes the menu first. The tree's own handler then runs, and a
+    // right-press on a row opens the menu for that row again.
+    private void OnTopLevelPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (IsMenuPress(e.Source))
+        {
+            return;
+        }
+
+        CloseMenu();
+    }
+
+    private void OnMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        CloseMenu();
+    }
+
+    // The menu covers the rows below the pointer. A right-press on one of those rows must still select
+    // it and move the menu there, so the press is resolved against the tree instead of the menu.
+    private void OnMenuPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(MenuItems).Properties.IsRightButtonPressed)
+        {
+            return;
+        }
+
+        var treePoint = e.GetPosition(this);
+        if (this.InputHitTest(treePoint) is not { } hit || NodeOf(hit) is not { } node)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        OpenMenu(node, hit as Control);
+    }
+
+    private void OpenMenu(TreeNodeViewModel node, Control? target)
+    {
+        if (ViewModel is null)
+        {
+            return;
+        }
+
+        ViewModel.SelectedNode = node;
+        MenuPopup.IsOpen = false;
+        MenuPopup.DataContext = node;
+        MenuPopup.PlacementTarget = target ?? this;
+        MenuPopup.IsOpen = true;
+    }
+
+    private void CloseMenu()
+    {
+        MenuPopup.IsOpen = false;
+    }
 
     private static TreeNodeViewModel? NodeOf(object? source)
     {
         return (source as StyledElement)?.DataContext as TreeNodeViewModel;
     }
 
+    // Presses that start inside the menu belong to the menu: a click must reach the menu item, and must
+    // not close the menu or start a drag from the tree node the menu happens to be bound to.
+    private static bool IsMenuPress(object? source)
+    {
+        return source is Visual visual && visual.FindAncestorOfType<MenuFlyoutPresenter>(includeSelf: true) is not null;
+    }
+
+    // A press on the expander must stay a click. A drag started from it would capture the pointer,
+    // and the expand would be lost.
+    private static bool IsExpanderPress(object? source)
+    {
+        return source is Visual visual && visual.FindAncestorOfType<ToggleButton>(includeSelf: true) is not null;
+    }
+
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (IsMenuPress(e.Source))
+        {
+            _pressedNode = null;
+            return;
+        }
+
         var node = NodeOf(e.Source);
-        if (node is null || node.IsEditing || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        var properties = e.GetCurrentPoint(this).Properties;
+        if (node is not null && !node.IsEditing && properties.IsRightButtonPressed)
+        {
+            _pressedNode = null;
+            OpenMenu(node, e.Source as Control);
+            return;
+        }
+
+        if (node is null || node.IsEditing || IsExpanderPress(e.Source) || !properties.IsLeftButtonPressed)
         {
             _pressedNode = null;
             return;

@@ -6,9 +6,8 @@ Updated:   2026-10-24
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M2 Collections implemented on branch m2. Changes are NOT committed yet.
-               Waiting for the manual checks in M2 below.
-NEXT STAGE:    M3 History (after M2 manual checks pass).
+CURRENT STAGE: M2 Collections complete (branch m2). All manual checks confirmed by user.
+NEXT STAGE:    M3 History (depends on M2, now closed).
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -112,7 +111,7 @@ MILESTONES
       returns the request body with its Content-Type. Not production code. It will be extended
       for fine-grained tests.
 
-[~] M2 Collections
+[x] M2 Collections
     Depends on: M1
     Goal: organize requests into collections, folders, and subfolders, persisted in SQLite.
 
@@ -128,13 +127,23 @@ MILESTONES
     [x] 6.  Duplicate request copies the definition with a new identifier
 
     Definition of Done:
-    [x] All tests pass (Domain 83, Application 66, Infrastructure 34, UI 28, Integration 11)
+    [x] All tests pass (Domain 83, Application 66, Infrastructure 34, UI 35, Integration 11)
     [x] Coverage gate holds (Domain 95.61%, Application 92.22%)
     [x] Solution builds with no warnings (warnings as errors on)
     [x] scripts/build.ps1 passes: license check, tests, win-x64 publish, smoke test
-    [ ] Manual: a three-level folder tree survives an app restart (to be checked by the user)
-    [ ] Manual: drag-and-drop, context menu and inline rename work in the running app
-        (not exercised by automated tests; see open points below)
+    [x] Manual: a three-level folder tree survives an app restart (confirmed by user, 2026-10-24)
+    [x] Manual: inline rename and drag-and-drop work (confirmed by user, 2026-10-24)
+    [x] Manual: context menu opens reliably (confirmed by user). Fixed 2026-10-24 in three steps. (1) The menu was
+        attached to the text only, so right-click on blank row space did nothing. (2) An open menu
+        swallowed the next right-click, so the row was not selected and no menu opened. The menu is
+        now a popup that does not light-dismiss; a right-click on any row, including one under the
+        menu, selects it and moves the menu there. (3) Presses that start inside the menu were
+        treated as presses outside it, so the menu closed before the item's click. Fixed: presses
+        from inside the menu are ignored by the close handler and the tree. Re-check in the
+        running app. Confirmed by user.
+    [x] Manual: expand/collapse responds to one click (confirmed by user). Not reproduced headless. A possible
+        cause was a drag starting from the chevron, and a guard was added. Re-check in the
+        running app. Confirmed by user.
 
     Deviations from plan and open points:
     - Migration 0002 is a SQL script folder (MigrationScripts\0002), as M0 decided, not a
@@ -157,9 +166,10 @@ MILESTONES
     - Deleting a request, folder or collection closes its open tab, and unsaved edits in that
       tab are lost. No delete confirmation yet (dialog service comes in M5).
     - Tab strip has no close button and Ctrl+S is not bound. Both come in M6.
-    - Not verified by hand (compile and smoke test only): drag-and-drop, flyout menus, double-click
-      to open, tree expansion, and focus in the inline rename box. After New folder or New
-      collection the rename box does not take focus, so the user must click it.
+    - Headless UI tests (Avalonia.Headless) cover the context menu and expander clicks. They
+      do not drive the OS drag loop, so they cannot show drag-related expander problems.
+    - After New folder or New collection the rename box does not take focus, so the user must
+      click it. Not fixed yet.
 
 [ ] M3 History
     Depends on: M2

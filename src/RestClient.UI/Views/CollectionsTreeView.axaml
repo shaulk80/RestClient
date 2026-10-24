@@ -3,47 +3,54 @@
              xmlns:vm="using:RestClient.UI.ViewModels"
              x:Class="RestClient.UI.Views.CollectionsTreeView"
              x:DataType="vm:CollectionsTreeViewModel">
-  <DockPanel Margin="8" LastChildFill="True">
-    <Button DockPanel.Dock="Top"
-            Margin="0,0,0,8"
-            HorizontalAlignment="Stretch"
-            Content="New collection"
-            Command="{Binding NewCollectionCommand}" />
-    <TreeView ItemsSource="{Binding Roots}"
-              SelectedItem="{Binding SelectedNode}">
-      <TreeView.Styles>
-        <Style Selector="TreeViewItem">
-          <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=TwoWay}" />
-        </Style>
-      </TreeView.Styles>
-      <TreeView.DataTemplates>
-        <TreeDataTemplate DataType="vm:TreeNodeViewModel" ItemsSource="{Binding Children}">
-          <Grid>
-            <TextBlock Text="{Binding Name}"
-                       VerticalAlignment="Center"
-                       IsVisible="{Binding !IsEditing}">
-              <TextBlock.ContextFlyout>
-                <MenuFlyout>
-                  <MenuItem Header="Open" Command="{Binding OpenCommand}" IsVisible="{Binding IsRequest}" />
-                  <MenuItem Header="New folder" Command="{Binding NewFolderCommand}" IsVisible="{Binding CanContainChildren}" />
-                  <MenuItem Header="New request" Command="{Binding NewRequestCommand}" IsVisible="{Binding CanContainChildren}" />
-                  <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" IsVisible="{Binding IsRequest}" />
-                  <MenuItem Header="Rename" Command="{Binding RenameCommand}" />
-                  <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
-                </MenuFlyout>
-              </TextBlock.ContextFlyout>
-            </TextBlock>
-            <TextBox Classes="rename"
-                     Text="{Binding EditName}"
-                     IsVisible="{Binding IsEditing}">
-              <TextBox.KeyBindings>
-                <KeyBinding Gesture="Enter" Command="{Binding CommitRenameCommand}" />
-                <KeyBinding Gesture="Escape" Command="{Binding CancelRenameCommand}" />
-              </TextBox.KeyBindings>
-            </TextBox>
-          </Grid>
-        </TreeDataTemplate>
-      </TreeView.DataTemplates>
-    </TreeView>
-  </DockPanel>
+  <Grid>
+    <DockPanel Margin="8" LastChildFill="True">
+      <Button DockPanel.Dock="Top"
+              Margin="0,0,0,8"
+              HorizontalAlignment="Stretch"
+              Content="New collection"
+              Command="{Binding NewCollectionCommand}" />
+      <TreeView ItemsSource="{Binding Roots}"
+                SelectedItem="{Binding SelectedNode}">
+        <TreeView.Styles>
+          <Style Selector="TreeViewItem">
+            <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=TwoWay}" />
+          </Style>
+        </TreeView.Styles>
+        <TreeView.DataTemplates>
+          <TreeDataTemplate DataType="vm:TreeNodeViewModel" ItemsSource="{Binding Children}">
+            <!-- Background makes the whole row hit-testable, so right-click works on blank row space too.
+                 A TextBlock only hit-tests on its glyphs. -->
+            <Grid Background="Transparent">
+              <TextBlock Text="{Binding Name}"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding !IsEditing}" />
+              <TextBox Classes="rename"
+                       Text="{Binding EditName}"
+                       IsVisible="{Binding IsEditing}">
+                <TextBox.KeyBindings>
+                  <KeyBinding Gesture="Enter" Command="{Binding CommitRenameCommand}" />
+                  <KeyBinding Gesture="Escape" Command="{Binding CancelRenameCommand}" />
+                </TextBox.KeyBindings>
+              </TextBox>
+            </Grid>
+          </TreeDataTemplate>
+        </TreeView.DataTemplates>
+      </TreeView>
+    </DockPanel>
+    <!-- Not light-dismissable on purpose. Light dismiss swallows the first press outside the menu, so
+         a right-click on another row would never reach the tree. The tree closes this menu itself. -->
+    <Popup x:Name="MenuPopup"
+           Placement="Pointer"
+           IsLightDismissEnabled="False">
+      <MenuFlyoutPresenter x:Name="MenuItems" x:DataType="vm:TreeNodeViewModel">
+        <MenuItem Header="Open" Command="{Binding OpenCommand}" IsVisible="{Binding IsRequest}" />
+        <MenuItem Header="New folder" Command="{Binding NewFolderCommand}" IsVisible="{Binding CanContainChildren}" />
+        <MenuItem Header="New request" Command="{Binding NewRequestCommand}" IsVisible="{Binding CanContainChildren}" />
+        <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" IsVisible="{Binding IsRequest}" />
+        <MenuItem Header="Rename" Command="{Binding RenameCommand}" />
+        <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
+      </MenuFlyoutPresenter>
+    </Popup>
+  </Grid>
 </UserControl>

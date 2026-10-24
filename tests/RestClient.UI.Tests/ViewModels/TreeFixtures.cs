@@ -38,6 +38,11 @@ internal sealed class TreeFixtures
 
     public ICollectionTreeService Tree { get; }
 
+    public static Folder CreateFolder(string name, IReadOnlyList<Folder>? folders = null)
+    {
+        return new Folder(Guid.NewGuid(), name, folders ?? [], []);
+    }
+
     public CollectionsTreeViewModel CreateSidebar()
     {
         return new CollectionsTreeViewModel(Collections, Folders, Requests, Tree);
