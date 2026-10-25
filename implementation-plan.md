@@ -237,7 +237,7 @@ Tasks:
 2. Application: `CollectionService`, `FolderService`, `CollectionTreeService` (move, reorder, cycle prevention), and the `ICollectionRepository` interface.
 3. Infrastructure: `Migration0002Collections`, `CollectionDto`, `FolderDto`, `RequestDto`, `BodyDto`, `AuthDto`, the matching mappers, and `SqliteCollectionRepository`.
 4. UI: `CollectionsTreeViewModel` with the node view models, a tree view with drag-and-drop, and a context menu (new collection, new folder, rename, duplicate, delete).
-5. Tabs link to saved requests. Edits mark the tab dirty. Save writes the request back to its collection.
+5. Tabs link to saved requests, or are unsaved (not in any collection). Edits mark the tab dirty. Save writes a linked request back to its collection. Save on an unsaved tab asks for a folder and a name, creates the request there, and links the tab. Decided 2026-10-25.
 6. Duplicate request copies the definition with a new identifier.
 
 Tests:
@@ -256,7 +256,7 @@ Tasks:
 1. Domain: `HistoryEntry`.
 2. Application: `HistoryService`, `RetentionPolicy`, `IHistoryRepository`. `RequestSender` records every attempt, including failures and cancellations.
 3. Infrastructure: `Migration0003History` (table and indexes on `SentAt` and `ResolvedUrl`), `RequestSnapshotDto`, `SqliteHistoryRepository`. Retention runs after each insert.
-4. UI: `HistoryListViewModel` with search by URL and method, and a restore action that opens a new tab.
+4. UI: `HistoryListViewModel` with search by URL and method, and a restore action that opens an unsaved tab with the restored request. Nothing is saved until the user saves it. Decided 2026-10-25.
 
 Tests:
 - Application: `HistoryServiceTests` (record success and failure, search, restore creates an independent copy), `RetentionPolicyTests` (parameterized over count and age limits).

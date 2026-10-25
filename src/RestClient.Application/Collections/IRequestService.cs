@@ -15,5 +15,7 @@ public interface IRequestService
 
     Task<Result<Guid>> DuplicateAsync(Guid requestId, CancellationToken cancellationToken);
 
+    Task<Result<Guid>> AddCopyAsync(Guid folderId, RequestDefinition source, CancellationToken cancellationToken);
+
     Task<Result> DeleteAsync(Guid requestId, CancellationToken cancellationToken);
 }

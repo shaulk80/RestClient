@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
+using RestClient.Domain.Collections;
 using RestClient.UI.Services;
 
 namespace RestClient.UI.ViewModels;
@@ -9,19 +10,30 @@ public sealed class MainWindowViewModel : ViewModelBase
 {
     private readonly IRequestSender _sender;
     private readonly IRequestService _requests;
+    private readonly IDestinationPicker _destinations;
     private RequestTabViewModel? _selectedTab;
 
-    public MainWindowViewModel(CollectionsTreeViewModel sidebar, IRequestSender sender, IRequestService requests)
+    public MainWindowViewModel(
+        CollectionsTreeViewModel sidebar,
+        HistoryListViewModel history,
+        IRequestSender sender,
+        IRequestService requests,
+        IDestinationPicker destinations)
     {
         Sidebar = sidebar;
+        History = history;
         _sender = sender;
         _requests = requests;
+        _destinations = destinations;
         Sidebar.RequestOpenRequested += OnRequestOpenRequested;
         Sidebar.TreeChanged += OnTreeChanged;
+        History.RestoreRequested += OpenUnsaved;
         Tabs.CollectionChanged += (_, _) => RaisePropertyChanged(nameof(HasTabs));
     }
 
     public CollectionsTreeViewModel Sidebar { get; }
+
+    public HistoryListViewModel History { get; }
 
     public ObservableCollection<RequestTabViewModel> Tabs { get; } = [];
 
@@ -35,7 +47,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public async Task OpenRequestAsync(Guid requestId)
     {
-        var existing = Tabs.FirstOrDefault(tab => tab.RequestId == requestId);
+        var existing = Tabs.FirstOrDefault(tab => tab.IsLinked && tab.RequestId == requestId);
         if (existing is not null)
         {
             SelectedTab = existing;
@@ -49,7 +61,25 @@ public sealed class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var tab = new RequestTabViewModel(_sender, _requests, loaded.Value!);
+        AddTab(CreateTab(loaded.Value!, isLinked: true));
+    }
+
+    // Always opens a new tab. Unsaved tabs are never matched against an existing one.
+    public void OpenUnsaved(RequestDefinition definition)
+    {
+        AddTab(CreateTab(definition, isLinked: false));
+    }
+
+    private RequestTabViewModel CreateTab(RequestDefinition definition, bool isLinked)
+    {
+        var tab = new RequestTabViewModel(_sender, _requests, _destinations, definition, isLinked);
+        tab.RequestSent += OnTabRequestSent;
+        tab.Linked += OnTabLinked;
+        return tab;
+    }
+
+    private void AddTab(RequestTabViewModel tab)
+    {
         Tabs.Add(tab);
         SelectedTab = tab;
     }
@@ -59,11 +89,27 @@ public sealed class MainWindowViewModel : ViewModelBase
         await OpenRequestAsync(requestId);
     }
 
-    // Keeps tab names in step with the tree, and closes tabs whose request was deleted.
+    private async void OnTabRequestSent(object? sender, EventArgs e)
+    {
+        await History.ReloadAsync();
+    }
+
+    private async void OnTabLinked(object? sender, RequestLinkedEventArgs e)
+    {
+        await Sidebar.ReloadAsync(e.RequestId, e.ExpandId);
+    }
+
+    // Keeps linked tab names in step with the tree, and closes linked tabs whose request was deleted.
+    // Unlinked tabs are not in the tree, so they are left alone.
     private void OnTreeChanged(object? sender, EventArgs e)
     {
         foreach (var tab in Tabs.ToList())
         {
+            if (!tab.IsLinked)
+            {
+                continue;
+            }
+
             var node = Sidebar.FindRequest(tab.RequestId);
             if (node is null)
             {

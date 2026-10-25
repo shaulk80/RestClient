@@ -9,7 +9,7 @@ public sealed class ResponseBodyReader
 {
     private const int PreviewLimitBytes = 1024 * 1024;
     private const int ChunkSizeBytes = 80 * 1024;
-    private const string TempFolderName = "temp";
+    public const string TempFolderName = "temp";
 
     private static readonly Action<ILogger, string, Exception?> SpillFailed = LoggerMessage.Define<string>(
         LogLevel.Error,

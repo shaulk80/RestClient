@@ -16,10 +16,12 @@ public sealed class RequestTabViewModel : ViewModelBase
 
     private readonly IRequestSender _sender;
     private readonly IRequestService _requests;
+    private readonly IDestinationPicker _destinations;
     private readonly AsyncRelayCommand _sendCommand;
     private readonly AsyncRelayCommand _saveCommand;
     private readonly RelayCommand _cancelCommand;
     private RequestDefinition _saved;
+    private bool _isLinked;
     private CancellationTokenSource? _cancellation;
     private string _name;
     private RequestMethod _method;
@@ -31,11 +33,20 @@ public sealed class RequestTabViewModel : ViewModelBase
     private bool _isBodyEdited;
     private string _saveError = string.Empty;
 
-    public RequestTabViewModel(IRequestSender sender, IRequestService requests, RequestDefinition definition)
+    // An unlinked tab holds a request that is not in any collection yet. It starts dirty, because it has to be saved.
+    public RequestTabViewModel(
+        IRequestSender sender,
+        IRequestService requests,
+        IDestinationPicker destinations,
+        RequestDefinition definition,
+        bool isLinked)
     {
         _sender = sender;
         _requests = requests;
+        _destinations = destinations;
         _saved = definition;
+        _isLinked = isLinked;
+        _isDirty = !isLinked;
         _name = definition.Name;
         _method = definition.Method;
         _url = definition.Url;
@@ -47,7 +58,10 @@ public sealed class RequestTabViewModel : ViewModelBase
         _cancelCommand = new RelayCommand(Cancel, () => IsSending);
     }
 
+    // The saved request's identifier. It means nothing for an unlinked tab, so check IsLinked first.
     public Guid RequestId => _saved.Id;
+
+    public bool IsLinked => _isLinked;
 
     public string Name
     {
@@ -128,6 +142,12 @@ public sealed class RequestTabViewModel : ViewModelBase
 
     public ICommand CancelCommand => _cancelCommand;
 
+    // Raised after every send, including failed and cancelled ones, because each one adds a history entry.
+    public event EventHandler? RequestSent;
+
+    // Raised when an unlinked tab is saved into a collection.
+    public event EventHandler<RequestLinkedEventArgs>? Linked;
+
     public async Task SendAsync()
     {
         using var cancellation = new CancellationTokenSource();
@@ -138,6 +158,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         {
             var result = await _sender.SendAsync(ApplyEdits(_saved), NoVariables, cancellation.Token);
             ShowResult(result);
+            RequestSent?.Invoke(this, EventArgs.Empty);
         }
         finally
         {
@@ -147,6 +168,22 @@ public sealed class RequestTabViewModel : ViewModelBase
     }
 
     public async Task SaveAsync()
+    {
+        if (IsLinked)
+        {
+            await SaveLinkedAsync();
+            return;
+        }
+
+        await SaveAsNewRequestAsync();
+    }
+
+    public void Cancel()
+    {
+        _cancellation?.Cancel();
+    }
+
+    private async Task SaveLinkedAsync()
     {
         var result = await _requests.UpdateAsync(_saved.Id, ApplyEdits, CancellationToken.None);
         if (!result.IsSuccess)
@@ -161,9 +198,42 @@ public sealed class RequestTabViewModel : ViewModelBase
         IsDirty = false;
     }
 
-    public void Cancel()
+    // Cancelling the dialog leaves the tab unchanged. A created request is linked even if the tree later renames it.
+    private async Task SaveAsNewRequestAsync()
     {
-        _cancellation?.Cancel();
+        var picked = await _destinations.PickAsync(Name, CancellationToken.None);
+        if (!picked.IsSuccess)
+        {
+            SaveError = ErrorMessageFormatter.Format(picked.Error!);
+            return;
+        }
+
+        if (picked.Value is not { } destination)
+        {
+            return;
+        }
+
+        var edited = ApplyEdits(_saved) with { Name = destination.Name };
+        var created = await _requests.AddCopyAsync(destination.FolderId, edited, CancellationToken.None);
+        if (!created.IsSuccess)
+        {
+            SaveError = ErrorMessageFormatter.Format(created.Error!);
+            return;
+        }
+
+        Link(edited with { Id = created.Value! }, destination);
+    }
+
+    private void Link(RequestDefinition saved, SaveDestination destination)
+    {
+        _saved = saved;
+        _isLinked = true;
+        _isBodyEdited = false;
+        Name = saved.Name;
+        SaveError = string.Empty;
+        IsDirty = false;
+        RaisePropertyChanged(nameof(IsLinked));
+        Linked?.Invoke(this, new RequestLinkedEventArgs(saved.Id, destination.ExpandId));
     }
 
     private void EditField<T>(ref T field, T value, string propertyName)

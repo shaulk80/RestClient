@@ -6,6 +6,7 @@ using RestClient.Domain.Bodies;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
+using RestClient.UI.Services;
 using RestClient.UI.ViewModels;
 
 namespace RestClient.UI.Tests.ViewModels;
@@ -195,9 +196,119 @@ public class RequestTabViewModelTests
         Assert.That(viewModel.Header, Is.EqualTo("Renamed"));
     }
 
-    private static RequestTabViewModel CreateViewModel(IRequestSender sender, IRequestService? requests = null)
+    [Test]
+    public async Task SendRaisesRequestSentWhenRequestFails()
     {
-        return new RequestTabViewModel(sender, requests ?? A.Fake<IRequestService>(), CreateDefinition());
+        var sender = A.Fake<IRequestSender>();
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(ErrorCategory.Network, "Not sent."))));
+        var viewModel = CreateViewModel(sender);
+        var raised = 0;
+        viewModel.RequestSent += (_, _) => raised++;
+
+        await viewModel.SendAsync();
+
+        Assert.That(raised, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void UnsavedTabStartsDirtyAndUnlinked()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), isLinked: false);
+
+        Assert.That(viewModel.IsLinked, Is.False);
+        Assert.That(viewModel.IsDirty, Is.True);
+    }
+
+    [Test]
+    public async Task SaveOfUnsavedTabCreatesRequestInChosenFolderAndLinksIt()
+    {
+        var folderId = Guid.NewGuid();
+        var expandId = Guid.NewGuid();
+        var newId = Guid.NewGuid();
+        var destinations = A.Fake<IDestinationPicker>();
+        A.CallTo(() => destinations.PickAsync(A<string>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<SaveDestination?>.Success(new SaveDestination(folderId, expandId, "Login"))));
+        var requests = A.Fake<IRequestService>();
+        A.CallTo(() => requests.AddCopyAsync(folderId, A<RequestDefinition>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<Guid>.Success(newId)));
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests, destinations, isLinked: false);
+        RequestLinkedEventArgs? linked = null;
+        viewModel.Linked += (_, e) => linked = e;
+
+        await viewModel.SaveAsync();
+
+        A.CallTo(() => requests.AddCopyAsync(folderId, A<RequestDefinition>.That.Matches(definition => definition.Name == "Login"), A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+        Assert.That(viewModel.IsLinked, Is.True);
+        Assert.That(viewModel.RequestId, Is.EqualTo(newId));
+        Assert.That(viewModel.IsDirty, Is.False);
+        Assert.That(linked?.RequestId, Is.EqualTo(newId));
+        Assert.That(linked?.ExpandId, Is.EqualTo(expandId));
+    }
+
+    [Test]
+    public async Task SaveOfUnsavedTabDoesNothingWhenDialogIsCancelled()
+    {
+        var destinations = A.Fake<IDestinationPicker>();
+        A.CallTo(() => destinations.PickAsync(A<string>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<SaveDestination?>.Success(null)));
+        var requests = A.Fake<IRequestService>();
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests, destinations, isLinked: false);
+
+        await viewModel.SaveAsync();
+
+        A.CallTo(() => requests.AddCopyAsync(A<Guid>._, A<RequestDefinition>._, A<CancellationToken>._)).MustNotHaveHappened();
+        Assert.That(viewModel.IsLinked, Is.False);
+        Assert.That(viewModel.IsDirty, Is.True);
+    }
+
+    [Test]
+    public async Task SaveOfUnsavedTabShowsDialogErrorWithoutCreatingRequest()
+    {
+        var destinations = A.Fake<IDestinationPicker>();
+        A.CallTo(() => destinations.PickAsync(A<string>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<SaveDestination?>.Failure(new Error(ErrorCategory.Storage, "The collections could not be loaded."))));
+        var requests = A.Fake<IRequestService>();
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests, destinations, isLinked: false);
+
+        await viewModel.SaveAsync();
+
+        Assert.That(viewModel.SaveError, Is.EqualTo("The collections could not be loaded."));
+        A.CallTo(() => requests.AddCopyAsync(A<Guid>._, A<RequestDefinition>._, A<CancellationToken>._)).MustNotHaveHappened();
+        Assert.That(viewModel.IsLinked, Is.False);
+    }
+
+    [Test]
+    public async Task SaveOfUnsavedTabStaysUnlinkedWhenCreateFails()
+    {
+        var destinations = A.Fake<IDestinationPicker>();
+        A.CallTo(() => destinations.PickAsync(A<string>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<SaveDestination?>.Success(new SaveDestination(Guid.NewGuid(), Guid.NewGuid(), "Login"))));
+        var requests = A.Fake<IRequestService>();
+        A.CallTo(() => requests.AddCopyAsync(A<Guid>._, A<RequestDefinition>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<Guid>.Failure(new Error(ErrorCategory.Storage, "The request could not be saved."))));
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests, destinations, isLinked: false);
+
+        await viewModel.SaveAsync();
+
+        Assert.That(viewModel.SaveError, Is.EqualTo("The request could not be saved."));
+        Assert.That(viewModel.IsLinked, Is.False);
+        Assert.That(viewModel.IsDirty, Is.True);
+    }
+
+    private static RequestTabViewModel CreateViewModel(
+        IRequestSender sender,
+        IRequestService? requests = null,
+        IDestinationPicker? destinations = null,
+        bool isLinked = true)
+    {
+        return new RequestTabViewModel(
+            sender,
+            requests ?? A.Fake<IRequestService>(),
+            destinations ?? A.Fake<IDestinationPicker>(),
+            CreateDefinition(),
+            isLinked);
     }
 
     private static RequestDefinition CreateDefinition()

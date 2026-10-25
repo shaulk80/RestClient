@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using RestClient.Application.Abstractions;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
@@ -10,36 +11,54 @@ public sealed class RequestSender : IRequestSender
 {
     private readonly RequestBuilder _builder;
     private readonly IHttpExecutor _executor;
+    private readonly IHistoryService _history;
+    private readonly IClock _clock;
 
-    public RequestSender(RequestBuilder builder, IHttpExecutor executor)
+    public RequestSender(RequestBuilder builder, IHttpExecutor executor, IHistoryService history, IClock clock)
     {
         _builder = builder;
         _executor = executor;
+        _history = history;
+        _clock = clock;
     }
 
+    // Every attempt is recorded, including validation failures, network failures and cancellations.
+    // A failed history write does not change the result of the send. The history repository logs it.
     public async Task<Result<ResponseSnapshot>> SendAsync(
         RequestDefinition definition,
         IReadOnlyDictionary<string, string> variables,
         CancellationToken cancellationToken)
     {
+        var sentAt = _clock.UtcNow;
+        var timer = Stopwatch.StartNew();
+        var prepared = Prepare(definition, variables);
+        var result = prepared.IsSuccess
+            ? await _executor.SendAsync(prepared.Value!, cancellationToken)
+            : Result<ResponseSnapshot>.Failure(prepared.Error!);
+
+        var resolvedUrl = prepared.Value?.Url ?? definition.Url;
+        var attempt = new RequestAttempt(definition, resolvedUrl, sentAt, timer.Elapsed.TotalMilliseconds, result);
+        await _history.RecordAsync(attempt, CancellationToken.None);
+        return result;
+    }
+
+    private Result<OutgoingRequest> Prepare(RequestDefinition definition, IReadOnlyDictionary<string, string> variables)
+    {
         var validation = RequestValidator.Validate(definition);
         if (!validation.IsSuccess)
         {
-            return Result<ResponseSnapshot>.Failure(validation.Error!);
+            return Result<OutgoingRequest>.Failure(validation.Error!);
         }
 
         var built = _builder.Build(definition, variables);
         if (!built.IsSuccess)
         {
-            return Result<ResponseSnapshot>.Failure(built.Error!);
+            return built;
         }
 
         var urlValidation = RequestValidator.ValidateUrl(built.Value!.Url);
-        if (!urlValidation.IsSuccess)
-        {
-            return Result<ResponseSnapshot>.Failure(urlValidation.Error!);
-        }
-
-        return await _executor.SendAsync(built.Value, cancellationToken);
+        return urlValidation.IsSuccess
+            ? built
+            : Result<OutgoingRequest>.Failure(urlValidation.Error!);
     }
 }

@@ -16,6 +16,7 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel viewModel)
         {
             await viewModel.Sidebar.ReloadAsync();
+            await viewModel.History.ReloadAsync();
         }
     }
 }

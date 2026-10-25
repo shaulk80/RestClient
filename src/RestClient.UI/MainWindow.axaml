@@ -10,9 +10,14 @@
         MinWidth="640"
         MinHeight="400">
   <Grid ColumnDefinitions="260,*" RowDefinitions="*,Auto">
-    <views:CollectionsTreeView Grid.Column="0"
-                               Grid.Row="0"
-                               DataContext="{Binding Sidebar}" />
+    <TabControl Grid.Column="0" Grid.Row="0">
+      <TabItem Header="Collections">
+        <views:CollectionsTreeView DataContext="{Binding Sidebar}" />
+      </TabItem>
+      <TabItem Header="History">
+        <views:HistoryListView DataContext="{Binding History}" />
+      </TabItem>
+    </TabControl>
     <TabControl Grid.Column="1"
                 Grid.Row="0"
                 ItemsSource="{Binding Tabs}"

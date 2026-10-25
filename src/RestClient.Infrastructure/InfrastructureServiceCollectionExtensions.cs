@@ -31,11 +31,13 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<MigrationSetBuilder>();
         services.AddSingleton<SqliteMigrator>();
         services.AddSingleton<ICollectionRepository, SqliteCollectionRepository>();
+        services.AddSingleton<IHistoryRepository, SqliteHistoryRepository>();
 
         services.AddSingleton(options);
         services.AddSingleton(new HttpTransportOptions(FollowRedirects: true, MaxRedirects: 10));
         services.AddSingleton<ResponseBodyReader>();
         services.AddSingleton<IHttpExecutor, HttpRequestExecutor>();
+        services.AddSingleton<IBodyFileStore, BodyFileStore>();
 
         return services;
     }

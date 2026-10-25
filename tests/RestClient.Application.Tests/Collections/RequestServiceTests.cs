@@ -59,6 +59,37 @@ public class RequestServiceTests
     }
 
     [Test]
+    public async Task AddCopyAddsIndependentRequestWithUniqueName()
+    {
+        var source = _login with { Headers = [new KeyValueEntry("Accept", "application/json", true)] };
+
+        var result = await _service.AddCopyAsync(_root.Id, source, CancellationToken.None);
+
+        var copy = FolderTree.FindRequest(_store.Collections[0].Root, result.Value!);
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(copy?.Id, Is.Not.EqualTo(_login.Id));
+        Assert.That(copy?.Name, Is.EqualTo("Login 2"));
+        Assert.That(copy?.Headers, Is.EqualTo(source.Headers));
+    }
+
+    [Test]
+    public async Task AddCopyNamesRequestWithoutNameAsRestored()
+    {
+        var result = await _service.AddCopyAsync(_root.Id, Fixtures.Request(string.Empty), CancellationToken.None);
+
+        var copy = FolderTree.FindRequest(_store.Collections[0].Root, result.Value!);
+        Assert.That(copy?.Name, Is.EqualTo("Restored request"));
+    }
+
+    [Test]
+    public async Task AddCopyReturnsNotFoundForMissingFolder()
+    {
+        var result = await _service.AddCopyAsync(Guid.NewGuid(), _login, CancellationToken.None);
+
+        Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.NotFound));
+    }
+
+    [Test]
     public async Task UpdateAppliesChangeToStoredRequest()
     {
         var result = await _service.UpdateAsync(_login.Id, request => request with { Url = "https://example.com/login" }, CancellationToken.None);

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
+using RestClient.Application.History;
 using RestClient.Application.Requests;
 
 namespace RestClient.Application;
@@ -16,6 +17,9 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IFolderService, FolderService>();
         services.AddSingleton<IRequestService, RequestService>();
         services.AddSingleton<ICollectionTreeService, CollectionTreeService>();
+        services.AddSingleton(RetentionPolicy.Default);
+        services.AddSingleton<HistoryRetention>();
+        services.AddSingleton<IHistoryService, HistoryService>();
 
         return services;
     }

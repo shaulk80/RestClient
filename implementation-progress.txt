@@ -2,12 +2,12 @@ REST CLIENT - IMPLEMENTATION PROGRESS
 =====================================
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-24
+Updated:   2026-10-25
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M2 Collections closed (2026-10-24). Its open items moved to M5, M6 and M7.
-NEXT STAGE:    M3 History (depends on M2, closed).
+CURRENT STAGE: none. M3 History closed (2026-10-25).
+NEXT STAGE:    M4 Body Editor (depends on M1).
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -19,6 +19,12 @@ PLAN CHANGE (2026-10-23)
     Linux is deferred to a later version. CI and scripts/build.ps1 cover Windows only:
     - build.ps1 publishes win-x64 by default. -Runtimes win-x64,linux-x64 re-enables Linux.
     - CI is GitHub Actions (.github/workflows/ci.yml), Windows job only. No Linux job yet.
+
+
+PLAN CHANGE (2026-10-25)
+    Tabs may be unsaved. An unsaved tab is not linked to a collection. Save asks for a folder and a name,
+    creates the request there, and links the tab. This replaces the M2 rule that every tab links a saved
+    request (M2 task 5, and the M2 deviation below). Restore from history opens an unsaved tab.
 
 
 MILESTONES
@@ -102,7 +108,7 @@ MILESTONES
     - Spill threshold is 1 MB, not 5 MB (decided 2026-10-24). Bodies up to 1 MB are kept in
       memory in full. Larger bodies are written to a file, and the preview is their first 1 MB.
       Plan section 9 and architecture plan Q9 are updated.
-    - Spilled bodies go to data/temp/ and are not cleaned up. Deferred to M3.
+    - Spilled bodies go to data/temp/ and are not cleaned up. Cleanup moved to M3 and done there.
     - UI has a Content-Type box, which the plan does not list. Headers and query params are
       supported by RequestBuilder but have no editor in M1.
     - RequestSender does not record history (M3).
@@ -163,14 +169,56 @@ MILESTONES
     - Domain project suppresses CA1711 for the type name Collection (plan-mandated).
     - Editor preserves what it does not show yet on save and send: headers, query params,
       form and multipart bodies, and auth. Their editors come in M4 and M5.
-    - Every request lives in a collection. There are no unsaved scratch tabs, and the app
-      starts with no tab open.
+    - Superseded 2026-10-25 (see PLAN CHANGE): tabs may be unsaved. The app still starts with no
+      tab open.
     - Headless UI tests (Avalonia.Headless) cover the context menu and expander clicks. They
       do not drive the OS drag loop, so they cannot show drag-related expander problems.
 
-[ ] M3 History
+[x] M3 History
     Depends on: M2
     Goal: every send is recorded. History can be searched and restored.
+    Closed 2026-10-25. Restore and the unsaved-tab rule were changed on this day (see PLAN CHANGE).
+
+    Tasks:
+    [x] 1.  Domain: HistoryEntry
+    [x] 2.  Application: HistoryService, HistoryRetention, RetentionPolicy, IHistoryRepository,
+            IBodyFileStore. RequestSender records every attempt, including failures and cancellations
+    [x] 3.  Infrastructure: migration 0003 (table, indexes on sent_at and resolved_url), SqliteHistoryRepository,
+            HistoryEntryDto and mapper, BodyFileStore. Retention runs after each insert
+    [x] 4.  UI: HistoryListViewModel and HistoryItemViewModel, History tab in the sidebar, search by URL
+            text and method, restore action
+
+    Definition of Done:
+    [x] All tests pass (Domain 83, Application 100, Infrastructure 52, UI 65, Integration 11)
+    [x] Coverage gate holds (Domain 90.74%, Application 95.57%)
+    [x] Solution builds with no warnings (warnings as errors on)
+    [x] scripts/build.ps1 completes: license check, tests, win-x64 publish, smoke test
+    [x] Manual: send ten requests, search one, restore it, and confirm the restored request matches the original (confirmed by user, 2026-10-25)
+    [x] Manual: the history list refreshes after a send, and a restored request opens in a new tab (confirmed by user, 2026-10-25)
+    [x] Manual, re-check after the 2026-10-25 change: restore opens an unsaved tab and writes nothing to the tree. (confirmed by user, 2026-10-25)
+        Save asks for a folder and a name, then links the tab to the new request.
+
+    Deviations from plan and open points:
+    - HistoryEntry has a BodyFilePath field. The plan's field list does not have one. It lets retention delete
+      the spilled body files of expired entries, which is the cleanup deferred from M1.
+    - The request snapshot reuses RequestDto and RequestJson. No separate RequestSnapshotDto was added,
+      because the shape is the same.
+    - Restore opens an unsaved tab with the snapshot, under a new identifier. Nothing is written to a
+      collection until the user saves (PLAN CHANGE 2026-10-25). The first version saved a copy at once.
+      That made every restore add a request to the tree.
+    - Validation failures are recorded too. Their URL is the URL as typed, because no URL was built.
+    - A history write that fails does not fail the send. The repository logs the error. The UI does not show it.
+    - History writes are serialized in HistoryService. Retention loads all entries on each insert. That is
+      fine for up to 1000 entries. Revisit if it gets slow.
+    - Search is a case-insensitive URL substring (ASCII case folding) plus an exact method. The method
+      list starts with "Any method".
+    - Spilled bodies are deleted only when their entry is removed, and only inside data\temp. A path
+      outside that folder is refused with a Security error.
+    - Domain line coverage fell to 90.74% (from 95.61% at M2). The new HistoryEntry record has no
+      logic, but its generated members count as lines. Still above the gate.
+    - Sent time is stored as Unix milliseconds.
+    - Open: saving into a folder where the name is taken gives "Login 2" with no warning. The save dialog
+      does not check names. Carried to M7 as a polish item.
 
 [ ] M4 Body Editor and Syntax Highlighting
     Depends on: M1
@@ -189,6 +237,8 @@ MILESTONES
     Carried from M2:
     - Tab strip close button.
     - Ctrl+S saves the active tab.
+    - Closing an unsaved tab (not linked to a collection) with edits asks to save or discard. M3 added
+      unsaved tabs and nothing closes them yet.
 
 [ ] M7 Polish and Release
     Depends on: all others
@@ -198,6 +248,8 @@ MILESTONES
     - Escape closes the tree context menu (today only a click elsewhere closes it).
     - Decide whether a left-click on a row under an open menu should activate the menu item
       (today it does, which is standard behavior).
+    - Save dialog (M3): warn when the chosen name is already taken in the folder. Today the request is
+      saved as "Login 2" without a message.
     - Infrastructure test for delete cascade: after deleting a folder or collection and saving,
       its requests are gone after reload (plan M2 test list; the application tests cover the
       in-memory delete only).
@@ -245,5 +297,6 @@ KNOWN ISSUES AND NOTES
 - Startup errors (data folder cannot be created, migration fails, or an unhandled exception
   before the window opens) are written to stderr only. The Windows build is a GUI app with
   no console, so the user sees nothing. Deferred to M7: show a visible error dialog.
-- Spilled bodies in data/temp/ are never deleted. Deferred to M3 (history owns the files).
+- Spilled bodies in data/temp/ are deleted when their history entry is removed by retention (M3).
+  Bodies of responses whose history entry is still kept stay on disk until then.
 - Integration and UI test projects contain M1 tests. Headless UI smoke tests come with M6.

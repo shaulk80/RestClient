@@ -7,6 +7,7 @@ namespace RestClient.Application.Collections;
 public sealed class RequestService : IRequestService
 {
     private const string NewRequestName = "New request";
+    private const string RestoredRequestName = "Restored request";
     private const string CopySuffix = " copy";
 
     private readonly CollectionWorkspace _workspace;
@@ -68,7 +69,35 @@ public sealed class RequestService : IRequestService
         return _workspace.UpdateAsync(collections => Delete(collections, requestId), cancellationToken);
     }
 
+    public async Task<Result<Guid>> AddCopyAsync(Guid folderId, RequestDefinition source, CancellationToken cancellationToken)
+    {
+        var copyId = _idGenerator.NewId();
+        var saved = await _workspace.UpdateAsync(collections => AddCopy(collections, folderId, source, copyId), cancellationToken);
+        return saved.IsSuccess ? Result<Guid>.Success(copyId) : Result<Guid>.Failure(saved.Error!);
+    }
+
     private static Result<IReadOnlyList<Collection>> Create(IReadOnlyList<Collection> collections, Guid folderId, Guid requestId)
+    {
+        var request = new RequestDefinition
+        {
+            Id = requestId,
+            Name = NewRequestName,
+        };
+        return Insert(collections, folderId, request);
+    }
+
+    private static Result<IReadOnlyList<Collection>> AddCopy(
+        IReadOnlyList<Collection> collections,
+        Guid folderId,
+        RequestDefinition source,
+        Guid copyId)
+    {
+        var name = string.IsNullOrWhiteSpace(source.Name) ? RestoredRequestName : source.Name;
+        return Insert(collections, folderId, source with { Id = copyId, Name = name });
+    }
+
+    // Inserts the request as the last child of the folder. Its name is made unique among the folder's children.
+    private static Result<IReadOnlyList<Collection>> Insert(IReadOnlyList<Collection> collections, Guid folderId, RequestDefinition request)
     {
         var collection = CollectionSet.FindByFolder(collections, folderId);
         if (collection is null)
@@ -77,12 +106,8 @@ public sealed class RequestService : IRequestService
         }
 
         var parent = FolderTree.FindFolder(collection.Root, folderId)!;
-        var request = new RequestDefinition
-        {
-            Id = requestId,
-            Name = ChildNameRules.NextAvailableName(NewRequestName, parent),
-        };
-        var root = FolderTree.InsertRequest(collection.Root, folderId, request, null);
+        var unique = request with { Name = ChildNameRules.NextAvailableName(request.Name, parent) };
+        var root = FolderTree.InsertRequest(collection.Root, folderId, unique, null);
         return Result<IReadOnlyList<Collection>>.Success(ReplaceRoot(collections, collection, root));
     }
 
