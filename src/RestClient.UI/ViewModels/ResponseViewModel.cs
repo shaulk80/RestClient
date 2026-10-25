@@ -1,10 +1,15 @@
+using System.Text;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
+using RestClient.UI.Services;
 
 namespace RestClient.UI.ViewModels;
 
 public sealed class ResponseViewModel : ViewModelBase
 {
+    private const string ContentTypeHeader = "Content-Type";
+
+    private readonly BodyFormatting _formatting;
     private string _statusText = string.Empty;
     private string _timingText = string.Empty;
     private string _sizeText = string.Empty;
@@ -12,6 +17,15 @@ public sealed class ResponseViewModel : ViewModelBase
     private string _bodyNote = string.Empty;
     private string _errorMessage = string.Empty;
     private IReadOnlyList<KeyValueEntry> _headers = [];
+    private EditorLanguage _language = EditorLanguage.PlainText;
+    private string _rawBody = string.Empty;
+    private string? _prettyBody;
+    private bool _isPrettyView;
+
+    public ResponseViewModel(BodyFormatting formatting)
+    {
+        _formatting = formatting;
+    }
 
     public string StatusText
     {
@@ -37,10 +51,38 @@ public sealed class ResponseViewModel : ViewModelBase
         private set => SetProperty(ref _headers, value);
     }
 
+    // Pretty and raw are both shown with the same highlighting. Pretty is the default when the body can be formatted.
     public string BodyText
     {
         get => _bodyText;
         private set => SetProperty(ref _bodyText, value);
+    }
+
+    public EditorLanguage Language
+    {
+        get => _language;
+        private set => SetProperty(ref _language, value);
+    }
+
+    public bool CanPrettyPrint => _prettyBody is not null;
+
+    public bool IsPrettyView
+    {
+        get => _isPrettyView;
+        set
+        {
+            if (SetProperty(ref _isPrettyView, value))
+            {
+                RaisePropertyChanged(nameof(IsRawView));
+                UpdateBodyText();
+            }
+        }
+    }
+
+    public bool IsRawView
+    {
+        get => !IsPrettyView;
+        set => IsPrettyView = !value;
     }
 
     public string BodyNote
@@ -62,8 +104,13 @@ public sealed class ResponseViewModel : ViewModelBase
         TimingText = FormatTiming(snapshot.Timing);
         SizeText = $"{snapshot.BodySizeBytes} bytes";
         Headers = snapshot.Headers;
-        BodyText = snapshot.BodyPreview;
-        BodyNote = FormatBodyNote(snapshot);
+        _rawBody = snapshot.BodyPreview;
+        Language = EditorLanguageMapper.Map(FindContentType(snapshot.Headers), Encoding.UTF8.GetByteCount(_rawBody));
+        var pretty = PrettyPrint(Language, _rawBody);
+        _prettyBody = pretty.Value;
+        IsPrettyView = CanPrettyPrint;
+        BodyNote = JoinNotes(FormatBodyNote(snapshot), pretty.Note);
+        UpdateBodyText();
     }
 
     public void ShowError(string message)
@@ -78,9 +125,35 @@ public sealed class ResponseViewModel : ViewModelBase
         TimingText = string.Empty;
         SizeText = string.Empty;
         Headers = [];
-        BodyText = string.Empty;
+        _rawBody = string.Empty;
+        _prettyBody = null;
+        Language = EditorLanguage.PlainText;
         BodyNote = string.Empty;
         ErrorMessage = string.Empty;
+        UpdateBodyText();
+    }
+
+    private void UpdateBodyText()
+    {
+        BodyText = IsPrettyView && _prettyBody is not null ? _prettyBody : _rawBody;
+    }
+
+    private PrettyResult PrettyPrint(EditorLanguage language, string body)
+    {
+        if (!BodyFormatting.CanFormat(language))
+        {
+            return new PrettyResult(null, null);
+        }
+
+        var result = _formatting.Format(language, body);
+        return result.IsSuccess
+            ? new PrettyResult(result.Value, null)
+            : new PrettyResult(null, $"Pretty print failed: {ErrorMessageFormatter.Format(result.Error!)}");
+    }
+
+    private static string? FindContentType(IReadOnlyList<KeyValueEntry> headers)
+    {
+        return headers.FirstOrDefault(header => string.Equals(header.Key, ContentTypeHeader, StringComparison.OrdinalIgnoreCase))?.Value;
     }
 
     private static string FormatTiming(ResponseTiming timing)
@@ -104,8 +177,15 @@ public sealed class ResponseViewModel : ViewModelBase
         return string.Empty;
     }
 
+    private static string JoinNotes(string first, string? second)
+    {
+        return string.IsNullOrEmpty(second) ? first : $"{first} {second}".Trim();
+    }
+
     private static string Milliseconds(double value)
     {
         return $"{Math.Round(value)} ms";
     }
+
+    private sealed record PrettyResult(string? Value, string? Note);
 }

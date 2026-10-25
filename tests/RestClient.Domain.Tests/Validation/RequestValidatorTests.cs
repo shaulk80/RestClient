@@ -69,6 +69,9 @@ public class RequestValidatorTests
             CreateDefinition() with { Headers = [new KeyValueEntry("", "x", true)] },
             CreateDefinition() with { Body = new MultipartBody([new MultipartPart("both", "value", "C:\\a.txt")]) },
             CreateDefinition() with { Body = new MultipartBody([new MultipartPart("neither", null, null)]) },
+            CreateDefinition() with { Body = new MultipartBody([new MultipartPart(" ", "value", null)]) },
+            CreateDefinition() with { Body = new MultipartBody([new MultipartPart("file", null, " ")]) },
+            CreateDefinition() with { Body = new FormUrlEncodedBody([new KeyValueEntry("", "x", true)]) },
         ];
     }
 

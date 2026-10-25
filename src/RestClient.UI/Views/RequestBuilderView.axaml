@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:RestClient.UI.ViewModels"
+             xmlns:views="using:RestClient.UI.Views"
              x:Class="RestClient.UI.Views.RequestBuilderView"
              x:DataType="vm:RequestTabViewModel">
   <StackPanel Margin="12" Spacing="8">
@@ -25,12 +26,6 @@
     <TextBlock Text="{Binding SaveError}"
                Foreground="Red"
                TextWrapping="Wrap" />
-    <TextBox Text="{Binding ContentType}"
-             PlaceholderText="Content-Type, for example application/json" />
-    <TextBox Text="{Binding Body}"
-             MinHeight="120"
-             AcceptsReturn="True"
-             TextWrapping="Wrap"
-             PlaceholderText="Request body" />
+    <views:BodyEditorView DataContext="{Binding BodyEditor}" />
   </StackPanel>
 </UserControl>

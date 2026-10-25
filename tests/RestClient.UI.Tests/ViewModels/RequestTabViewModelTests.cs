@@ -40,14 +40,25 @@ public class RequestTabViewModelTests
         var viewModel = CreateViewModel(sender);
         viewModel.Method = RequestMethod.Post;
         viewModel.Url = " https://example.com/a ";
-        viewModel.ContentType = "application/json";
-        viewModel.Body = "{}";
+        viewModel.BodyEditor.SelectedType = RawChoice(viewModel);
+        viewModel.BodyEditor.ContentType = "application/json";
+        viewModel.BodyEditor.Text = "{}";
 
         await viewModel.SendAsync();
 
         Assert.That(sent?.Method, Is.EqualTo(RequestMethod.Post));
         Assert.That(sent?.Url, Is.EqualTo("https://example.com/a"));
         Assert.That(sent?.Body, Is.EqualTo(new RawBody("application/json", "{}")));
+    }
+
+    [Test]
+    public void EditingBodyMarksTabDirty()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>());
+
+        viewModel.BodyEditor.Text = "{}";
+
+        Assert.That(viewModel.IsDirty, Is.True);
     }
 
     [TestCase(ErrorCategory.Network)]
@@ -154,21 +165,21 @@ public class RequestTabViewModelTests
     }
 
     [Test]
-    public async Task SaveKeepsBodyTheEditorDoesNotShowWhenBodyWasNotEdited()
+    public async Task SaveKeepsStoredFormBodyWhenOnlyUrlIsEdited()
     {
         var requests = A.Fake<IRequestService>();
         Func<RequestDefinition, RequestDefinition>? applied = null;
         A.CallTo(() => requests.UpdateAsync(A<Guid>._, A<Func<RequestDefinition, RequestDefinition>>._, A<CancellationToken>._))
             .Invokes((Guid _, Func<RequestDefinition, RequestDefinition> change, CancellationToken _) => applied = change)
             .Returns(Task.FromResult(Result.Success()));
-        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests);
+        var formBody = new FormUrlEncodedBody([new KeyValueEntry("user", "me", true)]);
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests, definition: CreateDefinition() with { Body = formBody });
         viewModel.Url = "https://example.com/other";
 
         await viewModel.SaveAsync();
 
-        var formBody = new FormUrlEncodedBody([new KeyValueEntry("user", "me", true)]);
         var stored = applied!(CreateDefinition() with { Body = formBody });
-        Assert.That(stored.Body, Is.EqualTo(formBody));
+        Assert.That((stored.Body as FormUrlEncodedBody)?.Fields, Is.EqualTo(formBody.Fields));
     }
 
     [Test]
@@ -297,17 +308,21 @@ public class RequestTabViewModelTests
         Assert.That(viewModel.IsDirty, Is.True);
     }
 
+    private static BodyTypeChoice RawChoice(RequestTabViewModel viewModel)
+    {
+        return viewModel.BodyEditor.Types.Single(choice => choice.Type == BodyType.Raw);
+    }
+
     private static RequestTabViewModel CreateViewModel(
         IRequestSender sender,
         IRequestService? requests = null,
         IDestinationPicker? destinations = null,
-        bool isLinked = true)
+        bool isLinked = true,
+        RequestDefinition? definition = null)
     {
         return new RequestTabViewModel(
-            sender,
-            requests ?? A.Fake<IRequestService>(),
-            destinations ?? A.Fake<IDestinationPicker>(),
-            CreateDefinition(),
+            RequestTabServicesFactory.Create(sender, requests ?? A.Fake<IRequestService>(), destinations ?? A.Fake<IDestinationPicker>()),
+            definition ?? CreateDefinition(),
             isLinked);
     }
 

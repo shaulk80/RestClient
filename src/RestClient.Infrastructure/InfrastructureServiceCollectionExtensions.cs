@@ -38,6 +38,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ResponseBodyReader>();
         services.AddSingleton<IHttpExecutor, HttpRequestExecutor>();
         services.AddSingleton<IBodyFileStore, BodyFileStore>();
+        services.AddSingleton<IFileReader, LocalFileReader>();
 
         return services;
     }

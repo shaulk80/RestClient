@@ -1,0 +1,90 @@
+using Avalonia;
+using AvaloniaEdit;
+using AvaloniaEdit.TextMate;
+using RestClient.UI.Services;
+using TextMateInstallation = AvaloniaEdit.TextMate.TextMate.Installation;
+using TextMateSharp.Grammars;
+using TextMateSharp.Themes;
+
+namespace RestClient.UI.Controls;
+
+// A read-write or read-only text editor with syntax highlighting for JSON and XML.
+// Plain text has no grammar, so the highlighting installation is removed.
+public sealed class CodeEditor : TextEditor
+{
+    public static readonly StyledProperty<EditorLanguage> LanguageProperty =
+        AvaloniaProperty.Register<CodeEditor, EditorLanguage>(nameof(Language));
+
+    // TextEditor.Text is not a styled property, so bindings go through EditorText and are copied both ways.
+    public static readonly StyledProperty<string> EditorTextProperty =
+        AvaloniaProperty.Register<CodeEditor, string>(
+            nameof(EditorText),
+            defaultValue: string.Empty,
+            defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+
+    private TextMateInstallation? _installation;
+
+    static CodeEditor()
+    {
+        LanguageProperty.Changed.AddClassHandler<CodeEditor>((editor, _) => editor.ApplyLanguage());
+        EditorTextProperty.Changed.AddClassHandler<CodeEditor>((editor, change) => editor.PushEditorText(change.GetNewValue<string>()));
+    }
+
+    public CodeEditor()
+    {
+        TextChanged += OnTextChanged;
+    }
+
+    // Themes are looked up by exact type. Without this override, the TextEditor theme (and its template) is not applied.
+    protected override Type StyleKeyOverride => typeof(TextEditor);
+
+    public EditorLanguage Language
+    {
+        get => GetValue(LanguageProperty);
+        set => SetValue(LanguageProperty, value);
+    }
+
+    public string EditorText
+    {
+        get => GetValue(EditorTextProperty);
+        set => SetValue(EditorTextProperty, value);
+    }
+
+    private void OnTextChanged(object? sender, EventArgs e)
+    {
+        SetCurrentValue(EditorTextProperty, Text ?? string.Empty);
+    }
+
+    private void PushEditorText(string text)
+    {
+        if (Text != text)
+        {
+            Text = text;
+        }
+    }
+
+    private void ApplyLanguage()
+    {
+        _installation?.Dispose();
+        _installation = null;
+        if (Language == EditorLanguage.PlainText)
+        {
+            return;
+        }
+
+        var registry = new RegistryOptions(ThemeFor(ActualThemeVariant));
+        var installation = this.InstallTextMate(registry);
+        installation.SetGrammar(registry.GetScopeByLanguageId(LanguageId(Language)));
+        _installation = installation;
+    }
+
+    private static ThemeName ThemeFor(Avalonia.Styling.ThemeVariant variant)
+    {
+        return variant == Avalonia.Styling.ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus;
+    }
+
+    private static string LanguageId(EditorLanguage language)
+    {
+        return language == EditorLanguage.Json ? "json" : "xml";
+    }
+}

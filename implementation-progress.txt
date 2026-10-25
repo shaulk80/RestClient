@@ -6,8 +6,8 @@ Updated:   2026-10-25
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: none. M3 History closed (2026-10-25).
-NEXT STAGE:    M4 Body Editor (depends on M1).
+CURRENT STAGE: none. M4 Body Editor closed 2026-10-25 on branch m4. Not committed yet.
+NEXT STAGE:    Commit M4 (on instruction). M5 Environments, Variables, Secrets, Auth (needs M1 and M2).
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -220,9 +220,58 @@ MILESTONES
     - Open: saving into a folder where the name is taken gives "Login 2" with no warning. The save dialog
       does not check names. Carried to M7 as a polish item.
 
-[ ] M4 Body Editor and Syntax Highlighting
+[x] M4 Body Editor and Syntax Highlighting
     Depends on: M1
     Goal: comfortable body editing with highlighting and formatting.
+    Started 2026-10-25 on branch m4 (from m3). Closed 2026-10-25. Not committed yet.
+
+    Tasks:
+    [x] 1.  Application: IBodyFormatter, BodyFormatter (base), JsonBodyFormatter, XmlBodyFormatter
+    [x] 2.  UI: BodyEditorViewModel and BodyEditorView with AvaloniaEdit (CodeEditor control),
+            EditorLanguageMapper, Format button
+    [x] 3.  Multipart body editor (MultipartEditorViewModel, rows with file picker through
+            IFilePickerService). Form-urlencoded body uses KeyValueEditorViewModel
+    [x] 4.  Response body highlighted, read-only, with pretty and raw toggles
+    [x] 5.  Body type selector: none, raw, form-urlencoded, multipart
+    [x] 6.  Large bodies (over 1 MB): plain text
+
+    Definition of Done:
+    [x] All tests pass (Domain 86, Application 117, Infrastructure 54, UI 115, Integration 11)
+    [x] Coverage gate holds (Domain 91.01%, Application 95.83%)
+    [x] Solution builds with no warnings (warnings as errors on)
+    [x] scripts/build.ps1 completes: license check (89 packages), tests, win-x64 publish, smoke test
+    [x] Manual: edit a 2 MB JSON body and confirm the editor stays responsive. Failed twice, then passed (confirmed by user).
+        1st run: Format was disabled above 1 MB. Fixed: Format depends on the content type only.
+        2nd run: after Format the app froze for about a minute (confirmed by user). Cause: the body editor
+        sat in a StackPanel, which gives its child unlimited height, so AvaloniaEdit laid out all 110k lines
+        of the formatted text. Measured headless: 10.2 s after Format. Fixed: the body editor has a fixed
+        height (320), so only the visible lines are laid out. Measured: 4 ms after Format.
+        Known limit, not fixed: pasting a 2 MB single line takes about 5 s, because AvaloniaEdit lays out
+        the whole line (same with word wrap off). Formatting the body first avoids the long line.
+        Re-check in the running app after restart: paste, Format, then edit.
+    [x] Manual: format a malformed JSON body and confirm the error message (confirmed by user, 2026-10-25)
+
+    Deviations from plan and open points:
+    - Form and multipart bodies are built by RequestBuilder now (M1 returned a Validation error for them).
+      RequestBuilder.Build is BuildAsync, because file parts are read through IFileReader (plan 5.1).
+    - Multipart file parts are read fully into memory before the send. A large upload uses memory equal
+      to the file size. Streaming is not in M4.
+    - Every file part is sent as application/octet-stream. No MIME mapping by extension.
+    - The multipart boundary comes from IIdGenerator ("RestClientBoundary" plus 32 hex digits).
+    - Formatting empty text gives a Validation error ("There is no body to format."). Parser messages
+      from System.Text.Json and System.Xml are shown as the error. Parse errors are not logged: they are
+      user input problems, and the Application layer has no logger.
+    - Syntax highlighting uses AvaloniaEdit.TextMate 12.0.0 with TextMateSharp 2.0.3 (both MIT), for JSON
+      and XML. The theme follows the theme variant when the language is set. A live theme switch is not
+      handled.
+    - Form field names and multipart part names must not be empty, and a file part needs a path. A blank
+      row blocks the send until it is filled in or removed. This matches headers and query params.
+    - A response that is not valid JSON or XML shows the raw text with a note ("Pretty print failed: ...").
+      That covers truncated previews of large bodies.
+    - The saved body is the selected type only. Values for other types stay in the editor until the tab closes.
+    - Headers and query params still have no editor. That stays out of M4, as in M1.
+    - Records with list fields compare lists by reference, so tests compare Fields and Parts element by element.
+    - CodeEditor has a headless test (text sync and language switch). View-level headless smoke tests stay in M6.
 
 [ ] M5 Environments, Variables, Secrets, Auth
     Depends on: M1, M2

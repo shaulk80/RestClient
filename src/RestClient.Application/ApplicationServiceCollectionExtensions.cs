@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RestClient.Application.Abstractions;
+using RestClient.Application.Bodies;
 using RestClient.Application.Collections;
 using RestClient.Application.History;
 using RestClient.Application.Requests;
@@ -10,7 +11,11 @@ public static class ApplicationServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddSingleton(new RequestBuilder(RequestBuilder.DefaultTimeout));
+        services.AddSingleton<MultipartBodyEncoder>();
+        services.AddSingleton<RequestBodyResolver>();
+        services.AddSingleton(provider => new RequestBuilder(
+            RequestBuilder.DefaultTimeout,
+            provider.GetRequiredService<RequestBodyResolver>()));
         services.AddSingleton<IRequestSender, RequestSender>();
         services.AddSingleton<CollectionWorkspace>();
         services.AddSingleton<ICollectionService, CollectionService>();
@@ -20,6 +25,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton(RetentionPolicy.Default);
         services.AddSingleton<HistoryRetention>();
         services.AddSingleton<IHistoryService, HistoryService>();
+        services.AddSingleton<JsonBodyFormatter>();
+        services.AddSingleton<XmlBodyFormatter>();
 
         return services;
     }

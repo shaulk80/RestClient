@@ -9,6 +9,9 @@ public static class UiServiceCollectionExtensions
     public static IServiceCollection AddUi(this IServiceCollection services)
     {
         services.AddSingleton<IDestinationPicker, SaveDestinationPicker>();
+        services.AddSingleton<IFilePickerService, StorageFilePickerService>();
+        services.AddSingleton<BodyFormatting>();
+        services.AddSingleton<RequestTabServices>();
         services.AddSingleton<CollectionsTreeViewModel>();
         services.AddSingleton<HistoryListViewModel>();
         services.AddSingleton<MainWindowViewModel>();

@@ -1,6 +1,4 @@
-using System.Text;
 using RestClient.Domain.Auth;
-using RestClient.Domain.Bodies;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -13,13 +11,18 @@ public sealed class RequestBuilder
     private const string ContentTypeHeader = "Content-Type";
 
     private readonly TimeSpan _timeout;
+    private readonly RequestBodyResolver _bodies;
 
-    public RequestBuilder(TimeSpan timeout)
+    public RequestBuilder(TimeSpan timeout, RequestBodyResolver bodies)
     {
         _timeout = timeout;
+        _bodies = bodies;
     }
 
-    public Result<OutgoingRequest> Build(RequestDefinition definition, IReadOnlyDictionary<string, string> variables)
+    public async Task<Result<OutgoingRequest>> BuildAsync(
+        RequestDefinition definition,
+        IReadOnlyDictionary<string, string> variables,
+        CancellationToken cancellationToken)
     {
         if (definition.Auth is not NoAuth)
         {
@@ -32,23 +35,23 @@ public sealed class RequestBuilder
             return Result<OutgoingRequest>.Failure(url.Error!);
         }
 
-        var headers = ResolveEntries(HeadersWithContentType(definition), variables);
+        var body = await _bodies.ResolveAsync(definition.Body, variables, cancellationToken);
+        if (!body.IsSuccess)
+        {
+            return Result<OutgoingRequest>.Failure(body.Error!);
+        }
+
+        var headers = KeyValueResolver.Resolve(definition.Headers, variables);
         if (!headers.IsSuccess)
         {
             return Result<OutgoingRequest>.Failure(headers.Error!);
         }
 
-        var content = ResolveBody(definition.Body, variables);
-        if (!content.IsSuccess)
-        {
-            return Result<OutgoingRequest>.Failure(content.Error!);
-        }
-
         return Result<OutgoingRequest>.Success(new OutgoingRequest(
             definition.Method,
             url.Value!,
-            headers.Value!,
-            content.Value,
+            WithContentType(headers.Value!, body.Value!.ContentType),
+            body.Value!.Content,
             _timeout));
     }
 
@@ -60,7 +63,7 @@ public sealed class RequestBuilder
             return baseUrl;
         }
 
-        var query = ResolveEntries(definition.QueryParams, variables);
+        var query = KeyValueResolver.Resolve(definition.QueryParams, variables);
         if (!query.IsSuccess)
         {
             return Result<string>.Failure(query.Error!);
@@ -69,72 +72,17 @@ public sealed class RequestBuilder
         return Result<string>.Success(AppendQuery(baseUrl.Value!, query.Value!));
     }
 
-    private static Result<IReadOnlyList<KeyValueEntry>> ResolveEntries(
-        IEnumerable<KeyValueEntry> entries,
-        IReadOnlyDictionary<string, string> variables)
+    // A body that sets its own content type replaces any Content-Type header the user wrote.
+    private static IReadOnlyList<KeyValueEntry> WithContentType(IReadOnlyList<KeyValueEntry> headers, string? contentType)
     {
-        var resolved = new List<KeyValueEntry>();
-        foreach (var entry in entries.Where(candidate => candidate.IsEnabled))
+        if (contentType is null)
         {
-            var resolvedEntry = ResolveEntry(entry, variables);
-            if (!resolvedEntry.IsSuccess)
-            {
-                return Result<IReadOnlyList<KeyValueEntry>>.Failure(resolvedEntry.Error!);
-            }
-
-            resolved.Add(resolvedEntry.Value!);
+            return headers;
         }
 
-        return Result<IReadOnlyList<KeyValueEntry>>.Success(resolved);
-    }
-
-    private static Result<KeyValueEntry> ResolveEntry(KeyValueEntry entry, IReadOnlyDictionary<string, string> variables)
-    {
-        var key = VariableResolver.Resolve(entry.Key, variables);
-        if (!key.IsSuccess)
-        {
-            return Result<KeyValueEntry>.Failure(key.Error!);
-        }
-
-        var value = VariableResolver.Resolve(entry.Value, variables);
-        if (!value.IsSuccess)
-        {
-            return Result<KeyValueEntry>.Failure(value.Error!);
-        }
-
-        return Result<KeyValueEntry>.Success(new KeyValueEntry(key.Value!, value.Value!, true));
-    }
-
-    private static Result<ReadOnlyMemory<byte>?> ResolveBody(BodyDefinition body, IReadOnlyDictionary<string, string> variables)
-    {
-        return body switch
-        {
-            NoBody => Result<ReadOnlyMemory<byte>?>.Success(null),
-            RawBody raw => ResolveRawBody(raw, variables),
-            _ => Result<ReadOnlyMemory<byte>?>.Failure(Unsupported("This body type is not supported yet.")),
-        };
-    }
-
-    private static Result<ReadOnlyMemory<byte>?> ResolveRawBody(RawBody raw, IReadOnlyDictionary<string, string> variables)
-    {
-        var text = VariableResolver.Resolve(raw.Text, variables);
-        if (!text.IsSuccess)
-        {
-            return Result<ReadOnlyMemory<byte>?>.Failure(text.Error!);
-        }
-
-        return Result<ReadOnlyMemory<byte>?>.Success(new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(text.Value!)));
-    }
-
-    private static IEnumerable<KeyValueEntry> HeadersWithContentType(RequestDefinition definition)
-    {
-        if (definition.Body is not RawBody { ContentType.Length: > 0 } raw)
-        {
-            return definition.Headers;
-        }
-
-        var otherHeaders = definition.Headers.Where(header => !string.Equals(header.Key, ContentTypeHeader, StringComparison.OrdinalIgnoreCase));
-        return otherHeaders.Append(new KeyValueEntry(ContentTypeHeader, raw.ContentType, true));
+        var others = headers.Where(header => !string.Equals(header.Key, ContentTypeHeader, StringComparison.OrdinalIgnoreCase)).ToList();
+        others.Add(new KeyValueEntry(ContentTypeHeader, contentType, true));
+        return others;
     }
 
     private static string AppendQuery(string url, IReadOnlyList<KeyValueEntry> query)
@@ -144,9 +92,8 @@ public sealed class RequestBuilder
             return url;
         }
 
-        var encoded = string.Join("&", query.Select(entry => $"{Uri.EscapeDataString(entry.Key)}={Uri.EscapeDataString(entry.Value)}"));
         var separator = url.Contains('?') ? "&" : "?";
-        return $"{url}{separator}{encoded}";
+        return $"{url}{separator}{KeyValueEncoder.Encode(query)}";
     }
 
     private static Error Unsupported(string message)

@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestClient.UI.ViewModels"
+             xmlns:controls="using:RestClient.UI.Controls"
+             xmlns:views="using:RestClient.UI.Views"
+             x:Class="RestClient.UI.Views.BodyEditorView"
+             x:DataType="vm:BodyEditorViewModel">
+  <StackPanel Spacing="8">
+    <ComboBox Width="220"
+              ItemsSource="{Binding Types}"
+              SelectedItem="{Binding SelectedType}">
+      <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:BodyTypeChoice">
+          <TextBlock Text="{Binding Label}" />
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+    <TextBlock Name="NoBodyHint"
+               Text="This request sends no body. Choose a body type to add one."
+               IsVisible="{Binding IsNone}"
+               FontStyle="Italic" />
+    <StackPanel IsVisible="{Binding IsRaw}" Spacing="8">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBox Grid.Column="0"
+                 Text="{Binding ContentType}"
+                 PlaceholderText="Content-Type, for example application/json" />
+        <Button Grid.Column="1"
+                Content="Format"
+                Command="{Binding FormatCommand}"
+                IsEnabled="{Binding CanFormat}" />
+      </Grid>
+      <controls:CodeEditor EditorText="{Binding Text}"
+                           Language="{Binding Language}"
+                           WordWrap="True"
+                           Height="320" />
+      <TextBlock Text="Highlighting is off for bodies over 1 MB."
+                 IsVisible="{Binding IsLargeBody}"
+                 FontStyle="Italic" />
+    </StackPanel>
+    <StackPanel IsVisible="{Binding IsFormUrlEncoded}">
+      <views:KeyValueEditorView DataContext="{Binding Form}" />
+    </StackPanel>
+    <StackPanel IsVisible="{Binding IsMultipart}">
+      <views:MultipartEditorView DataContext="{Binding Multipart}" />
+    </StackPanel>
+    <TextBlock Text="{Binding Message}"
+               Foreground="Red"
+               TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

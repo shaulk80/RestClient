@@ -31,7 +31,7 @@ public sealed class RequestSender : IRequestSender
     {
         var sentAt = _clock.UtcNow;
         var timer = Stopwatch.StartNew();
-        var prepared = Prepare(definition, variables);
+        var prepared = await PrepareAsync(definition, variables, cancellationToken);
         var result = prepared.IsSuccess
             ? await _executor.SendAsync(prepared.Value!, cancellationToken)
             : Result<ResponseSnapshot>.Failure(prepared.Error!);
@@ -42,7 +42,10 @@ public sealed class RequestSender : IRequestSender
         return result;
     }
 
-    private Result<OutgoingRequest> Prepare(RequestDefinition definition, IReadOnlyDictionary<string, string> variables)
+    private async Task<Result<OutgoingRequest>> PrepareAsync(
+        RequestDefinition definition,
+        IReadOnlyDictionary<string, string> variables,
+        CancellationToken cancellationToken)
     {
         var validation = RequestValidator.Validate(definition);
         if (!validation.IsSuccess)
@@ -50,7 +53,7 @@ public sealed class RequestSender : IRequestSender
             return Result<OutgoingRequest>.Failure(validation.Error!);
         }
 
-        var built = _builder.Build(definition, variables);
+        var built = await _builder.BuildAsync(definition, variables, cancellationToken);
         if (!built.IsSuccess)
         {
             return built;

@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestClient.UI.ViewModels"
+             x:Class="RestClient.UI.Views.MultipartEditorView"
+             x:DataType="vm:MultipartEditorViewModel">
+  <StackPanel Spacing="6">
+    <ItemsControl ItemsSource="{Binding Rows}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:MultipartRowViewModel">
+          <StackPanel Spacing="4" Margin="0,2">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+              <TextBox Grid.Column="0" Text="{Binding Name}" PlaceholderText="Name" />
+              <CheckBox Grid.Column="1" Content="File" IsChecked="{Binding IsFile}" />
+              <Button Grid.Column="2" Content="Remove" Command="{Binding RemoveCommand}" />
+            </Grid>
+            <TextBox IsVisible="{Binding !IsFile}" Text="{Binding Value}" PlaceholderText="Value" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" IsVisible="{Binding IsFile}">
+              <TextBox Grid.Column="0" Text="{Binding FilePath}" PlaceholderText="File path" />
+              <Button Grid.Column="1" Content="Browse..." Command="{Binding BrowseCommand}" />
+            </Grid>
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="Red"
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <Button HorizontalAlignment="Left" Content="Add part" Command="{Binding AddRowCommand}" />
+  </StackPanel>
+</UserControl>

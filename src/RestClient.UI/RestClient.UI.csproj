@@ -10,6 +10,8 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 

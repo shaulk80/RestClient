@@ -170,7 +170,7 @@ public class MainWindowViewModelTests
     {
         var sidebar = _fixtures.CreateSidebar();
         var history = new HistoryListViewModel(_historyService);
-        return new MainWindowViewModel(sidebar, history, sender, _fixtures.Requests, _destinations);
+        return new MainWindowViewModel(sidebar, history, RequestTabServicesFactory.Create(sender, _fixtures.Requests, _destinations));
     }
 
     private static RequestDefinition CreateUnsavedDefinition()

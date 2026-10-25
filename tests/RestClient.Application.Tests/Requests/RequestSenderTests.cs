@@ -148,7 +148,7 @@ public class RequestSenderTests
 
     private RequestSender CreateSender(IHttpExecutor executor)
     {
-        return new RequestSender(new RequestBuilder(RequestBuilder.DefaultTimeout), executor, _history, _clock);
+        return new RequestSender(RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout), executor, _history, _clock);
     }
 
     private static RequestDefinition CreateDefinition(string url)

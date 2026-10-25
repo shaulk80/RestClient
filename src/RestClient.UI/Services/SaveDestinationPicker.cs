@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using RestClient.Application.Collections;
 using RestClient.Domain.Results;
 using RestClient.UI.ViewModels;
@@ -30,7 +29,7 @@ public sealed class SaveDestinationPicker : IDestinationPicker
             return Result<SaveDestination?>.Failure(ResultErrors.Validation("Create a collection first, then save into it."));
         }
 
-        if (MainOwner() is not { } owner)
+        if (MainWindowLocator.Find() is not { } owner)
         {
             return Result<SaveDestination?>.Failure(new Error(ErrorCategory.Unexpected, "The save dialog has no window to attach to."));
         }
@@ -41,10 +40,5 @@ public sealed class SaveDestinationPicker : IDestinationPicker
         };
         var destination = await window.ShowDialog<SaveDestination?>(owner);
         return Result<SaveDestination?>.Success(destination);
-    }
-
-    private static Window? MainOwner()
-    {
-        return (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
     }
 }

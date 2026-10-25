@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
 using RestClient.Domain.Collections;
 using RestClient.UI.Services;
@@ -8,23 +7,17 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
-    private readonly IRequestSender _sender;
-    private readonly IRequestService _requests;
-    private readonly IDestinationPicker _destinations;
+    private readonly RequestTabServices _tabServices;
     private RequestTabViewModel? _selectedTab;
 
     public MainWindowViewModel(
         CollectionsTreeViewModel sidebar,
         HistoryListViewModel history,
-        IRequestSender sender,
-        IRequestService requests,
-        IDestinationPicker destinations)
+        RequestTabServices tabServices)
     {
         Sidebar = sidebar;
         History = history;
-        _sender = sender;
-        _requests = requests;
-        _destinations = destinations;
+        _tabServices = tabServices;
         Sidebar.RequestOpenRequested += OnRequestOpenRequested;
         Sidebar.TreeChanged += OnTreeChanged;
         History.RestoreRequested += OpenUnsaved;
@@ -54,7 +47,7 @@ public sealed class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var loaded = await _requests.GetAsync(requestId, CancellationToken.None);
+        var loaded = await _tabServices.Requests.GetAsync(requestId, CancellationToken.None);
         if (!loaded.IsSuccess)
         {
             Sidebar.StatusMessage = ErrorMessageFormatter.Format(loaded.Error!);
@@ -72,7 +65,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     private RequestTabViewModel CreateTab(RequestDefinition definition, bool isLinked)
     {
-        var tab = new RequestTabViewModel(_sender, _requests, _destinations, definition, isLinked);
+        var tab = new RequestTabViewModel(_tabServices, definition, isLinked);
         tab.RequestSent += OnTabRequestSent;
         tab.Linked += OnTabLinked;
         return tab;

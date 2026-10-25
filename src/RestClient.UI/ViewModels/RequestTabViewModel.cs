@@ -1,7 +1,6 @@
 using System.Windows.Input;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
-using RestClient.Domain.Bodies;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
@@ -26,33 +25,25 @@ public sealed class RequestTabViewModel : ViewModelBase
     private string _name;
     private RequestMethod _method;
     private string _url;
-    private string _contentType;
-    private string _body;
     private bool _isSending;
     private bool _isDirty;
-    private bool _isBodyEdited;
     private string _saveError = string.Empty;
 
     // An unlinked tab holds a request that is not in any collection yet. It starts dirty, because it has to be saved.
-    public RequestTabViewModel(
-        IRequestSender sender,
-        IRequestService requests,
-        IDestinationPicker destinations,
-        RequestDefinition definition,
-        bool isLinked)
+    public RequestTabViewModel(RequestTabServices services, RequestDefinition definition, bool isLinked)
     {
-        _sender = sender;
-        _requests = requests;
-        _destinations = destinations;
+        _sender = services.Sender;
+        _requests = services.Requests;
+        _destinations = services.Destinations;
         _saved = definition;
         _isLinked = isLinked;
         _isDirty = !isLinked;
         _name = definition.Name;
         _method = definition.Method;
         _url = definition.Url;
-        var raw = definition.Body as RawBody;
-        _contentType = raw?.ContentType ?? string.Empty;
-        _body = raw?.Text ?? string.Empty;
+        BodyEditor = new BodyEditorViewModel(services.Formatting, services.Files, definition.Body);
+        BodyEditor.Edited += OnBodyEdited;
+        Response = new ResponseViewModel(services.Formatting);
         _sendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending);
         _saveCommand = new AsyncRelayCommand(SaveAsync, () => true);
         _cancelCommand = new RelayCommand(Cancel, () => IsSending);
@@ -91,17 +82,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         set => EditField(ref _url, value, nameof(Url));
     }
 
-    public string ContentType
-    {
-        get => _contentType;
-        set => EditBodyField(ref _contentType, value, nameof(ContentType));
-    }
-
-    public string Body
-    {
-        get => _body;
-        set => EditBodyField(ref _body, value, nameof(Body));
-    }
+    public BodyEditorViewModel BodyEditor { get; }
 
     public bool IsDirty
     {
@@ -134,7 +115,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         private set => SetProperty(ref _saveError, value);
     }
 
-    public ResponseViewModel Response { get; } = new();
+    public ResponseViewModel Response { get; }
 
     public ICommand SendCommand => _sendCommand;
 
@@ -193,7 +174,6 @@ public sealed class RequestTabViewModel : ViewModelBase
         }
 
         _saved = ApplyEdits(_saved);
-        _isBodyEdited = false;
         SaveError = string.Empty;
         IsDirty = false;
     }
@@ -228,7 +208,6 @@ public sealed class RequestTabViewModel : ViewModelBase
     {
         _saved = saved;
         _isLinked = true;
-        _isBodyEdited = false;
         Name = saved.Name;
         SaveError = string.Empty;
         IsDirty = false;
@@ -244,13 +223,9 @@ public sealed class RequestTabViewModel : ViewModelBase
         }
     }
 
-    private void EditBodyField(ref string field, string value, string propertyName)
+    private void OnBodyEdited(object? sender, EventArgs e)
     {
-        if (SetProperty(ref field, value, propertyName))
-        {
-            _isBodyEdited = true;
-            IsDirty = true;
-        }
+        IsDirty = true;
     }
 
     private void ShowResult(Result<ResponseSnapshot> result)
@@ -264,19 +239,14 @@ public sealed class RequestTabViewModel : ViewModelBase
         Response.ShowError(ErrorMessageFormatter.Format(result.Error!));
     }
 
-    // Fields the editor does not show (headers, query, form and multipart bodies, auth) stay as stored.
+    // Headers, query params and auth are not editable yet, so they stay as stored.
     private RequestDefinition ApplyEdits(RequestDefinition definition)
     {
         return definition with
         {
             Method = Method,
             Url = Url.Trim(),
-            Body = _isBodyEdited ? CreateBody() : definition.Body,
+            Body = BodyEditor.Build(),
         };
-    }
-
-    private BodyDefinition CreateBody()
-    {
-        return Body.Length == 0 ? new NoBody() : new RawBody(ContentType.Trim(), Body);
     }
 }

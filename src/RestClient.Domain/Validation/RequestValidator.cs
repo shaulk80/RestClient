@@ -23,9 +23,12 @@ public static class RequestValidator
             return Invalid("Header names must not be empty.");
         }
 
-        return definition.Body is MultipartBody multipart
-            ? ValidateParts(multipart.Parts)
-            : Result.Success();
+        return definition.Body switch
+        {
+            FormUrlEncodedBody form when HasEmptyEnabledKey(form.Fields) => Invalid("Form field names must not be empty."),
+            MultipartBody multipart => ValidateParts(multipart.Parts),
+            _ => Result.Success(),
+        };
     }
 
     public static Result ValidateUrl(string url)
@@ -47,9 +50,19 @@ public static class RequestValidator
     {
         foreach (var part in parts)
         {
+            if (string.IsNullOrWhiteSpace(part.Name))
+            {
+                return Invalid("Multipart part names must not be empty.");
+            }
+
             if ((part.Value is null) == (part.FilePath is null))
             {
                 return Invalid($"Multipart part '{part.Name}' needs either a value or a file path, not both or neither.");
+            }
+
+            if (part.FilePath is not null && string.IsNullOrWhiteSpace(part.FilePath))
+            {
+                return Invalid($"Multipart part '{part.Name}' needs a file path.");
             }
         }
 
