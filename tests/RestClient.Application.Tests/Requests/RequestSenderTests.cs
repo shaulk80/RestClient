@@ -20,6 +20,7 @@ public class RequestSenderTests
 
     private IHistoryService _history = null!;
     private IClock _clock = null!;
+    private IRequestVariables _variables = null!;
 
     [SetUp]
     public void SetUp()
@@ -29,6 +30,24 @@ public class RequestSenderTests
             .Returns(Task.FromResult(Result.Success()));
         _clock = A.Fake<IClock>();
         A.CallTo(() => _clock.UtcNow).Returns(SentAt);
+        _variables = CreateVariables();
+    }
+
+    [Test]
+    public async Task SendRecordsLockedSecretFailureWithoutExecuting()
+    {
+        var executor = A.Fake<IHttpExecutor>();
+        _variables = CreateVariables(Result<IReadOnlyDictionary<string, string>>.Failure(new Error(ErrorCategory.Security, "Locked.")));
+        var sender = CreateSender(executor);
+
+        var result = await sender.SendAsync(CreateDefinition("https://{{host}}/a"), CancellationToken.None);
+
+        Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Security));
+        A.CallTo(() => executor.SendAsync(A<OutgoingRequest>._, A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _history.RecordAsync(
+                A<RequestAttempt>.That.Matches(attempt => attempt.Outcome.Error != null && attempt.Outcome.Error.Category == ErrorCategory.Security),
+                A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
     }
 
     [Test]
@@ -40,7 +59,7 @@ public class RequestSenderTests
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Success(snapshot)));
         var sender = CreateSender(executor);
 
-        var result = await sender.SendAsync(CreateDefinition("https://{{host}}/a"), Variables, CancellationToken.None);
+        var result = await sender.SendAsync(CreateDefinition("https://{{host}}/a"), CancellationToken.None);
 
         Assert.That(result.Value, Is.EqualTo(snapshot));
     }
@@ -55,7 +74,7 @@ public class RequestSenderTests
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(category, "Failed."))));
         var sender = CreateSender(executor);
 
-        var result = await sender.SendAsync(CreateDefinition("https://example.com"), Variables, CancellationToken.None);
+        var result = await sender.SendAsync(CreateDefinition("https://example.com"), CancellationToken.None);
 
         Assert.That(result.Error?.Category, Is.EqualTo(category));
     }
@@ -70,7 +89,7 @@ public class RequestSenderTests
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(category, "Failed."))));
         var sender = CreateSender(executor);
 
-        await sender.SendAsync(CreateDefinition("https://example.com"), Variables, CancellationToken.None);
+        await sender.SendAsync(CreateDefinition("https://example.com"), CancellationToken.None);
 
         A.CallTo(() => _history.RecordAsync(
                 A<RequestAttempt>.That.Matches(attempt => attempt.Outcome.Error != null && attempt.Outcome.Error.Category == category),
@@ -86,7 +105,7 @@ public class RequestSenderTests
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Success(CreateSnapshot())));
         var sender = CreateSender(executor);
 
-        await sender.SendAsync(CreateDefinition("https://{{host}}/a"), Variables, CancellationToken.None);
+        await sender.SendAsync(CreateDefinition("https://{{host}}/a"), CancellationToken.None);
 
         A.CallTo(() => _history.RecordAsync(
                 A<RequestAttempt>.That.Matches(attempt =>
@@ -106,7 +125,7 @@ public class RequestSenderTests
         var executor = A.Fake<IHttpExecutor>();
         var sender = CreateSender(executor);
 
-        var result = await sender.SendAsync(CreateDefinition(url), Variables, CancellationToken.None);
+        var result = await sender.SendAsync(CreateDefinition(url), CancellationToken.None);
 
         Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Validation));
         A.CallTo(() => executor.SendAsync(A<OutgoingRequest>._, A<CancellationToken>._)).MustNotHaveHappened();
@@ -119,7 +138,7 @@ public class RequestSenderTests
     {
         var sender = CreateSender(A.Fake<IHttpExecutor>());
 
-        await sender.SendAsync(CreateDefinition(url), Variables, CancellationToken.None);
+        await sender.SendAsync(CreateDefinition(url), CancellationToken.None);
 
         A.CallTo(() => _history.RecordAsync(
                 A<RequestAttempt>.That.Matches(attempt =>
@@ -141,14 +160,22 @@ public class RequestSenderTests
             .Returns(Task.FromResult(Result.Failure(new Error(ErrorCategory.Storage, "The history entry could not be saved."))));
         var sender = CreateSender(executor);
 
-        var result = await sender.SendAsync(CreateDefinition("https://example.com"), Variables, CancellationToken.None);
+        var result = await sender.SendAsync(CreateDefinition("https://example.com"), CancellationToken.None);
 
         Assert.That(result.Value, Is.EqualTo(snapshot));
     }
 
     private RequestSender CreateSender(IHttpExecutor executor)
     {
-        return new RequestSender(RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout), executor, _history, _clock);
+        return new RequestSender(RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout), executor, _history, _clock, _variables);
+    }
+
+    private static IRequestVariables CreateVariables(Result<IReadOnlyDictionary<string, string>>? result = null)
+    {
+        var variables = A.Fake<IRequestVariables>();
+        A.CallTo(() => variables.ResolveAsync(A<RequestDefinition>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(result ?? Result<IReadOnlyDictionary<string, string>>.Success(Variables)));
+        return variables;
     }
 
     private static RequestDefinition CreateDefinition(string url)

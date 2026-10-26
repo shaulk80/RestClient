@@ -2,7 +2,9 @@ using FakeItEasy;
 using NUnit.Framework;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
+using RestClient.Application.Environments;
 using RestClient.Application.History;
+using RestClient.Application.Secrets;
 using RestClient.Domain.Collections;
 using RestClient.Domain.History;
 using RestClient.Domain.Responses;
@@ -143,7 +145,7 @@ public class MainWindowViewModelTests
     public async Task SendFromTabRefreshesHistory()
     {
         var sender = A.Fake<IRequestSender>();
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(ErrorCategory.Network, "Not sent."))));
         var window = CreateWindow(sender);
         await window.OpenRequestAsync(_fixtures.Login.Id);
@@ -170,7 +172,14 @@ public class MainWindowViewModelTests
     {
         var sidebar = _fixtures.CreateSidebar();
         var history = new HistoryListViewModel(_historyService);
-        return new MainWindowViewModel(sidebar, history, RequestTabServicesFactory.Create(sender, _fixtures.Requests, _destinations));
+        var environments = new EnvironmentSelectorViewModel(A.Fake<IEnvironmentService>(), A.Fake<IEnvironmentDialogs>());
+        var secrets = new SecretStatusViewModel(A.Fake<ISecretService>(), A.Fake<ISecretPrompt>());
+        return new MainWindowViewModel(
+            sidebar,
+            history,
+            RequestTabServicesFactory.Create(sender, _fixtures.Requests, _destinations),
+            environments,
+            secrets);
     }
 
     private static RequestDefinition CreateUnsavedDefinition()

@@ -10,10 +10,17 @@ public static class UiServiceCollectionExtensions
     {
         services.AddSingleton<IDestinationPicker, SaveDestinationPicker>();
         services.AddSingleton<IFilePickerService, StorageFilePickerService>();
+        services.AddSingleton<ISecretDialogs, SecretDialogs>();
+        services.AddSingleton<ISecretPrompt, SecretPrompt>();
+        services.AddSingleton<IEnvironmentDialogs, EnvironmentDialogs>();
+        services.AddSingleton<IConfirmationDialogs, ConfirmationDialogs>();
         services.AddSingleton<BodyFormatting>();
         services.AddSingleton<RequestTabServices>();
         services.AddSingleton<CollectionsTreeViewModel>();
         services.AddSingleton<HistoryListViewModel>();
+        services.AddSingleton<EnvironmentEditorViewModel>();
+        services.AddSingleton<EnvironmentSelectorViewModel>();
+        services.AddSingleton<SecretStatusViewModel>();
         services.AddSingleton<MainWindowViewModel>();
 
         return services;

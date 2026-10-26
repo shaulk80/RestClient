@@ -1,4 +1,3 @@
-using RestClient.Domain.Auth;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -24,12 +23,13 @@ public sealed class RequestBuilder
         IReadOnlyDictionary<string, string> variables,
         CancellationToken cancellationToken)
     {
-        if (definition.Auth is not NoAuth)
+        var auth = AuthResolver.Resolve(definition.Auth, variables);
+        if (!auth.IsSuccess)
         {
-            return Result<OutgoingRequest>.Failure(Unsupported("Authentication is not supported yet."));
+            return Result<OutgoingRequest>.Failure(auth.Error!);
         }
 
-        var url = ResolveUrl(definition, variables);
+        var url = ResolveUrl(definition, variables, auth.Value!.QueryParams);
         if (!url.IsSuccess)
         {
             return Result<OutgoingRequest>.Failure(url.Error!);
@@ -41,7 +41,7 @@ public sealed class RequestBuilder
             return Result<OutgoingRequest>.Failure(body.Error!);
         }
 
-        var headers = KeyValueResolver.Resolve(definition.Headers, variables);
+        var headers = ResolveHeaders(definition, variables, auth.Value!, body.Value!);
         if (!headers.IsSuccess)
         {
             return Result<OutgoingRequest>.Failure(headers.Error!);
@@ -50,12 +50,15 @@ public sealed class RequestBuilder
         return Result<OutgoingRequest>.Success(new OutgoingRequest(
             definition.Method,
             url.Value!,
-            WithContentType(headers.Value!, body.Value!.ContentType),
+            headers.Value!,
             body.Value!.Content,
             _timeout));
     }
 
-    private static Result<string> ResolveUrl(RequestDefinition definition, IReadOnlyDictionary<string, string> variables)
+    private static Result<string> ResolveUrl(
+        RequestDefinition definition,
+        IReadOnlyDictionary<string, string> variables,
+        IReadOnlyList<KeyValueEntry> authQuery)
     {
         var baseUrl = VariableResolver.Resolve(definition.Url, variables);
         if (!baseUrl.IsSuccess)
@@ -69,19 +72,33 @@ public sealed class RequestBuilder
             return Result<string>.Failure(query.Error!);
         }
 
-        return Result<string>.Success(AppendQuery(baseUrl.Value!, query.Value!));
+        return Result<string>.Success(AppendQuery(baseUrl.Value!, [.. query.Value!, .. authQuery]));
     }
 
-    // A body that sets its own content type replaces any Content-Type header the user wrote.
-    private static IReadOnlyList<KeyValueEntry> WithContentType(IReadOnlyList<KeyValueEntry> headers, string? contentType)
+    // Auth and the body's content type replace a header of the same name that the user wrote.
+    private static Result<IReadOnlyList<KeyValueEntry>> ResolveHeaders(
+        RequestDefinition definition,
+        IReadOnlyDictionary<string, string> variables,
+        ResolvedAuth auth,
+        ResolvedBody body)
     {
-        if (contentType is null)
+        var headers = KeyValueResolver.Resolve(definition.Headers, variables);
+        if (!headers.IsSuccess)
         {
-            return headers;
+            return Result<IReadOnlyList<KeyValueEntry>>.Failure(headers.Error!);
         }
 
-        var others = headers.Where(header => !string.Equals(header.Key, ContentTypeHeader, StringComparison.OrdinalIgnoreCase)).ToList();
-        others.Add(new KeyValueEntry(ContentTypeHeader, contentType, true));
+        var withAuth = auth.Headers.Aggregate(headers.Value!, AddOrReplace);
+        var withBody = body.ContentType is null
+            ? withAuth
+            : AddOrReplace(withAuth, new KeyValueEntry(ContentTypeHeader, body.ContentType, true));
+        return Result<IReadOnlyList<KeyValueEntry>>.Success(withBody);
+    }
+
+    private static IReadOnlyList<KeyValueEntry> AddOrReplace(IReadOnlyList<KeyValueEntry> headers, KeyValueEntry entry)
+    {
+        var others = headers.Where(header => !string.Equals(header.Key, entry.Key, StringComparison.OrdinalIgnoreCase)).ToList();
+        others.Add(entry);
         return others;
     }
 
@@ -94,10 +111,5 @@ public sealed class RequestBuilder
 
         var separator = url.Contains('?') ? "&" : "?";
         return $"{url}{separator}{KeyValueEncoder.Encode(query)}";
-    }
-
-    private static Error Unsupported(string message)
-    {
-        return new Error(ErrorCategory.Validation, message);
     }
 }

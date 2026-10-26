@@ -27,5 +27,6 @@
                Foreground="Red"
                TextWrapping="Wrap" />
     <views:BodyEditorView DataContext="{Binding BodyEditor}" />
+    <views:AuthEditorView DataContext="{Binding AuthEditor}" />
   </StackPanel>
 </UserControl>

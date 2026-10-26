@@ -16,6 +16,7 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
     private readonly IFolderService _folders;
     private readonly IRequestService _requests;
     private readonly ICollectionTreeService _tree;
+    private readonly IConfirmationDialogs _confirmations;
     private readonly AsyncRelayCommand _newCollectionCommand;
     private HashSet<Guid> _expandedIds = [];
     private TreeNodeViewModel? _selectedNode;
@@ -25,12 +26,14 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         ICollectionService collections,
         IFolderService folders,
         IRequestService requests,
-        ICollectionTreeService tree)
+        ICollectionTreeService tree,
+        IConfirmationDialogs confirmations)
     {
         _collections = collections;
         _folders = folders;
         _requests = requests;
         _tree = tree;
+        _confirmations = confirmations;
         _newCollectionCommand = new AsyncRelayCommand(CreateCollectionAsync, () => true);
     }
 
@@ -115,8 +118,17 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         await ReloadAsync(node.Id);
     }
 
+    // Nothing is deleted unless the user confirms. Open tabs of a deleted request are closed by the window.
     public async Task DeleteAsync(TreeNodeViewModel node)
     {
+        var confirmed = await _confirmations.ConfirmAsync(
+            $"Delete '{node.Name}'? Its contents and any unsaved edits in open tabs are lost. This cannot be undone.",
+            CancellationToken.None);
+        if (!confirmed)
+        {
+            return;
+        }
+
         var result = await DeleteNodeAsync(node);
         if (!result.IsSuccess)
         {

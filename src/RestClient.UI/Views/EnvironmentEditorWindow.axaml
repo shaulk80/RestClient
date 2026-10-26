@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RestClient.UI.ViewModels"
+        xmlns:views="using:RestClient.UI.Views"
+        x:Class="RestClient.UI.Views.EnvironmentEditorWindow"
+        x:DataType="vm:EnvironmentEditorViewModel"
+        Title="Environments"
+        Width="640"
+        Height="480"
+        MinWidth="520"
+        MinHeight="380"
+        WindowStartupLocation="CenterOwner">
+  <Grid Margin="12" ColumnDefinitions="200,*" ColumnSpacing="12" RowDefinitions="*,Auto">
+    <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="6">
+      <TextBlock Grid.Row="0" Text="Environments" />
+      <ListBox Grid.Row="1"
+               ItemsSource="{Binding Environments}"
+               SelectedItem="{Binding SelectedEnvironment}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:EnvironmentItem">
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <TextBox Grid.Row="2" PlaceholderText="New environment name" Text="{Binding NewName}" />
+      <Button Grid.Row="3" Content="Create" Command="{Binding CreateCommand}" />
+      <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <TextBox Grid.Column="0" Text="{Binding RenameTo}" />
+        <Button Grid.Column="1" Content="Rename" Command="{Binding RenameCommand}" />
+      </Grid>
+    </Grid>
+    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="6">
+      <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="Variables" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Content="Delete environment" Command="{Binding DeleteCommand}" />
+      </Grid>
+      <views:VariablesEditorView Grid.Row="1" DataContext="{Binding Variables}" />
+      <TextBlock Grid.Row="2" Text="{Binding Message}" Foreground="Red" TextWrapping="Wrap" />
+    </Grid>
+  </Grid>
+</Window>

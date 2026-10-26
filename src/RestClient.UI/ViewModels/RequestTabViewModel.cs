@@ -11,11 +11,10 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class RequestTabViewModel : ViewModelBase
 {
-    private static readonly IReadOnlyDictionary<string, string> NoVariables = new Dictionary<string, string>();
-
     private readonly IRequestSender _sender;
     private readonly IRequestService _requests;
     private readonly IDestinationPicker _destinations;
+    private readonly ISecretPrompt _secrets;
     private readonly AsyncRelayCommand _sendCommand;
     private readonly AsyncRelayCommand _saveCommand;
     private readonly RelayCommand _cancelCommand;
@@ -35,6 +34,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         _sender = services.Sender;
         _requests = services.Requests;
         _destinations = services.Destinations;
+        _secrets = services.SecretPrompt;
         _saved = definition;
         _isLinked = isLinked;
         _isDirty = !isLinked;
@@ -43,6 +43,8 @@ public sealed class RequestTabViewModel : ViewModelBase
         _url = definition.Url;
         BodyEditor = new BodyEditorViewModel(services.Formatting, services.Files, definition.Body);
         BodyEditor.Edited += OnBodyEdited;
+        AuthEditor = new AuthEditorViewModel(definition.Auth);
+        AuthEditor.Edited += OnBodyEdited;
         Response = new ResponseViewModel(services.Formatting);
         _sendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending);
         _saveCommand = new AsyncRelayCommand(SaveAsync, () => true);
@@ -83,6 +85,8 @@ public sealed class RequestTabViewModel : ViewModelBase
     }
 
     public BodyEditorViewModel BodyEditor { get; }
+
+    public AuthEditorViewModel AuthEditor { get; }
 
     public bool IsDirty
     {
@@ -137,7 +141,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         Response.Clear();
         try
         {
-            var result = await _sender.SendAsync(ApplyEdits(_saved), NoVariables, cancellation.Token);
+            var result = await SendOnceAsync(cancellation.Token);
             ShowResult(result);
             RequestSent?.Invoke(this, EventArgs.Empty);
         }
@@ -239,7 +243,32 @@ public sealed class RequestTabViewModel : ViewModelBase
         Response.ShowError(ErrorMessageFormatter.Format(result.Error!));
     }
 
-    // Headers, query params and auth are not editable yet, so they stay as stored.
+    // A send that needs a locked secret asks for the password once, then sends again. Other failures are shown as they are.
+    private async Task<Result<ResponseSnapshot>> SendOnceAsync(CancellationToken cancellationToken)
+    {
+        var result = await _sender.SendAsync(ApplyEdits(_saved), cancellationToken);
+        if (result.Error?.Category != ErrorCategory.Security)
+        {
+            return result;
+        }
+
+        return await RetryAfterUnlockAsync(result, cancellationToken);
+    }
+
+    private async Task<Result<ResponseSnapshot>> RetryAfterUnlockAsync(
+        Result<ResponseSnapshot> failed,
+        CancellationToken cancellationToken)
+    {
+        var unlocked = await _secrets.EnsureUnlockedAsync(cancellationToken);
+        if (!unlocked.IsSuccess || !unlocked.Value)
+        {
+            return failed;
+        }
+
+        return await _sender.SendAsync(ApplyEdits(_saved), cancellationToken);
+    }
+
+    // Headers and query params are not editable yet, so they stay as stored.
     private RequestDefinition ApplyEdits(RequestDefinition definition)
     {
         return definition with
@@ -247,6 +276,7 @@ public sealed class RequestTabViewModel : ViewModelBase
             Method = Method,
             Url = Url.Trim(),
             Body = BodyEditor.Build(),
+            Auth = AuthEditor.Build(),
         };
     }
 }

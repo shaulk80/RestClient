@@ -9,4 +9,5 @@ public sealed record RequestTabServices(
     IRequestService Requests,
     IDestinationPicker Destinations,
     BodyFormatting Formatting,
-    IFilePickerService Files);
+    IFilePickerService Files,
+    ISecretPrompt SecretPrompt);

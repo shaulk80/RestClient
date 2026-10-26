@@ -18,7 +18,7 @@ public class RequestTabViewModelTests
     public async Task SendShowsResponseWhenRequestSucceeds()
     {
         var sender = A.Fake<IRequestSender>();
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Success(CreateSnapshot())));
         var viewModel = CreateViewModel(sender);
 
@@ -34,8 +34,8 @@ public class RequestTabViewModelTests
     {
         RequestDefinition? sent = null;
         var sender = A.Fake<IRequestSender>();
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
-            .Invokes((RequestDefinition definition, IReadOnlyDictionary<string, string> _, CancellationToken _) => sent = definition)
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
+            .Invokes((RequestDefinition definition, CancellationToken _) => sent = definition)
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(ErrorCategory.Network, "Not sent."))));
         var viewModel = CreateViewModel(sender);
         viewModel.Method = RequestMethod.Post;
@@ -67,7 +67,7 @@ public class RequestTabViewModelTests
     public async Task SendShowsFormattedErrorWhenRequestFails(ErrorCategory category)
     {
         var sender = A.Fake<IRequestSender>();
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(category, "Something failed.", "details"))));
         var viewModel = CreateViewModel(sender);
 
@@ -82,7 +82,7 @@ public class RequestTabViewModelTests
     {
         var sender = A.Fake<IRequestSender>();
         var completion = new TaskCompletionSource<Result<ResponseSnapshot>>();
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
             .Returns(completion.Task);
         var viewModel = CreateViewModel(sender);
 
@@ -106,8 +106,8 @@ public class RequestTabViewModelTests
         var sender = A.Fake<IRequestSender>();
         var completion = new TaskCompletionSource<Result<ResponseSnapshot>>();
         var requestToken = CancellationToken.None;
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
-            .Invokes((RequestDefinition _, IReadOnlyDictionary<string, string> _, CancellationToken token) => requestToken = token)
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
+            .Invokes((RequestDefinition _, CancellationToken token) => requestToken = token)
             .Returns(completion.Task);
         var viewModel = CreateViewModel(sender);
 
@@ -211,7 +211,7 @@ public class RequestTabViewModelTests
     public async Task SendRaisesRequestSentWhenRequestFails()
     {
         var sender = A.Fake<IRequestSender>();
-        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<IReadOnlyDictionary<string, string>>._, A<CancellationToken>._))
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
             .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(ErrorCategory.Network, "Not sent."))));
         var viewModel = CreateViewModel(sender);
         var raised = 0;

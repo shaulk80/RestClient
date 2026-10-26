@@ -2,8 +2,12 @@ using Microsoft.Extensions.DependencyInjection;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Bodies;
 using RestClient.Application.Collections;
+using RestClient.Application.Environments;
 using RestClient.Application.History;
 using RestClient.Application.Requests;
+using RestClient.Application.Secrets;
+using RestClient.Application.Workspaces;
+using RestClient.Domain.Environments;
 
 namespace RestClient.Application;
 
@@ -11,6 +15,14 @@ public static class ApplicationServiceCollectionExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddSingleton<IRequestVariables, EnvironmentRequestVariables>();
+        services.AddSingleton<ISecretService, SecretService>();
+        services.AddSingleton<IEnvironmentService, EnvironmentService>();
+        services.AddSingleton(provider =>
+        {
+            var repository = provider.GetRequiredService<IEnvironmentRepository>();
+            return new Workspace<RequestEnvironment>(repository.LoadAsync, repository.SaveAsync);
+        });
         services.AddSingleton<MultipartBodyEncoder>();
         services.AddSingleton<RequestBodyResolver>();
         services.AddSingleton(provider => new RequestBuilder(

@@ -3,6 +3,7 @@ using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
+using RestClient.UI.Services;
 using RestClient.UI.ViewModels;
 
 namespace RestClient.UI.Tests.ViewModels;
@@ -19,6 +20,8 @@ internal sealed class TreeFixtures
         Folders = A.Fake<IFolderService>();
         Requests = A.Fake<IRequestService>();
         Tree = A.Fake<ICollectionTreeService>();
+        Confirmations = A.Fake<IConfirmationDialogs>();
+        A.CallTo(() => Confirmations.ConfirmAsync(A<string>._, A<CancellationToken>._)).Returns(Task.FromResult(true));
         SetCollections([Shop]);
     }
 
@@ -38,6 +41,8 @@ internal sealed class TreeFixtures
 
     public ICollectionTreeService Tree { get; }
 
+    public IConfirmationDialogs Confirmations { get; }
+
     public static Folder CreateFolder(string name, IReadOnlyList<Folder>? folders = null)
     {
         return new Folder(Guid.NewGuid(), name, folders ?? [], []);
@@ -45,7 +50,7 @@ internal sealed class TreeFixtures
 
     public CollectionsTreeViewModel CreateSidebar()
     {
-        return new CollectionsTreeViewModel(Collections, Folders, Requests, Tree);
+        return new CollectionsTreeViewModel(Collections, Folders, Requests, Tree, Confirmations);
     }
 
     public void SetCollections(IReadOnlyList<Collection> collections)

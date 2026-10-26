@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestClient.UI.ViewModels"
+             x:Class="RestClient.UI.Views.AuthEditorView"
+             x:DataType="vm:AuthEditorViewModel">
+  <StackPanel Spacing="6">
+    <ComboBox MinWidth="160"
+              ItemsSource="{Binding Types}"
+              SelectedItem="{Binding Type}" />
+    <StackPanel IsVisible="{Binding IsBasic}" Spacing="6">
+      <TextBox PlaceholderText="Username" Text="{Binding Username}" />
+      <TextBox PlaceholderText="Password" PasswordChar="*" Text="{Binding Password}" />
+    </StackPanel>
+    <TextBox IsVisible="{Binding IsBearer}"
+             PlaceholderText="Token"
+             PasswordChar="*"
+             Text="{Binding Token}" />
+    <StackPanel IsVisible="{Binding IsApiKey}" Spacing="6">
+      <TextBox PlaceholderText="Key name" Text="{Binding ApiKeyName}" />
+      <TextBox PlaceholderText="Value" PasswordChar="*" Text="{Binding ApiKeyValue}" />
+      <ComboBox MinWidth="160"
+                ItemsSource="{Binding Locations}"
+                SelectedItem="{Binding ApiKeyLocation}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

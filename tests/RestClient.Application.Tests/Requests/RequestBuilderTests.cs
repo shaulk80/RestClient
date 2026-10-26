@@ -128,8 +128,40 @@ public class RequestBuilderTests
         Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Validation));
     }
 
-    [TestCaseSource(nameof(UnsupportedAuth))]
-    public async Task BuildFailsForAuthNotSupportedYet(AuthDefinition auth)
+    [TestCaseSource(nameof(AuthHeaderCases))]
+    public async Task BuildAddsAuthHeaderWithVariablesResolved(AuthDefinition auth, KeyValueEntry expected)
+    {
+        var result = await _builder.BuildAsync(CreateDefinition("https://example.com") with { Auth = auth }, Variables, CancellationToken.None);
+
+        Assert.That(result.Value?.Headers, Does.Contain(expected));
+    }
+
+    [Test]
+    public async Task BuildAddsApiKeyToQueryWhenLocationIsQuery()
+    {
+        var auth = new ApiKeyAuth("api_key", "{{token}}", ApiKeyLocation.Query);
+
+        var result = await _builder.BuildAsync(CreateDefinition("https://example.com/a?x=1") with { Auth = auth }, Variables, CancellationToken.None);
+
+        Assert.That(result.Value?.Url, Is.EqualTo("https://example.com/a?x=1&api_key=abc"));
+    }
+
+    [Test]
+    public async Task BuildReplacesUserAuthorizationHeaderWithAuth()
+    {
+        var definition = CreateDefinition("https://example.com") with
+        {
+            Headers = [new KeyValueEntry("authorization", "old", true)],
+            Auth = new BearerAuth("{{token}}"),
+        };
+
+        var result = await _builder.BuildAsync(definition, Variables, CancellationToken.None);
+
+        Assert.That(result.Value?.Headers.Select(header => header.Value).ToList(), Is.EqualTo(new List<string> { "Bearer abc" }));
+    }
+
+    [TestCaseSource(nameof(UnresolvedAuthCases))]
+    public async Task BuildFailsWhenAuthVariableIsUnresolved(AuthDefinition auth)
     {
         var result = await _builder.BuildAsync(CreateDefinition("https://example.com") with { Auth = auth }, Variables, CancellationToken.None);
 
@@ -211,13 +243,20 @@ public class RequestBuilderTests
         Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.NotFound));
     }
 
-    public static IEnumerable<AuthDefinition> UnsupportedAuth()
+    public static IEnumerable<TestCaseData> AuthHeaderCases()
+    {
+        yield return new TestCaseData(new BasicAuth("user", "{{token}}"), new KeyValueEntry("Authorization", "Basic dXNlcjphYmM=", true));
+        yield return new TestCaseData(new BearerAuth("{{token}}"), new KeyValueEntry("Authorization", "Bearer abc", true));
+        yield return new TestCaseData(new ApiKeyAuth("X-Key", "{{token}}", ApiKeyLocation.Header), new KeyValueEntry("X-Key", "abc", true));
+    }
+
+    public static IEnumerable<AuthDefinition> UnresolvedAuthCases()
     {
         return
         [
-            new BasicAuth("user", "secret"),
-            new BearerAuth("token"),
-            new ApiKeyAuth("X-Key", "value", ApiKeyLocation.Header),
+            new BasicAuth("{{missing}}", "secret"),
+            new BearerAuth("{{missing}}"),
+            new ApiKeyAuth("X-Key", "{{missing}}", ApiKeyLocation.Header),
         ];
     }
 

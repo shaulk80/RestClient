@@ -5,6 +5,7 @@ using RestClient.Application.Abstractions;
 using RestClient.Infrastructure.Http;
 using RestClient.Infrastructure.Logging;
 using RestClient.Infrastructure.Persistence;
+using RestClient.Infrastructure.Security;
 using RestClient.Infrastructure.Services;
 using Serilog;
 
@@ -32,6 +33,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<SqliteMigrator>();
         services.AddSingleton<ICollectionRepository, SqliteCollectionRepository>();
         services.AddSingleton<IHistoryRepository, SqliteHistoryRepository>();
+        services.AddSingleton<IEnvironmentRepository, SqliteEnvironmentRepository>();
+        services.AddSingleton<ISettingsStore, SqliteSettingsStore>();
+        services.AddSingleton<ISecretCipher, AesGcmSecretCipher>();
+        services.AddSingleton<IKeyDeriver, Pbkdf2KeyDeriver>();
+        services.AddSingleton<IRandomBytes, SecureRandomBytes>();
 
         services.AddSingleton(options);
         services.AddSingleton(new HttpTransportOptions(FollowRedirects: true, MaxRedirects: 10));

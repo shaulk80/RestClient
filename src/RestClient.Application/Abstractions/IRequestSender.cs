@@ -6,8 +6,5 @@ namespace RestClient.Application.Abstractions;
 
 public interface IRequestSender
 {
-    Task<Result<ResponseSnapshot>> SendAsync(
-        RequestDefinition definition,
-        IReadOnlyDictionary<string, string> variables,
-        CancellationToken cancellationToken);
+    Task<Result<ResponseSnapshot>> SendAsync(RequestDefinition definition, CancellationToken cancellationToken);
 }

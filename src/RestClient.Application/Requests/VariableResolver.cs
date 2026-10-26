@@ -30,6 +30,14 @@ public static partial class VariableResolver
         return Result<string>.Success(resolved);
     }
 
+    public static IReadOnlySet<string> PlaceholderNames(string template)
+    {
+        return PlaceholderPattern()
+            .Matches(template)
+            .Select(match => match.Groups[1].Value.Trim())
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
     [GeneratedRegex(@"\{\{([^{}]*)\}\}")]
     private static partial Regex PlaceholderPattern();
 }

@@ -2,12 +2,13 @@ REST CLIENT - IMPLEMENTATION PROGRESS
 =====================================
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-25
+Updated:   2026-10-26
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: none. M4 Body Editor closed 2026-10-25 on branch m4. Not committed yet.
-NEXT STAGE:    Commit M4 (on instruction). M5 Environments, Variables, Secrets, Auth (needs M1 and M2).
+CURRENT STAGE: M5 Environments, Variables, Secrets, Auth is closed on branch m5 (from main, which holds M4).
+               Not committed yet.
+NEXT STAGE:    Commit M5 on branch m5 (on instruction). M6 Tabs, Autosave, Settings, Shortcuts.
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -223,7 +224,7 @@ MILESTONES
 [x] M4 Body Editor and Syntax Highlighting
     Depends on: M1
     Goal: comfortable body editing with highlighting and formatting.
-    Started 2026-10-25 on branch m4 (from m3). Closed 2026-10-25. Not committed yet.
+    Started 2026-10-25 on branch m4 (from m3). Closed 2026-10-25. Committed as 2d632c9 on main.
 
     Tasks:
     [x] 1.  Application: IBodyFormatter, BodyFormatter (base), JsonBodyFormatter, XmlBodyFormatter
@@ -273,12 +274,71 @@ MILESTONES
     - Records with list fields compare lists by reference, so tests compare Fields and Parts element by element.
     - CodeEditor has a headless test (text sync and language switch). View-level headless smoke tests stay in M6.
 
-[ ] M5 Environments, Variables, Secrets, Auth
+[x] M5 Environments, Variables, Secrets, Auth
     Depends on: M1, M2
     Goal: reuse values across requests, keep secrets encrypted, and send authenticated requests.
-    Carried from M2:
-    - Delete confirmation. Deleting a request, folder or collection closes its open tab and
-      discards unsaved edits. Ask first, through the dialog service.
+    Started 2026-10-25 on branch m5 (from main). Closed 2026-10-26. Not committed yet.
+
+    Tasks:
+    [x] 1.  Domain: RequestEnvironment (plan name Environment), Variable, VariableNameRules
+    [x] 2.  Application: EnvironmentService, SecretService, EnvironmentRequestVariables (IRequestVariables),
+            RequestPlaceholders, AuthResolver. RequestBuilder applies auth. VariableResolver is unchanged
+    [x] 3.  Infrastructure: migration 0004 (environments, environment_variables with value and secret_value),
+            SqliteEnvironmentRepository, SqliteSettingsStore, AesGcmSecretCipher, Pbkdf2KeyDeriver,
+            SecureRandomBytes
+    [x] 4.  UI: environment selector and lock state in the status bar, EnvironmentEditorWindow (environments
+            and variables, secret toggle), UnlockDialogWindow, MasterPasswordSetupWindow,
+            AuthEditorView (None, Basic, Bearer, API key)
+    [x] 5.  A send that needs a locked secret asks for the master password, then sends once more
+
+    Carried from M2 (done in M5):
+    [x] Delete confirmation for requests, folders and collections (tree), and for environments.
+        Cancelling leaves the item and its open tab unchanged.
+
+    Definition of Done:
+    [x] All tests pass (Domain 95, Application 166, Infrastructure 73, UI 145, Integration 11 = 490)
+    [x] Coverage gate holds (Domain 92.27%, Application 92.42%; M4 was 91.01% and 95.83%)
+    [x] Solution projects build with warnings as errors on. The full scripts\build.ps1 ran on 2026-10-26
+        after the sample API was stopped: restore, license check, build, tests, win-x64 publish, zip and
+        smoke test of the extracted zip all passed (exit code 0, dist\RestClient-win-x64.zip rebuilt).
+    [x] License check passed (89 packages, same as M4; no new packages)
+    [x] win-x64 publish and smoke test passed, run from the scratchpad (not dist\). data\app.db and a log
+        are created beside the exe, the app stays up, and the log has no errors.
+    [x] Manual (passed 2026-10-26): store a token as a secret, restart, confirm the database contains no
+        plaintext, unlock, and send an authenticated request.
+    [x] Manual (passed 2026-10-26): the status bar shows the environment and lock state; sending a request
+        that uses a secret while locked asks for the master password and sends after unlock; delete asks
+        first for requests and environments.
+
+    Deviations from plan and open points:
+    - The plan's Environment type is RequestEnvironment. Environment clashes with System.Environment in
+      files that import both.
+    - Secrets are stored as ciphertext in Variable.Value. The editor sends a typed secret as VariableEdit
+      with ValueIsPlainText, and EnvironmentService encrypts it. Plain text never reaches the repository.
+      The secret_value column holds ciphertext, and value is NULL for a secret (tested).
+    - A secret is decrypted only when the request names it (RequestPlaceholders covers URL, parameters,
+      headers, body and auth). A locked secret blocks only the requests that use it.
+    - IRequestSender lost its variables argument. RequestSender gets the variables from IRequestVariables,
+      so a failed lookup is recorded in history as an attempt. The UI tests were updated.
+    - After a locked-secret failure and a successful unlock, the request is sent once more. The locked attempt
+      stays in history as its own entry.
+    - SecretService keeps the salt, the iteration count and an encrypted verifier in the settings table.
+      The iteration count is 600,000, as in plan section 9, and is stored with each setup.
+    - The active environment is stored in the settings table too.
+    - Workspace<T> is a generic version of CollectionWorkspace's load-and-save logic. CollectionWorkspace was
+      not changed to use it. Merge them in M7 to remove the duplication.
+    - Auth headers replace a header of the same name that the user wrote, as Content-Type does.
+    - Environment names are unique, ignoring case. Variable names are unique after trimming and cannot
+      contain braces.
+    - Secret rows: a stored secret shows no value, and typing one replaces it. Turning Secret off clears the value,
+      because the ciphertext has no plain form.
+    - The app does not lock on a timer. Locking happens on Lock, on exit, and by the user.
+    - Open: a corrupt salt or iteration setting throws FormatException when unlocking, because it is not caught
+      in the Application layer (which has no logger). Fix it in M6, when the settings store gets typed values.
+    - Open: request headers and query params still have no editor (carried from M1 and M4).
+    - Open: the Application coverage fell from 95.83% to 92.42% because of the new services. The gate holds.
+    - Note: scripts\build.ps1 fails while a sample API process holds tests\RestClient.SampleApi\bin\...\apphost.exe.
+      Close the sample API before running it.
 
 [ ] M6 Tabs, Autosave, Settings, Shortcuts
     Depends on: M1, M2

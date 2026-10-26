@@ -13,25 +13,29 @@ public sealed class RequestSender : IRequestSender
     private readonly IHttpExecutor _executor;
     private readonly IHistoryService _history;
     private readonly IClock _clock;
+    private readonly IRequestVariables _variables;
 
-    public RequestSender(RequestBuilder builder, IHttpExecutor executor, IHistoryService history, IClock clock)
+    public RequestSender(
+        RequestBuilder builder,
+        IHttpExecutor executor,
+        IHistoryService history,
+        IClock clock,
+        IRequestVariables variables)
     {
         _builder = builder;
         _executor = executor;
         _history = history;
         _clock = clock;
+        _variables = variables;
     }
 
-    // Every attempt is recorded, including validation failures, network failures and cancellations.
+    // Every attempt is recorded, including validation failures, locked secrets, network failures and cancellations.
     // A failed history write does not change the result of the send. The history repository logs it.
-    public async Task<Result<ResponseSnapshot>> SendAsync(
-        RequestDefinition definition,
-        IReadOnlyDictionary<string, string> variables,
-        CancellationToken cancellationToken)
+    public async Task<Result<ResponseSnapshot>> SendAsync(RequestDefinition definition, CancellationToken cancellationToken)
     {
         var sentAt = _clock.UtcNow;
         var timer = Stopwatch.StartNew();
-        var prepared = await PrepareAsync(definition, variables, cancellationToken);
+        var prepared = await PrepareAsync(definition, cancellationToken);
         var result = prepared.IsSuccess
             ? await _executor.SendAsync(prepared.Value!, cancellationToken)
             : Result<ResponseSnapshot>.Failure(prepared.Error!);
@@ -42,10 +46,7 @@ public sealed class RequestSender : IRequestSender
         return result;
     }
 
-    private async Task<Result<OutgoingRequest>> PrepareAsync(
-        RequestDefinition definition,
-        IReadOnlyDictionary<string, string> variables,
-        CancellationToken cancellationToken)
+    private async Task<Result<OutgoingRequest>> PrepareAsync(RequestDefinition definition, CancellationToken cancellationToken)
     {
         var validation = RequestValidator.Validate(definition);
         if (!validation.IsSuccess)
@@ -53,7 +54,13 @@ public sealed class RequestSender : IRequestSender
             return Result<OutgoingRequest>.Failure(validation.Error!);
         }
 
-        var built = await _builder.BuildAsync(definition, variables, cancellationToken);
+        var variables = await _variables.ResolveAsync(definition, cancellationToken);
+        if (!variables.IsSuccess)
+        {
+            return Result<OutgoingRequest>.Failure(variables.Error!);
+        }
+
+        var built = await _builder.BuildAsync(definition, variables.Value!, cancellationToken);
         if (!built.IsSuccess)
         {
             return built;

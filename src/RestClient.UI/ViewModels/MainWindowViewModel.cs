@@ -13,10 +13,14 @@ public sealed class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         CollectionsTreeViewModel sidebar,
         HistoryListViewModel history,
-        RequestTabServices tabServices)
+        RequestTabServices tabServices,
+        EnvironmentSelectorViewModel environments,
+        SecretStatusViewModel secrets)
     {
         Sidebar = sidebar;
         History = history;
+        Environments = environments;
+        Secrets = secrets;
         _tabServices = tabServices;
         Sidebar.RequestOpenRequested += OnRequestOpenRequested;
         Sidebar.TreeChanged += OnTreeChanged;
@@ -27,6 +31,10 @@ public sealed class MainWindowViewModel : ViewModelBase
     public CollectionsTreeViewModel Sidebar { get; }
 
     public HistoryListViewModel History { get; }
+
+    public EnvironmentSelectorViewModel Environments { get; }
+
+    public SecretStatusViewModel Secrets { get; }
 
     public ObservableCollection<RequestTabViewModel> Tabs { get; } = [];
 
