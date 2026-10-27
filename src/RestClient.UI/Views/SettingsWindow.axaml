@@ -28,6 +28,9 @@
     <TextBox Text="{Binding ProxyUrl}"
              PlaceholderText="http://proxy:8080"
              AutomationProperties.Name="Proxy URL" />
+    <CheckBox Content="Open a request with a single click"
+              IsChecked="{Binding OpenOnSingleClick}"
+              AutomationProperties.Name="Open a request with a single click" />
     <TextBlock Text="{Binding Error}"
                Classes="error"
                TextWrapping="Wrap"

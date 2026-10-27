@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace RestClient.UI.Views;
 
-public partial class RequestBuilderView : UserControl
+public partial class RequestBarView : UserControl
 {
-    public RequestBuilderView()
+    public RequestBarView()
     {
         InitializeComponent();
     }

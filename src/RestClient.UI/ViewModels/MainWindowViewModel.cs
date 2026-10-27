@@ -1,5 +1,7 @@
 using System.Windows.Input;
+using RestClient.Application.Settings;
 using RestClient.Domain.Collections;
+using RestClient.Domain.Results;
 using RestClient.UI.Commands;
 using RestClient.UI.Services;
 
@@ -7,6 +9,8 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
+    private readonly ISettingsService _settings;
+    private readonly ISettingsDialogs _settingsDialogs;
     private readonly AsyncRelayCommand _settingsCommand;
 
     public MainWindowViewModel(
@@ -15,6 +19,8 @@ public sealed class MainWindowViewModel : ViewModelBase
         TabStripViewModel tabStrip,
         EnvironmentSelectorViewModel environments,
         SecretStatusViewModel secrets,
+        WorkspaceLayoutViewModel layout,
+        ISettingsService settings,
         ISettingsDialogs settingsDialogs)
     {
         Sidebar = sidebar;
@@ -22,7 +28,10 @@ public sealed class MainWindowViewModel : ViewModelBase
         TabStrip = tabStrip;
         Environments = environments;
         Secrets = secrets;
-        _settingsCommand = new AsyncRelayCommand(() => settingsDialogs.ShowAsync(CancellationToken.None), () => true);
+        Layout = layout;
+        _settings = settings;
+        _settingsDialogs = settingsDialogs;
+        _settingsCommand = new AsyncRelayCommand(ShowSettingsAsync, () => true);
         Sidebar.RequestOpenRequested += OnRequestOpenRequested;
         Sidebar.TreeChanged += OnTreeChanged;
         History.RestoreRequested += TabStrip.OpenUnsaved;
@@ -40,7 +49,33 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public SecretStatusViewModel Secrets { get; }
 
+    public WorkspaceLayoutViewModel Layout { get; }
+
     public ICommand SettingsCommand => _settingsCommand;
+
+    // Takes the settings that the window itself uses: the panel widths and the click that opens a request.
+    public async Task ApplySettingsAsync()
+    {
+        var loaded = await _settings.GetAsync(CancellationToken.None);
+        if (!loaded.IsSuccess)
+        {
+            Sidebar.StatusMessage = ErrorMessageFormatter.Format(loaded.Error!);
+            return;
+        }
+
+        Layout.Apply(loaded.Value!);
+        Sidebar.OpensOnSingleClick = loaded.Value!.OpenOnSingleClick;
+    }
+
+    public async Task RememberSidebarWidthAsync(double width)
+    {
+        ReportFailure(await Layout.RememberSidebarWidthAsync(width));
+    }
+
+    public async Task RememberResponseWidthAsync(double width)
+    {
+        ReportFailure(await Layout.RememberResponseWidthAsync(width));
+    }
 
     public async Task OpenRequestAsync(Guid requestId)
     {
@@ -54,6 +89,20 @@ public sealed class MainWindowViewModel : ViewModelBase
     public void OpenUnsaved(RequestDefinition definition)
     {
         TabStrip.OpenUnsaved(definition);
+    }
+
+    private async Task ShowSettingsAsync()
+    {
+        await _settingsDialogs.ShowAsync(CancellationToken.None);
+        await ApplySettingsAsync();
+    }
+
+    private void ReportFailure(Result result)
+    {
+        if (!result.IsSuccess)
+        {
+            Sidebar.StatusMessage = ErrorMessageFormatter.Format(result.Error!);
+        }
     }
 
     private async void OnRequestOpenRequested(Guid requestId)

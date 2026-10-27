@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:behaviors="using:RestClient.UI.Behaviors"
+        x:Class="RestClient.UI.Views.AboutWindow"
+        Title="About REST Client"
+        Width="380"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="16" Spacing="8">
+    <TextBlock Text="REST Client" FontSize="20" FontWeight="SemiBold" />
+    <TextBlock x:Name="VersionText" />
+    <TextBlock Text="Licensed under the Apache License 2.0." />
+    <TextBlock Text="Requests, collections, history and settings are kept in the data folder beside the program."
+               TextWrapping="Wrap" />
+    <Button Content="Close"
+            HorizontalAlignment="Right"
+            IsCancel="True"
+            IsDefault="True"
+            Click="OnCloseClick"
+            behaviors:InitialFocus.IsTarget="True" />
+  </StackPanel>
+</Window>

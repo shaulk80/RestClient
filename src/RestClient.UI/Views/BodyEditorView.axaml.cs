@@ -8,4 +8,15 @@ public partial class BodyEditorView : UserControl
     {
         InitializeComponent();
     }
+
+    public void FocusFirstInput()
+    {
+        if (BodyCodeEditor.IsEffectivelyVisible)
+        {
+            BodyCodeEditor.TextArea.Focus();
+            return;
+        }
+
+        BodyTypeBox.Focus();
+    }
 }

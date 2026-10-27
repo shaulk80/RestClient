@@ -44,6 +44,14 @@ public class DialogAccessibilityTests
     }
 
     [AvaloniaTest]
+    public void AboutDialogControlsAreNamed()
+    {
+        Show(new AboutWindow());
+
+        Assert.That(AccessibleNameChecker.FindUnnamed(_window!), Is.Empty);
+    }
+
+    [AvaloniaTest]
     public void SaveDestinationDialogControlsAreNamed()
     {
         Show(new SaveDestinationWindow());

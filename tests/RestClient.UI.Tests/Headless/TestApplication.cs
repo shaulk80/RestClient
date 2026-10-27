@@ -13,5 +13,9 @@ public sealed class TestApplication : Avalonia.Application
         {
             Source = new Uri("avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"),
         });
+        Styles.Add(new StyleInclude(new Uri("avares://RestClient.UI.Tests/"))
+        {
+            Source = new Uri("avares://RestClient/Styles/AppStyles.axaml"),
+        });
     }
 }

@@ -38,6 +38,19 @@ public class AppSettingsValidatorTests
         Assert.That(result.IsSuccess, Is.EqualTo(expectedValid));
     }
 
+    [TestCase(100, true)]
+    [TestCase(4000, true)]
+    [TestCase(99, false)]
+    [TestCase(4001, false)]
+    public void PanelWidthsMustBeInRange(int width, bool expectedValid)
+    {
+        var sidebar = AppSettingsValidator.Validate(new AppSettings { SidebarWidth = width });
+        var response = AppSettingsValidator.Validate(new AppSettings { ResponseWidth = width });
+
+        Assert.That(sidebar.IsSuccess, Is.EqualTo(expectedValid));
+        Assert.That(response.IsSuccess, Is.EqualTo(expectedValid));
+    }
+
     [TestCase("", true)]
     [TestCase("http://proxy:8080", true)]
     [TestCase("https://proxy.example.com", true)]

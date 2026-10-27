@@ -12,6 +12,7 @@ using RestClient.Application.Abstractions;
 using RestClient.Application.Environments;
 using RestClient.Application.History;
 using RestClient.Application.Secrets;
+using RestClient.Application.Settings;
 using RestClient.Application.Tabs;
 using RestClient.Domain.Bodies;
 using RestClient.Domain.Auth;
@@ -29,12 +30,14 @@ namespace RestClient.UI.Tests.Views;
 
 // Starts the real main window with fake services, and drives it with the keyboard and mouse.
 [TestFixture]
-public class MainWindowSmokeTests
+public partial class MainWindowSmokeTests
 {
     private TreeFixtures _fixtures = null!;
     private IRequestSender _sender = null!;
     private ITabService _tabService = null!;
     private RequestDefinition _stored = null!;
+    private AppSettings? _initialSettings;
+    private ISettingsService _settings = null!;
     private MainWindowViewModel _viewModel = null!;
     private MainWindow _window = null!;
 
@@ -209,14 +212,14 @@ public class MainWindowSmokeTests
         Assert.That(unnamed, Is.Empty);
     }
 
-    [TestCase(0, "Parameter name", "Params (1)")]
-    [TestCase(1, "Header name", "Headers (1)")]
+    [TestCase(1, "Parameter name", "Params (1)")]
+    [TestCase(2, "Header name", "Headers (1)")]
     [AvaloniaTest]
     public void HeadersAndParamsTabsShowTheirRows(int tabIndex, string expectedAutomationName, string expectedHeader)
     {
         OpenWindow();
         var tab = _viewModel.TabStrip.SelectedTab!;
-        var editor = tabIndex == 0 ? tab.QueryParams : tab.Headers;
+        var editor = tabIndex == (int)RequestSection.Params ? tab.QueryParams : tab.Headers;
         editor.AddRowCommand.Execute(null);
         editor.Rows[0].Key = "X-Test";
         var details = _window.GetVisualDescendants().OfType<TabControl>()
@@ -283,12 +286,15 @@ public class MainWindowSmokeTests
 
         var services = RequestTabServicesFactory.Create(_sender, _fixtures.Requests, A.Fake<IDestinationPicker>());
         var tabs = TabStripFactory.Create(services, _tabService, TabStripFactory.CreatePrompt(SaveChangesChoice.Discard));
+        _settings = SettingsServiceFactory.Create(_initialSettings);
         _viewModel = new MainWindowViewModel(
             _fixtures.CreateSidebar(),
             new HistoryListViewModel(CreateHistory()),
             tabs,
             new EnvironmentSelectorViewModel(CreateEnvironments(), A.Fake<IEnvironmentDialogs>()),
             new SecretStatusViewModel(CreateSecrets(), A.Fake<ISecretPrompt>()),
+            new WorkspaceLayoutViewModel(_settings),
+            _settings,
             A.Fake<ISettingsDialogs>());
         _window = new MainWindow { DataContext = _viewModel };
         _window.Show();

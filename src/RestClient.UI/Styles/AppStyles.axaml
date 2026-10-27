@@ -1,0 +1,61 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ae="using:AvaloniaEdit">
+  <!-- The look shared by every window. It is a file of its own, so the headless tests load the same styles as the app. -->
+  <Styles.Resources>
+    <ResourceDictionary>
+      <!-- The tree text is 14, so a tab header is 15. Fluent's own tab header size is 24. -->
+      <x:Double x:Key="TabHeaderFontSize">15</x:Double>
+      <ResourceDictionary.ThemeDictionaries>
+        <!-- Message colors with at least 4.5:1 contrast on the window background in each theme. -->
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="ErrorTextBrush" Color="#B00020" />
+          <SolidColorBrush x:Key="WarningTextBrush" Color="#8A5A00" />
+          <!-- Borders of panels, controls and tab headers. At least 3:1 against the window background. -->
+          <SolidColorBrush x:Key="PanelBorderBrush" Color="#8C8C8C" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF8A80" />
+          <SolidColorBrush x:Key="WarningTextBrush" Color="#FFCC66" />
+          <SolidColorBrush x:Key="PanelBorderBrush" Color="#7A7A7A" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="TextBlock.error">
+    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.warning">
+    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+
+  <!-- Panels, controls and tab headers have a border, so they stand out from each other. -->
+  <Style Selector="Border.panel">
+    <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="TabControl">
+    <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="{DynamicResource TabHeaderFontSize}" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button, TextBox, ComboBox">
+    <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <!-- The scroll bar of a code editor stays in view instead of fading out, so it is clear that the text scrolls. -->
+  <Style Selector="ae|TextEditor /template/ ScrollViewer">
+    <Setter Property="AllowAutoHide" Value="False" />
+  </Style>
+  <Style Selector="GridSplitter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+</Styles>

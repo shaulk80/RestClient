@@ -1,29 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="RestClient.UI.App">
-  <Application.Resources>
-    <ResourceDictionary>
-      <!-- Message colors with at least 4.5:1 contrast on the window background in each theme. -->
-      <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="ErrorTextBrush" Color="#B00020" />
-          <SolidColorBrush x:Key="WarningTextBrush" Color="#8A5A00" />
-        </ResourceDictionary>
-        <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF8A80" />
-          <SolidColorBrush x:Key="WarningTextBrush" Color="#FFCC66" />
-        </ResourceDictionary>
-      </ResourceDictionary.ThemeDictionaries>
-    </ResourceDictionary>
-  </Application.Resources>
   <Application.Styles>
     <FluentTheme />
     <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
-    <Style Selector="TextBlock.error">
-      <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
-    </Style>
-    <Style Selector="TextBlock.warning">
-      <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
-    </Style>
+    <StyleInclude Source="avares://RestClient/Styles/AppStyles.axaml" />
   </Application.Styles>
 </Application>

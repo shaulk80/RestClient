@@ -6,7 +6,8 @@
              x:Class="RestClient.UI.Views.BodyEditorView"
              x:DataType="vm:BodyEditorViewModel">
   <StackPanel Spacing="8">
-    <ComboBox Width="220"
+    <ComboBox x:Name="BodyTypeBox"
+              Width="220"
               ItemsSource="{Binding Types}"
               SelectedItem="{Binding SelectedType}"
               AutomationProperties.Name="Body type">
@@ -31,7 +32,8 @@
                 Command="{Binding FormatCommand}"
                 IsEnabled="{Binding CanFormat}" />
       </Grid>
-      <controls:CodeEditor EditorText="{Binding Text}"
+      <controls:CodeEditor x:Name="BodyCodeEditor"
+                           EditorText="{Binding Text}"
                            Language="{Binding Language}"
                            WordWrap="True"
                            Height="320"

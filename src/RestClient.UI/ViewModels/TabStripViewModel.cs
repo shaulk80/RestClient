@@ -22,6 +22,11 @@ public sealed class TabStripViewModel : ViewModelBase
     private readonly AsyncRelayCommand _closeSelectedCommand;
     private readonly AsyncRelayCommand _saveSelectedCommand;
     private readonly AsyncRelayCommand _sendSelectedCommand;
+    private readonly AsyncRelayCommand _saveAllCommand;
+    private readonly RelayCommand _nextRecentTabCommand;
+    private readonly RelayCommand _previousRecentTabCommand;
+    private readonly RecentTabs _recent = new();
+    private readonly HashSet<Guid> _opening = [];
     private RequestTabViewModel? _selectedTab;
     private bool _isRestored;
     private string _autosaveError = string.Empty;
@@ -40,6 +45,9 @@ public sealed class TabStripViewModel : ViewModelBase
         _closeSelectedCommand = new AsyncRelayCommand(CloseSelectedAsync, () => true);
         _saveSelectedCommand = new AsyncRelayCommand(SaveSelectedAsync, () => true);
         _sendSelectedCommand = new AsyncRelayCommand(SendSelectedAsync, () => true);
+        _saveAllCommand = new AsyncRelayCommand(SaveAllAsync, () => true);
+        _nextRecentTabCommand = new RelayCommand(() => SwitchRecentOnce(forward: true), () => true);
+        _previousRecentTabCommand = new RelayCommand(() => SwitchRecentOnce(forward: false), () => true);
         Tabs.CollectionChanged += OnTabsChanged;
     }
 
@@ -54,6 +62,7 @@ public sealed class TabStripViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedTab, value))
             {
+                _recent.Select(value);
                 ScheduleAutosave();
             }
         }
@@ -73,11 +82,22 @@ public sealed class TabStripViewModel : ViewModelBase
 
     public ICommand SendSelectedCommand => _sendSelectedCommand;
 
+    public ICommand SaveAllCommand => _saveAllCommand;
+
+    // The menu items. A key press goes through SwitchRecent instead, because the key is held while it is repeated.
+    public ICommand NextRecentTabCommand => _nextRecentTabCommand;
+
+    public ICommand PreviousRecentTabCommand => _previousRecentTabCommand;
+
     // Raised after a tab sent a request, including failed and cancelled sends, because each one adds a history entry.
     public event EventHandler? RequestSent;
 
     // Raised when an unsaved tab was saved into a collection.
     public event EventHandler<RequestLinkedEventArgs>? Linked;
+
+    // Raised when a tab is opened by the user: a new tab, a request from the tree, or a restore from history.
+    // It is not raised for the tabs that come back at the start.
+    public event EventHandler<RequestTabViewModel>? TabOpened;
 
     public async Task<Result> OpenRequestAsync(Guid requestId)
     {
@@ -88,14 +108,27 @@ public sealed class TabStripViewModel : ViewModelBase
             return Result.Success();
         }
 
-        var loaded = await _tabServices.Requests.GetAsync(requestId, CancellationToken.None);
-        if (!loaded.IsSuccess)
+        // A second click on the same request while it loads must not open a second tab.
+        if (!_opening.Add(requestId))
         {
-            return Result.Failure(loaded.Error!);
+            return Result.Success();
         }
 
-        AddTab(CreateTab(loaded.Value!, isLinked: true, isDirty: false));
-        return Result.Success();
+        try
+        {
+            var loaded = await _tabServices.Requests.GetAsync(requestId, CancellationToken.None);
+            if (!loaded.IsSuccess)
+            {
+                return Result.Failure(loaded.Error!);
+            }
+
+            AddTab(CreateTab(loaded.Value!, isLinked: true, isDirty: false));
+            return Result.Success();
+        }
+        finally
+        {
+            _opening.Remove(requestId);
+        }
     }
 
     // Always opens a new tab. Unsaved tabs are never matched against an existing one.
@@ -107,6 +140,19 @@ public sealed class TabStripViewModel : ViewModelBase
     public void NewTab()
     {
         OpenUnsaved(new RequestDefinition { Id = Guid.NewGuid(), Name = NewRequestName });
+    }
+
+    // Moves to the next tab in the order the tabs were last used, not the order of the strip. The key stays down while
+    // it is repeated, so a run of steps walks further back. CommitRecentSwitch ends the run when the key is released.
+    public void SwitchRecent(bool forward)
+    {
+        _recent.Step(forward, tab => SelectedTab = tab);
+    }
+
+    // Makes the tab that a run of SwitchRecent steps stopped on the most recently used one.
+    public void CommitRecentSwitch()
+    {
+        _recent.Commit(SelectedTab);
     }
 
     // Asks to save a tab with unsaved changes. The tab stays open when the user cancels, or the save does not finish.
@@ -194,6 +240,7 @@ public sealed class TabStripViewModel : ViewModelBase
     {
         Tabs.Add(tab);
         SelectedTab = tab;
+        TabOpened?.Invoke(this, tab);
     }
 
     private void RemoveTab(RequestTabViewModel tab)
@@ -204,6 +251,7 @@ public sealed class TabStripViewModel : ViewModelBase
         tab.Changed -= OnTabChanged;
         tab.CloseRequested -= OnTabCloseRequested;
         var index = Tabs.IndexOf(tab);
+        _recent.Remove(tab);
         Tabs.Remove(tab);
         if (SelectedTab == tab)
         {
@@ -243,6 +291,33 @@ public sealed class TabStripViewModel : ViewModelBase
         }
     }
 
+    // Linked tabs first, so cancelling the dialog of an unsaved tab does not keep the others from being saved.
+    // An unsaved tab that is still unsaved afterwards means the dialog was cancelled or the save failed: stop there.
+    public async Task SaveAllAsync()
+    {
+        var changed = Tabs.Where(tab => tab.IsDirty).ToList();
+        foreach (var tab in changed.Where(tab => tab.IsLinked))
+        {
+            await tab.SaveAsync();
+        }
+
+        foreach (var tab in changed.Where(tab => !tab.IsLinked))
+        {
+            SelectedTab = tab;
+            await tab.SaveAsync();
+            if (!tab.IsLinked)
+            {
+                return;
+            }
+        }
+    }
+
+    private void SwitchRecentOnce(bool forward)
+    {
+        SwitchRecent(forward);
+        CommitRecentSwitch();
+    }
+
     private async Task SendSelectedAsync()
     {
         if (SelectedTab is { IsSending: false } tab)
@@ -268,6 +343,11 @@ public sealed class TabStripViewModel : ViewModelBase
 
     private void OnTabsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        foreach (var added in e.NewItems?.OfType<RequestTabViewModel>() ?? [])
+        {
+            _recent.Add(added);
+        }
+
         RaisePropertyChanged(nameof(HasTabs));
         ScheduleAutosave();
     }

@@ -13,6 +13,9 @@ public sealed class AppSettingsStorage
     private const string MaxRedirectsKey = "http.maxRedirects";
     private const string VerifySslKey = "http.verifySsl";
     private const string ProxyUrlKey = "http.proxyUrl";
+    private const string OpenOnSingleClickKey = "ui.openOnSingleClick";
+    private const string SidebarWidthKey = "ui.sidebarWidth";
+    private const string ResponseWidthKey = "ui.responseWidth";
 
     private readonly ISettingsStore _store;
 
@@ -29,8 +32,11 @@ public sealed class AppSettingsStorage
         var maxRedirects = await ReadAsync(MaxRedirectsKey, cancellationToken);
         var verify = await ReadAsync(VerifySslKey, cancellationToken);
         var proxy = await ReadAsync(ProxyUrlKey, cancellationToken);
+        var singleClick = await ReadAsync(OpenOnSingleClickKey, cancellationToken);
+        var sidebarWidth = await ReadAsync(SidebarWidthKey, cancellationToken);
+        var responseWidth = await ReadAsync(ResponseWidthKey, cancellationToken);
 
-        var failed = new[] { timeout, follow, maxRedirects, verify, proxy }.FirstOrDefault(read => !read.IsSuccess);
+        var failed = new[] { timeout, follow, maxRedirects, verify, proxy, singleClick, sidebarWidth, responseWidth }.FirstOrDefault(read => !read.IsSuccess);
         if (failed is not null)
         {
             return Result<AppSettings>.Failure(failed.Error!);
@@ -43,6 +49,9 @@ public sealed class AppSettingsStorage
             MaxRedirects = ParseInt(maxRedirects.Value, defaults.MaxRedirects),
             VerifySsl = ParseBool(verify.Value, defaults.VerifySsl),
             ProxyUrl = proxy.Value ?? defaults.ProxyUrl,
+            OpenOnSingleClick = ParseBool(singleClick.Value, defaults.OpenOnSingleClick),
+            SidebarWidth = ParseInt(sidebarWidth.Value, defaults.SidebarWidth),
+            ResponseWidth = ParseInt(responseWidth.Value, defaults.ResponseWidth),
         });
     }
 
@@ -55,6 +64,9 @@ public sealed class AppSettingsStorage
             [MaxRedirectsKey] = settings.MaxRedirects.ToString(CultureInfo.InvariantCulture),
             [VerifySslKey] = settings.VerifySsl.ToString(CultureInfo.InvariantCulture),
             [ProxyUrlKey] = settings.ProxyUrl,
+            [OpenOnSingleClickKey] = settings.OpenOnSingleClick.ToString(CultureInfo.InvariantCulture),
+            [SidebarWidthKey] = settings.SidebarWidth.ToString(CultureInfo.InvariantCulture),
+            [ResponseWidthKey] = settings.ResponseWidth.ToString(CultureInfo.InvariantCulture),
         };
 
         foreach (var (key, value) in values)

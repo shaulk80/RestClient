@@ -55,6 +55,9 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         set => SetProperty(ref _selectedNode, value);
     }
 
+    // From the settings. A single click on a request opens it. Otherwise it takes a double-click.
+    public bool OpensOnSingleClick { get; set; }
+
     public string StatusMessage
     {
         get => _statusMessage;

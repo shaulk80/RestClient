@@ -14,6 +14,9 @@ First packaged release. Windows x64 only: `RestClient-win-x64.zip`, a single sel
 - Environments, `{{variables}}` and secret variables encrypted with a master password.
 - Tabs with autosaved drafts that survive a restart.
 - Settings: timeout, redirects, SSL verification, proxy.
+- Main menu (File, Edit, View, Help) and a three-panel window: Collections and History, the request, and the response on the right, with splitters. Panel widths are remembered.
+- A new request opens on its Body page with the body focused. Save All (Ctrl+Shift+S). Ctrl+Tab switches request tabs in the order they were last used.
+- Setting: open a request with a single click in the Collections tree (off by default).
 - Keyboard use throughout: tree shortcuts, dialog defaults, Esc to cancel, named controls for screen readers, light and dark themes.
 
 ### Not signed

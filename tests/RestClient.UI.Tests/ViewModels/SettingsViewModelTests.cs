@@ -36,6 +36,7 @@ public class SettingsViewModelTests
             MaxRedirects = 4,
             VerifySsl = false,
             ProxyUrl = "http://proxy:8080",
+            OpenOnSingleClick = true,
         };
         A.CallTo(() => _settings.GetAsync(A<CancellationToken>._))
             .Returns(Task.FromResult(Result<AppSettings>.Success(current)));
@@ -47,6 +48,41 @@ public class SettingsViewModelTests
         Assert.That(_viewModel.MaxRedirectsText, Is.EqualTo("4"));
         Assert.That(_viewModel.VerifySsl, Is.False);
         Assert.That(_viewModel.ProxyUrl, Is.EqualTo("http://proxy:8080"));
+        Assert.That(_viewModel.OpenOnSingleClick, Is.True);
+    }
+
+    [Test]
+    public async Task OpenOnSingleClickIsOffByDefault()
+    {
+        await _viewModel.LoadAsync();
+
+        Assert.That(_viewModel.OpenOnSingleClick, Is.False);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task SaveStoresTheSingleClickChoice(bool choice)
+    {
+        await _viewModel.LoadAsync();
+        _viewModel.OpenOnSingleClick = choice;
+
+        await _viewModel.SaveAsync();
+
+        Assert.That(_saved?.OpenOnSingleClick, Is.EqualTo(choice));
+    }
+
+    [Test]
+    public async Task SaveKeepsTheSettingsThatHaveNoBox()
+    {
+        var current = AppSettings.Default with { SidebarWidth = 333, ResponseWidth = 444 };
+        A.CallTo(() => _settings.GetAsync(A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<AppSettings>.Success(current)));
+        await _viewModel.LoadAsync();
+
+        await _viewModel.SaveAsync();
+
+        Assert.That(_saved?.SidebarWidth, Is.EqualTo(333));
+        Assert.That(_saved?.ResponseWidth, Is.EqualTo(444));
     }
 
     [Test]

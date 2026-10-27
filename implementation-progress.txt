@@ -6,11 +6,12 @@ Updated:   2026-10-27
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M7 Polish and Release is in progress on branch m7 (from m6; M6 is committed as 9798311).
-               Code, docs and scripts are done and the automated checks pass. Not committed yet. The manual checks in
-               docs\portability-checklist.md are still to do, and the open decisions are listed under M7.
-NEXT STAGE:    Manual checks (portability, accessibility, Smart App Control), the open decisions, then commit M7
-               (on instruction). The first public release also needs the SignPath step (plan M7 task 5).
+CURRENT STAGE: M7 Polish (UX only) is in progress on branch m7 (from m6; M6 is committed as 9798311). The work done before
+               the plan change (accessibility pass, headers and params editor, release tooling) is committed as 6002322.
+               The UX tasks 4 to 13 are implemented and tested (725 tests, build.ps1 passes). Not committed yet.
+NEXT STAGE:    The manual checks of M7 (dark theme, mouse use of the menu, splitters, the accessibility checklist), then
+               commit M7 (on instruction). Then M8 Release (portability, SignPath, Smart App Control). M9 is Linux
+               verification.
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
     From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
@@ -33,6 +34,19 @@ PLAN CHANGE (2026-10-25)
     Tabs may be unsaved. An unsaved tab is not linked to a collection. Save asks for a folder and a name,
     creates the request there, and links the tab. This replaces the M2 rule that every tab links a saved
     request (M2 task 5, and the M2 deviation below). Restore from history opens an unsaved tab.
+
+
+PLAN CHANGE (2026-10-27)
+    M7 is now Polish only, mainly UX. The hard, non-UX checks and the release tasks move to a new M8 Release
+    (portability smoke test, checksums, README and release notes, SignPath application, Smart App Control check).
+    Linux verification, which was plan section 8.1 and has no milestone number, is now M9. Section 8.1 keeps its
+    number so that old references hold.
+    New UX tasks in M7 (from C:\zzz_temp\PlanChange.txt and improve_ux.png): main menu, borders, response panel on the
+    right, resizable panels, Body as the first and focused sub-tab, smaller tab header font, thin top bar for
+    environment and secrets (Settings in the menu only), single-click open setting, Save All (Ctrl+Shift+S), and
+    Ctrl+Tab in recently used order for request tabs only.
+    Docs updated: plan sections 7, 8, 8.1, 10, 11, 12; ARCHITECTURE_PLAN.md milestone table and Q7;
+    docs\portability-checklist.md plan references.
 
 
 MILESTONES
@@ -411,22 +425,40 @@ MILESTONES
       one from the reload at start. Harmless; moved to M7.
     - A failure to store the tabs is shown in the status bar (red, left) and is cleared by the next
       successful store. Moved to M7 to decide whether it needs a more visible form.
-[~] M7 Polish and Release
+[~] M7 Polish (UX)
     Depends on: all others
-    Goal: a first packaged release for Windows. Linux follows in a later version.
-    Started 2026-10-27 on branch m7 (from m6).
+    Goal: a window that is easier to read and use. UX only. Release tasks are in M8.
+    Started 2026-10-27 on branch m7 (from m6). Scope changed 2026-10-27 (see PLAN CHANGE).
 
-    Tasks:
-    [x] 1.  Accessibility pass (details below)
-    [~] 2.  Portability smoke test: checklist written (docs\portability-checklist.md, section 1). The run on the
-            extracted zip is still to do (manual)
-    [x] 3.  scripts\build.ps1 writes dist\SHA256SUMS.txt (scripts\Checksums.ps1) and verifies it. The zip has no
-            .pdb files any more (DebugType=none, and the native .pdb files are removed before zipping): 44 MB
-            instead of about 70 MB
-    [x] 4.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props)
-    [ ] 5.  SignPath application (not code; checklist section 4). Signing stays out of this milestone
-    [ ] 6.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
-    [x] 7.  Conventional Commits from M7 (see COMMIT CONVENTION above)
+    Tasks done before the plan change (committed as 6002322):
+    [x] 1.  Accessibility pass (details below). To be rerun after the UX tasks, because the layout changes
+    [x] 2.  Headers and query params editor, and the polish items carried from M2 to M6 (details below)
+    [x] 3.  Conventional Commits from M7 (see COMMIT CONVENTION above). Was task 7 of the old M7
+
+    Tasks, UX changes (plan M7 tasks 4 to 13), implemented 2026-10-27:
+    [x] 4.  Main menu: File, Edit, View, Help. Items show their shortcuts and call the same commands as the key bindings
+    [x] 5.  Borders on controls, panels and tab headers (theme resources, light and dark)
+    [x] 6.  Layout: Collections and History | request editor | Response on the right. Vertical scroll bar on the response
+    [x] 7.  Splitters between the three panels, with minimum widths
+    [x] 8.  Request tab order Body, Params, Headers, Authorization. A new request opens on Body with the body editor focused
+    [x] 9.  Smaller tab header font (Collections tree font size + 1)
+    [x] 10. Thin top bar with environment, secrets and Manage. Settings in the menu only (no button).
+            A thin bottom line stays for status and autosave error messages only
+    [x] 11. Setting "Open a request with a single click" (AppSettings.OpenOnSingleClick, default off)
+    [x] 12. Save All, Ctrl+Shift+S
+    [x] 13. Ctrl+Tab and Ctrl+Shift+Tab switch request tabs in recently used order. Only request tabs are affected
+
+    Decided 2026-10-27 (all details are in the plan, M7):
+    - Menu contents (task 4): File, Edit, View and Help items as listed in the plan.
+    - Panel widths are remembered across restarts, in the settings (task 7).
+    - Body-first applies to every opened request, from the tree and from history too; a restored tab keeps its
+      sub-tab (task 8). Changed while implementing: each tab keeps its page while the app runs, but a tab that is
+      restored at the next start opens on Body, because the page is not stored (see the deviations below).
+    - The smaller font applies to all tab headers (task 9).
+    - Status and autosave error messages stay in a thin bottom line; the bottom bar holds nothing else (task 10).
+    - Save All asks for a folder and a name for unlinked tabs, tab by tab; Cancel stops (task 12).
+    - Ctrl+Tab moves one step per press in recently used order, with no pop-up (task 13).
+    - Single-click open is off by default (task 11).
 
     Accessibility pass (task 1):
     - Every interactive control in the main window and in each dialog has an automation name. Tests:
@@ -459,15 +491,58 @@ MILESTONES
     - The save dialog's FolderChoice now carries its Folder, to check names.
     - TextBlocks use Classes="error" or "warning" instead of Foreground="Red".
 
-    Definition of Done:
+    Checkpoint before the plan change (2026-10-27, commit 6002322):
     [x] All tests pass (Domain 95, Application 217, Infrastructure 84, UI 234, Integration 16 = 646)
     [x] Coverage gate holds (Domain 91.30%, Application 95.20%)
     [x] Solution builds with warnings as errors on
     [x] scripts\build.ps1 ran on 2026-10-27 after the headers editor and migration 0006 (the zip holds the 0006 script): restore, license check (89 packages),
         build, tests, win-x64 publish, zip, checksum file and smoke test of the extracted zip all passed (exit code 0)
-    [ ] Manual: portability checklist section 1 on the extracted zip
-    [ ] Manual: accessibility checklist section 2 (keyboard, light and dark, Narrator)
-    [ ] Manual: Smart App Control (section 3)
+
+    Definition of Done (after the UX tasks):
+    [x] All tests pass (Domain 95, Application 224, Infrastructure 84, UI 306, Integration 16 = 725)
+    [x] Coverage gate holds (Domain 91.30%, Application 95.26%)
+    [x] Solution builds with warnings as errors on
+    [x] scripts\build.ps1 ran on 2026-10-27 after the UX tasks: restore, license check (89 packages, no new ones),
+        build, tests, win-x64 publish, zip, checksum file and smoke test of the extracted zip all passed (exit code 0)
+    [x] Checked in the running app (screenshots of the real window, light theme): the layout matches improve_ux.png,
+        with the menu, thin top bar, bordered panels, Body first, response on the right, and a scroll bar on the response.
+        Not checked by eye: the dark theme, and the menu items opened with the mouse.
+    [ ] Manual: dark theme; both splitters drag; every menu item works with the mouse and shows its shortcut;
+        single-click open, Save All and Ctrl+Tab work in the running app
+    [ ] Manual: accessibility checklist section 2 (keyboard, light and dark, Narrator), run after the UX changes
+
+    Deviations from the plan, and notes on the UX tasks:
+    - The page of the request editor (Body, Params, Headers, Authorization) is not stored with the open tabs. Each tab
+      keeps its page while the app runs. A restored tab opens on Body. Storing it needs a migration and a change to
+      OpenTab, TabSnapshot and RestoredTab; say if you want it.
+    - Layout: the request tab strip and the URL bar span the request and the response. Below them are the request
+      pages and the Response panel, side by side. RequestBuilderView is split into RequestBarView and
+      RequestDetailsView. The window is one view of the selected tab, not one view per tab.
+    - Panel widths (AppSettings.SidebarWidth and ResponseWidth, validated 100 to 4000) are stored when a splitter is
+      released and when the window closes (a splitter moved with the arrow keys has no drag to complete). The
+      window keeps the request page at least 280 wide, the Collections panel at least 160 and the Response at least 200.
+      The minimum window width is now 760.
+    - The shared look (borders, tab header size, theme colors) moved from App.axaml to Styles\AppStyles.axaml, so the
+      headless tests load the same styles as the app. Tab header size is 15, one more than the 14 of the tree text.
+    - Ctrl+Tab is handled in the window before any control sees it. A run of presses with Ctrl held walks back through
+      the used order. The tab where the run stopped becomes the most recent one when Ctrl is released (or the window
+      loses focus). Ctrl+Shift+Tab walks the other way, and wraps to the least recently used tab. The menu items
+      Next and Previous request tab take one step and commit at once.
+    - Save All saves the changed linked tabs first, then the unsaved ones, one dialog each. A tab that stays unsaved
+      afterwards (Cancel, or a failed save) stops the rest. A failed save of a linked tab does not stop the others;
+      its error shows on that tab.
+    - Single-click open: a click that is released without a drag opens the request. The double-click does nothing extra
+      in that mode. A request that is still loading is not opened twice.
+    - Body focus: a tab opened by the user (New request, a request from the tree, a restore from history) puts the
+      cursor in the raw body editor, or in the body type box for other body types. Tabs restored at the start do not
+      take the focus.
+    - The Edit menu cuts, copies, pastes and selects in the text control that last had the focus (TextEditTarget).
+    - Help has About (name, version, license). The README link of the plan is left out: there is no public page to
+      point at yet.
+    - The response panel hides its empty lines, and the request bar hides an empty save error, so empty text no longer
+      leaves a gap. The scroll bar of the code editors does not fade out any more.
+    - Not done: a live switch between light and dark was not tried by eye. The borders use theme resources with a
+      light and a dark value.
 
     Decided 2026-10-27 and done:
     [x] Headers and query params editor (open since M1 and M4). RequestTabViewModel has Headers and QueryParams
@@ -488,9 +563,32 @@ MILESTONES
           request.
     - test.txt at the repository root is tracked and contains "1". It looks like a stray file. Not touched.
 
+[ ] M8 Release
+    Depends on: M7
+    Goal: a first packaged release for Windows. Linux follows in M9.
+    Created 2026-10-27 (PLAN CHANGE). Tasks 2 and 3 were done in the old M7 and moved here as they were.
 
-LINUX VERIFICATION (deferred to a later version, plan section 8.1)
-------------------------------------------------------------------
+    Tasks:
+    [~] 1.  Portability smoke test: checklist written (docs\portability-checklist.md, section 1). The run on the
+            extracted zip is still to do (manual). Was task 2 of the old M7
+    [x] 2.  scripts\build.ps1 writes dist\SHA256SUMS.txt (scripts\Checksums.ps1) and verifies it. The zip has no
+            .pdb files any more (DebugType=none, and the native .pdb files are removed before zipping): 44 MB
+            instead of about 70 MB
+    [~] 3.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props) are written. They need an
+            update for the M7 UX changes (menu, layout, shortcuts, the new setting) before the release
+    [ ] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code
+    [ ] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
+
+    Definition of Done:
+    [ ] All tests pass and the coverage gate holds
+    [ ] scripts\build.ps1 runs end to end on the release commit; CI is green on main for it
+    [ ] Manual: portability checklist section 1 on the extracted zip
+    [ ] Manual: Smart App Control (section 3)
+    [ ] SignPath application sent, and the outcome recorded (section 4)
+
+
+LINUX VERIFICATION, M9 (deferred to a later version, plan section 8.1)
+----------------------------------------------------------------------
 [ ] Unzip dist\RestClient-linux-x64.zip to a new folder; run; data/app.db and log created beside it
 [ ] SQLite native library loads from the single-file publish
 [ ] --data-dir and RESTCLIENT_DATA_DIR redirect the data folder

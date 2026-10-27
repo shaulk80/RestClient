@@ -15,6 +15,8 @@ public sealed class SettingsViewModel : ViewModelBase
     private string _maxRedirectsText = string.Empty;
     private bool _verifySsl;
     private string _proxyUrl = string.Empty;
+    private bool _openOnSingleClick;
+    private AppSettings _loaded = AppSettings.Default;
     private string _error = string.Empty;
 
     public SettingsViewModel(ISettingsService settings)
@@ -51,6 +53,12 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _proxyUrl;
         set => SetProperty(ref _proxyUrl, value);
+    }
+
+    public bool OpenOnSingleClick
+    {
+        get => _openOnSingleClick;
+        set => SetProperty(ref _openOnSingleClick, value);
     }
 
     public string Error
@@ -98,11 +106,13 @@ public sealed class SettingsViewModel : ViewModelBase
 
     private void Show(AppSettings settings)
     {
+        _loaded = settings;
         TimeoutText = settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture);
         FollowRedirects = settings.FollowRedirects;
         MaxRedirectsText = settings.MaxRedirects.ToString(CultureInfo.InvariantCulture);
         VerifySsl = settings.VerifySsl;
         ProxyUrl = settings.ProxyUrl;
+        OpenOnSingleClick = settings.OpenOnSingleClick;
     }
 
     // Sets Error and gives null when a number box does not hold a whole number.
@@ -120,13 +130,15 @@ public sealed class SettingsViewModel : ViewModelBase
             return null;
         }
 
-        return new AppSettings
+        // Settings that have no box here, such as the panel widths, are kept as they were loaded.
+        return _loaded with
         {
             TimeoutSeconds = timeout,
             FollowRedirects = FollowRedirects,
             MaxRedirects = maxRedirects,
             VerifySsl = VerifySsl,
             ProxyUrl = ProxyUrl.Trim(),
+            OpenOnSingleClick = OpenOnSingleClick,
         };
     }
 }

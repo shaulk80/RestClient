@@ -223,10 +223,16 @@ public partial class CollectionsTreeView : UserControl
         await StartDragAsync(node, pressArgs);
     }
 
+    // A press that was released without a drag is a click. With the single-click setting on, it opens a request.
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        var clicked = _pressedNode;
         _pressedNode = null;
         _pressArgs = null;
+        if (clicked is RequestNodeViewModel request && ViewModel is { OpensOnSingleClick: true } viewModel)
+        {
+            viewModel.OpenRequest(request.Id);
+        }
     }
 
     private static async Task StartDragAsync(TreeNodeViewModel node, PointerPressedEventArgs pressArgs)
@@ -258,11 +264,12 @@ public partial class CollectionsTreeView : UserControl
         await ViewModel.MoveAsync(source, target);
     }
 
+    // With the single-click setting on, the first click has opened the request already.
     private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (NodeOf(e.Source) is RequestNodeViewModel request)
+        if (ViewModel is { OpensOnSingleClick: false } viewModel && NodeOf(e.Source) is RequestNodeViewModel request)
         {
-            ViewModel?.OpenRequest(request.Id);
+            viewModel.OpenRequest(request.Id);
         }
     }
 }

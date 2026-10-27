@@ -219,14 +219,68 @@ public class CollectionsTreeViewInteractionTests
         A.CallTo(() => _fixtures.Folders.DeleteAsync(folder.Id, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 
-    private async Task<CollectionsTreeViewModel> OpenSidebarAsync()
+    [AvaloniaTest]
+    public async Task SingleClickOnARequestOpensItWhenTheSettingIsOn()
     {
-        var fixtures = new TreeFixtures();
-        _fixtures = fixtures;
-        fixtures.SetCollections([
+        var sidebar = await OpenSidebarWithRequestAsync(opensOnSingleClick: true);
+        var opened = new List<Guid>();
+        sidebar.RequestOpenRequested += opened.Add;
+
+        Click(Center(FindItem(sidebar.Roots[0].Children[0])));
+
+        Assert.That(opened, Is.EqualTo(new[] { sidebar.Roots[0].Children[0].Id }));
+    }
+
+    [AvaloniaTest]
+    public async Task SingleClickOnARequestOnlySelectsItWhenTheSettingIsOff()
+    {
+        var sidebar = await OpenSidebarWithRequestAsync(opensOnSingleClick: false);
+        var opened = new List<Guid>();
+        sidebar.RequestOpenRequested += opened.Add;
+        var request = sidebar.Roots[0].Children[0];
+
+        Click(Center(FindItem(request)));
+
+        Assert.That(opened, Is.Empty);
+        Assert.That(sidebar.SelectedNode, Is.SameAs(request));
+    }
+
+    [AvaloniaTest]
+    public async Task SingleClickOnACollectionDoesNotOpenAnythingWhenTheSettingIsOn()
+    {
+        var sidebar = await OpenSidebarWithRequestAsync(opensOnSingleClick: true);
+        var opened = new List<Guid>();
+        sidebar.RequestOpenRequested += opened.Add;
+
+        var label = FindItem(sidebar.Roots[0]).GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == "Shop");
+        Click(Center(label));
+
+        Assert.That(opened, Is.Empty);
+    }
+
+    private async Task<CollectionsTreeViewModel> OpenSidebarWithRequestAsync(bool opensOnSingleClick)
+    {
+        var request = new RequestDefinition { Id = Guid.NewGuid(), Name = "Login" };
+        var root = new Folder(Guid.NewGuid(), string.Empty, [], [request]);
+        var sidebar = await OpenSidebarAsync([new Collection(Guid.NewGuid(), "Shop", root)]);
+        sidebar.OpensOnSingleClick = opensOnSingleClick;
+        ClickExpander(sidebar.Roots[0]);
+        return sidebar;
+    }
+
+    private Task<CollectionsTreeViewModel> OpenSidebarAsync()
+    {
+        return OpenSidebarAsync([
             new Collection(Guid.NewGuid(), "First", TreeFixtures.CreateFolder(string.Empty, [TreeFixtures.CreateFolder("Alpha")])),
             new Collection(Guid.NewGuid(), "Second", TreeFixtures.CreateFolder(string.Empty, [TreeFixtures.CreateFolder("Beta")])),
         ]);
+    }
+
+    private async Task<CollectionsTreeViewModel> OpenSidebarAsync(IReadOnlyList<Collection> collections)
+    {
+        var fixtures = new TreeFixtures();
+        _fixtures = fixtures;
+        fixtures.SetCollections(collections);
         var sidebar = fixtures.CreateSidebar();
         await sidebar.ReloadAsync();
         _view = new CollectionsTreeView { DataContext = sidebar };

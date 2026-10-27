@@ -25,6 +25,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<EnvironmentEditorViewModel>();
         services.AddSingleton<EnvironmentSelectorViewModel>();
         services.AddSingleton<SecretStatusViewModel>();
+        services.AddSingleton<WorkspaceLayoutViewModel>();
         services.AddSingleton<MainWindowViewModel>();
 
         return services;

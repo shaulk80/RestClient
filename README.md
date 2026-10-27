@@ -13,6 +13,9 @@ A desktop REST client for Windows. Build requests, send them, and keep them in c
 - Several request tabs. Open tabs and unsaved edits come back after a restart.
 - Settings for the request timeout, redirects, SSL certificate checks, and a proxy.
 - Light and dark themes, following the system setting.
+- A main menu (File, Edit, View, Help) with the shortcuts shown next to each item. Settings are in the File menu.
+- Three panels: Collections and History, the request, and the response on the right. Drag the splitters to change the widths. The widths are remembered. The View menu hides the Collections and Response panels.
+- A setting to open a request with a single click in the Collections tree. It is off by default, which keeps the double-click.
 
 ## Install and run
 
@@ -57,7 +60,7 @@ To move the app to another computer or back it up, copy the whole folder, includ
 
 Secret variables are encrypted with AES-256-GCM, with a key derived from your master password (PBKDF2, 600,000 iterations). The password itself is never stored. **There is no way to recover a forgotten master password.** The secrets then have to be entered again.
 
-Secrets are unlocked for the running session only. Use *Lock* in the status bar to lock them sooner.
+Secrets are unlocked for the running session only. Use *Lock* in the bar under the menu to lock them sooner.
 
 ## Keyboard
 
@@ -65,8 +68,10 @@ Secrets are unlocked for the running session only. Use *Lock* in the status bar 
 |---|---|
 | Ctrl+Enter | Send the request in the active tab |
 | Ctrl+S | Save the active tab |
+| Ctrl+Shift+S | Save all changed tabs. A tab that is not in a collection yet asks for a folder and a name. Cancel stops the rest |
 | Ctrl+T | Open a new tab |
 | Ctrl+F4 | Close the active tab |
+| Ctrl+Tab / Ctrl+Shift+Tab | Switch the request tabs in the order they were last used. Keep Ctrl down to go further back. Other tabs (Collections, History, Body, Params, and so on) are not affected |
 | F2 / Delete / Enter | In the Collections tree: rename, delete, or open the selected item |
 | Shift+F10 or the Menu key | In the Collections tree: open the context menu. Esc closes it |
 | Esc / Shift+Esc | In a text editor (request or response body): move focus to the next / previous control. Tab types a tab character there |

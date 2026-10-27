@@ -35,6 +35,9 @@ public class AppSettingsStorageTests
             MaxRedirects = 3,
             VerifySsl = false,
             ProxyUrl = "http://proxy:8080",
+            OpenOnSingleClick = true,
+            SidebarWidth = 300,
+            ResponseWidth = 500,
         };
 
         await _storage.SaveAsync(settings, CancellationToken.None);
@@ -48,6 +51,9 @@ public class AppSettingsStorageTests
     [TestCase("http.maxRedirects", "")]
     [TestCase("http.followRedirects", "maybe")]
     [TestCase("http.verifySsl", "1")]
+    [TestCase("ui.openOnSingleClick", "yes")]
+    [TestCase("ui.sidebarWidth", "wide")]
+    [TestCase("ui.responseWidth", "-1")]
     public async Task UnreadableValueFallsBackToDefault(string key, string value)
     {
         _store.Values[key] = value;

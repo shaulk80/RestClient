@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestClient.UI.ViewModels"
+             xmlns:views="using:RestClient.UI.Views"
+             x:Class="RestClient.UI.Views.RequestDetailsView"
+             x:DataType="vm:RequestTabViewModel">
+  <!-- The tab order is the order of RequestSection. Each request tab remembers its own page. -->
+  <TabControl SelectedIndex="{Binding SectionIndex, Mode=TwoWay}"
+              AutomationProperties.Name="Request details">
+    <TabItem Header="Body">
+      <ScrollViewer>
+        <views:BodyEditorView x:Name="Body" Margin="8" DataContext="{Binding BodyEditor}" />
+      </ScrollViewer>
+    </TabItem>
+    <TabItem Header="{Binding QueryParams.Rows.Count, StringFormat='Params ({0})'}">
+      <StackPanel Margin="8" Spacing="6">
+        <TextBlock Text="{}Added to the URL when the request is sent. Enabled rows only. {{variables}} are allowed."
+                   TextWrapping="Wrap"
+                   Opacity="0.7" />
+        <ScrollViewer MaxHeight="240">
+          <views:KeyValueEditorView DataContext="{Binding QueryParams}" />
+        </ScrollViewer>
+      </StackPanel>
+    </TabItem>
+    <TabItem Header="{Binding Headers.Rows.Count, StringFormat='Headers ({0})'}">
+      <StackPanel Margin="8" Spacing="6">
+        <TextBlock Text="Sent with the request. Enabled rows only. The body's Content-Type and the authorization replace a header of the same name."
+                   TextWrapping="Wrap"
+                   Opacity="0.7" />
+        <ScrollViewer MaxHeight="240">
+          <views:KeyValueEditorView DataContext="{Binding Headers}" />
+        </ScrollViewer>
+      </StackPanel>
+    </TabItem>
+    <TabItem Header="Authorization">
+      <ScrollViewer>
+        <views:AuthEditorView Margin="8" DataContext="{Binding AuthEditor}" />
+      </ScrollViewer>
+    </TabItem>
+  </TabControl>
+</UserControl>

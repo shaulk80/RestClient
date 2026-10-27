@@ -6,6 +6,8 @@ public static class AppSettingsValidator
 {
     public const int MaxTimeoutSeconds = 3600;
     public const int MaxRedirectLimit = 50;
+    public const int MinPanelWidth = 100;
+    public const int MaxPanelWidth = 4000;
 
     private static readonly string[] ProxySchemes = ["http", "https", "socks4", "socks4a", "socks5"];
 
@@ -19,6 +21,11 @@ public static class AppSettingsValidator
         if (settings.MaxRedirects is < 1 or > MaxRedirectLimit)
         {
             return Invalid($"The redirect limit must be between 1 and {MaxRedirectLimit}.");
+        }
+
+        if (settings.SidebarWidth is < MinPanelWidth or > MaxPanelWidth || settings.ResponseWidth is < MinPanelWidth or > MaxPanelWidth)
+        {
+            return Invalid($"A panel width must be between {MinPanelWidth} and {MaxPanelWidth} pixels.");
         }
 
         return ValidateProxy(settings.ProxyUrl);

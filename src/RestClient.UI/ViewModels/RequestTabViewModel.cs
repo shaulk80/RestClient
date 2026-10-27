@@ -31,6 +31,7 @@ public sealed class RequestTabViewModel : ViewModelBase
     private bool _isSending;
     private bool _isDirty;
     private string _saveError = string.Empty;
+    private int _sectionIndex = (int)RequestSection.Body;
 
     // An unlinked tab holds a request that is not in any collection yet. It starts dirty, because it has to be saved.
     // A restored tab with unsaved edits is passed as dirty.
@@ -93,6 +94,14 @@ public sealed class RequestTabViewModel : ViewModelBase
     {
         get => _url;
         set => EditField(ref _url, value, nameof(Url));
+    }
+
+    // The page of the request editor that is shown, as the index of a RequestSection. Each tab keeps its own page,
+    // and a tab starts on the body. Choosing a page is not an edit.
+    public int SectionIndex
+    {
+        get => _sectionIndex;
+        set => SetProperty(ref _sectionIndex, value);
     }
 
     public KeyValueEditorViewModel QueryParams { get; }
