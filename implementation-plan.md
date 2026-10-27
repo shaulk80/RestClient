@@ -165,7 +165,7 @@ Grouped by folder. Every type is a separate file.
 
 ## 7. UI Layer (Avalonia)
 
-- **Shell:** `App`, `MainWindow` with `MainWindowViewModel`, status bar.
+- **Shell:** `App`, `MainWindow` with `MainWindowViewModel`, main menu (File, Edit, View, Help), a thin top bar (environment, secrets), a thin bottom line for messages, and three resizable panels: Collections and History, request editor, Response (M7).
 - **Sidebar:** `CollectionsTreeViewModel` with `CollectionNodeViewModel`, `FolderNodeViewModel`, `RequestNodeViewModel`. Drag-and-drop, context menu. `HistoryListViewModel` with `HistoryItemViewModel`.
 - **Request editing:** `RequestTabViewModel`, `RequestBuilderViewModel`, `KeyValueEditorViewModel` with `KeyValueRowViewModel`, `AuthEditorViewModel`, `BodyEditorViewModel`.
 - **Response:** `ResponseViewModel`, which shows status, timing, size, headers, and a body that can be pretty or raw.
@@ -173,13 +173,13 @@ Grouped by folder. Every type is a separate file.
 - **Settings:** `SettingsViewModel` and `SettingsWindow`.
 - **Editor integration:** `EditorLanguageMapper` maps body type to a TextMate grammar (JSON, XML, plain text). AvaloniaEdit with `AvaloniaEdit.TextMate`.
 - **Services:** `IDialogService`, `IFilePickerService`, `IClipboardService`, `ErrorMessageFormatter` (turns `Error` into user text).
-- **Keyboard shortcuts:** defined in `MainWindow` (Ctrl+Enter sends, Ctrl+S saves, Ctrl+T opens a new tab, Ctrl+F4 closes one).
+- **Keyboard shortcuts:** defined in `MainWindow` (Ctrl+Enter sends, Ctrl+S saves, Ctrl+Shift+S saves all, Ctrl+T opens a new tab, Ctrl+F4 closes one, Ctrl+Tab and Ctrl+Shift+Tab switch request tabs in recently used order). The menu items call the same commands.
 
 ViewModels contain no Avalonia types where possible, so they can be tested with plain NUnit.
 
 ## 8. Milestones
 
-Dependencies: M0 → M1 → M2 → M3. M4 needs M1. M5 needs M1 and M2. M6 needs M1 and M2. M7 needs all others.
+Dependencies: M0 → M1 → M2 → M3. M4 needs M1. M5 needs M1 and M2. M6 needs M1 and M2. M7 needs all others. M8 needs M7. M9 needs M8 and a Linux machine (section 8.1).
 
 Each milestone ends with the **Definition of Done**: all tests pass, the coverage gate holds (section 10), the solution builds with no warnings on Windows, and the milestone's manual checks are done.
 
@@ -321,26 +321,59 @@ Tests:
 
 Manual checks: edit two tabs without saving, close the app, reopen it, and confirm both tabs and drafts are restored.
 
-### M7 Polish and Release
+### M7 Polish (UX)
 
-**Goal:** a first packaged release for Windows. Linux follows in the Linux verification stage (section 8.1).
+**Goal:** a window that is easier to read and use. This milestone is UX only. Packaging, signing, and the hard non-UX checks are in M8. Changed 2026-10-27 (decision recorded in `implementation-progress.txt`); the UX list below comes from `C:\zzz_temp\PlanChange.txt` and the mock-up `improve_ux.png`.
 
-Tasks:
-1. Accessibility pass: keyboard navigation through every control, automation names on controls, check light and dark themes.
-2. Portability smoke test, recorded as a checklist in `docs/`: on Windows, unzip, run, send a request, create a collection, restart, and confirm `data/` is beside the executable. The Linux run is part of the Linux verification stage (section 8.1).
-3. `scripts/build.ps1` publishes the release zips with SHA-256 checksums.
-4. Release notes and a short README covering the data folder, the `--data-dir` option, the SmartScreen warning for unsigned builds, and the Apache-2.0 license.
-5. Signing is out of this milestone. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
-6. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
-7. Switch commit messages to Conventional Commits (`type(scope): summary`), as decided in section 12, item 4. Record the switch in the progress tracker.
+Tasks, done before the plan change:
+1. Accessibility pass: keyboard navigation through every control, automation names on controls, check light and dark themes. The keyboard and Narrator checks are rerun after the UX tasks below, because the layout changes.
+2. Headers and query params editor (open since M1 and M4), and the other polish items carried from M2 to M6.
+3. Switch commit messages to Conventional Commits (`type(scope): summary`), as decided in section 12, item 4. Record the switch in the progress tracker.
+
+Tasks, UX changes (details decided 2026-10-27):
+4. **Main menu.** A menu bar with File, Edit, View, and Help. Every item that has a shortcut shows it, and calls the same command as the key binding, so the logic is not duplicated. Contents:
+    - File: New request (Ctrl+T), Save (Ctrl+S), Save All (Ctrl+Shift+S), Close tab (Ctrl+F4), Settings, Exit.
+    - Edit: Cut, Copy, Paste, Select all (on the focused text control), Send (Ctrl+Enter), Cancel send.
+    - View: show or hide the Collections panel and the Response panel, next and previous request tab (Ctrl+Tab, Ctrl+Shift+Tab).
+    - Help: About (name, version, license), README link.
+5. **Borders.** Controls, panels, and tab headers get a border, so they are visually distinct. Border colors are theme resources and work in light and dark.
+6. **Layout.** Three panels from left to right: Collections and History, the request editor, and the Response. The Response moves to the right side (it is below the request now). The response body has a vertical scroll bar.
+7. **Resizable panels.** A splitter between the Collections panel and the request editor, and between the request editor and the Response, so each width can be changed. Each panel has a minimum width. The widths are remembered in the settings across restarts.
+8. **Request tab order.** The body tab comes first: Body, Params, Headers, Authorization. Each new request opens with the Body tab selected and the body editor focused. The same holds for a request opened from the tree or from history. Each tab keeps its own page while the app runs. A tab restored at the next start opens on Body, because the page is not stored.
+9. **Tab header font.** Tab headers use a smaller font, the font size of the Collections tree plus 1. This applies to all tab headers (the request tabs, the Params, Headers, Body, Authorization tabs, and Collections and History).
+10. **Top bar.** The secrets lock state, environment selector, and Manage move from the bottom bar to a thin bar at the top, below the menu. Settings are no longer a button: they open from the menu only. The bottom bar stays as a thin line that shows only the status and autosave error messages (they remain live regions).
+11. **Single-click open.** A new setting, "Open a request with a single click" (`AppSettings.OpenOnSingleClick`, default off, which keeps the double-click). It is shown in the Settings window, stored with the other settings, and applies without a restart.
+12. **Save All.** Ctrl+Shift+S saves every changed tab. A tab that is not linked to a collection asks for a folder and a name, one after the other, and Cancel stops the rest.
+13. **Ctrl+Tab.** Ctrl+Tab and Ctrl+Shift+Tab switch the open request tabs in the order they were last used, not in strip order. The request tabs are the only tabs affected. The sidebar tabs (Collections, History) and the Params, Headers, Body, Authorization tabs do not change. The most-recently-used order lives in `TabStripViewModel`. Each press moves one step in the order, with no pop-up list.
+
+Tests:
+- UI: `TabStripViewModelTests` for the recently used order (parameterized: switch, close, reopen, wrap around, one tab only) and for Save All (changed linked tabs, unlinked tab asks for a name, cancel stops).
+- Application and UI: `SettingsServiceTests` and `SettingsViewModelTests` for `OpenOnSingleClick` (default, store, read back). Panel widths too, if they are stored.
+- UI: headless tests for single-click and double-click open in the Collections tree, for the default sub-tab and focus of a new request, and for Ctrl+Tab affecting only the request tabs.
+- UI: the existing smoke tests (`EveryInteractiveControlHasAnAccessibleName`, dialogs) cover the menu items and the splitters.
+
+Manual checks: compare the window with `improve_ux.png` in light and dark. Drag both splitters. Use every menu item and confirm its shortcut. Run the accessibility checklist again (`docs/portability-checklist.md`, section 2).
 
 Tests: the full suite runs green on Windows. Coverage gate holds.
 
-### 8.1 Release Order and Linux Verification (Amended)
+### M8 Release
 
-No Linux machine is available during the Windows phase, so the Linux work is separated from the milestones and runs after the Windows release. The milestone checklists above cover Windows only. Linux is deferred to a later version: there is no `linux-x64` publish and no Linux CI job until that stage starts. `scripts/build.ps1 -Runtimes win-x64,linux-x64` re-enables the Linux publish.
+**Goal:** a first packaged release for Windows. Linux follows in M9 (section 8.1). Depends on M7. These are the release tasks and the hard checks that are not UX. Moved from the former M7 on 2026-10-27.
 
-1. **Windows release.** `scripts/build.ps1` produces `dist/RestClient-win-x64.zip`. Its smoke test runs against the extracted zip, the artifact a user receives. The Windows release is verified before any Linux work starts.
+Tasks:
+1. Portability smoke test, recorded as a checklist in `docs/`: on Windows, unzip, run, send a request, create a collection, restart, and confirm `data/` is beside the executable. The Linux run is part of M9 (section 8.1).
+2. `scripts/build.ps1` publishes the release zips with SHA-256 checksums.
+3. Release notes and a short README covering the data folder, the `--data-dir` option, the SmartScreen warning for unsigned builds, and the Apache-2.0 license. Updated at the end of M7 for the UX changes (menu, layout, shortcuts, the new setting).
+4. Signing is out of the code. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
+5. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
+
+Tests: the full suite runs green on Windows. Coverage gate holds. `scripts/build.ps1` runs end to end on the release commit, and CI is green on `main` for it.
+
+### 8.1 M9 Linux Verification and Release Order (Amended)
+
+No Linux machine is available during the Windows phase, so the Linux work is separated from the other milestones and runs after the Windows release (M8). It is M9. The milestone checklists above cover Windows only. Linux is deferred to a later version: there is no `linux-x64` publish and no Linux CI job until that stage starts. `scripts/build.ps1 -Runtimes win-x64,linux-x64` re-enables the Linux publish.
+
+1. **Windows release (M8).** `scripts/build.ps1` produces `dist/RestClient-win-x64.zip`. Its smoke test runs against the extracted zip, the artifact a user receives. The Windows release is verified before any Linux work starts.
 2. **Linux verification.** When a Linux machine is available, run the `linux-x64` build from `dist/RestClient-linux-x64.zip` and check the following:
    - Unzip to a new folder, run, and confirm `data/app.db` and a log file are created beside the executable.
    - The SQLite native library loads from the single-file publish (the risk in section 11).
@@ -374,7 +407,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 - **Integration tests:** in-process Kestrel server. These cover real HTTP behavior: redirects, timeouts, cancellation, and large bodies.
 - **UI tests:** view models in plain NUnit. Avalonia.Headless (`Avalonia.Headless.NUnit`, verify the package at M0) for a small number of smoke tests.
 - **Coverage gate:** coverlet with the threshold properties of `coverlet.msbuild`, set to 80% line coverage. The gate covers `RestClient.Domain` and `RestClient.Application` only. Infrastructure and UI are reported, not gated.
-- **Portability checks:** `build.ps1` publishes win-x64 on every run. Manual smoke tests on Windows as in M0 and M7. Linux smoke tests follow section 8.1 in a later version.
+- **Portability checks:** `build.ps1` publishes win-x64 on every run. Manual smoke tests on Windows as in M0 and M8. Linux smoke tests follow section 8.1 in a later version.
 
 ## 11. Risks
 
@@ -386,15 +419,15 @@ These values are proposed here and are easy to change in settings or code. Confi
 | Large responses slow the UI | Poor UX | Preview cap, spill to disk, background reading (M1, M4). |
 | Master password forgotten | Secrets unrecoverable | State this clearly in the setup dialog. There is no recovery in v1. |
 | Linux desktop differences (fonts, drag-and-drop, file pickers) | Visual or behavior bugs | Linux verification after the Windows release (section 8.1), then fixes. |
-| Smart App Control blocks unsigned builds on Windows 11 | Windows 11 users cannot run the release | Test on a clean Windows 11 install in M7. If blocked, revisit Q7 before release. |
-| SignPath application declined or delayed | First releases stay unsigned | Unsigned fallback with checksums and SmartScreen notes (M7). Reapply at later releases. |
+| Smart App Control blocks unsigned builds on Windows 11 | Windows 11 users cannot run the release | Test on a clean Windows 11 install in M8. If blocked, revisit Q7 before release. |
+| SignPath application declined or delayed | First releases stay unsigned | Unsigned fallback with checksums and SmartScreen notes (M8). Reapply at later releases. |
 
 ## 12. Open Items Before Starting M0
 
 1. **CI host.** Decided 2026-10-23: GitHub Actions, Windows job only (`.github/workflows/ci.yml`). The job runs `scripts/build.ps1` and uploads the win-x64 zip. The Linux CI job waits for the Linux stage (section 8.1). SignPath (Q7) signs from an automated build, so this choice also affects signing and should be settled before the first public release.
 2. **Linux test machine.** Not available for now. Linux verification is deferred until after the Windows release (section 8.1), when a machine is available.
 3. **Parameter defaults** in section 9. Confirm or change.
-4. **Commit message convention.** Decided 2026-10-23. Until M7, use plain imperative subjects of 72 characters or fewer, starting with a capital letter and with no period. When a commit completes or changes a milestone task, name the milestone in the subject, for example "M1: add RequestBuilder". Wrap the body at 72 characters and explain why. Leave out `Co-Authored-By` lines, per `CLAUDE.md`. Keep one logical change per commit. From M7, switch to Conventional Commits (`type(scope): summary`), as M7 task 7 sets out.
+4. **Commit message convention.** Decided 2026-10-23. Until M7, use plain imperative subjects of 72 characters or fewer, starting with a capital letter and with no period. When a commit completes or changes a milestone task, name the milestone in the subject, for example "M1: add RequestBuilder". Wrap the body at 72 characters and explain why. Leave out `Co-Authored-By` lines, per `CLAUDE.md`. Keep one logical change per commit. From M7, switch to Conventional Commits (`type(scope): summary`), as M7 task 3 sets out.
 5. **Warnings as errors.** Proposed on in `Directory.Build.props`. Confirm.
 6. **SignPath eligibility.** SignPath requires a project that is already released in signable form. Confirm with SignPath whether an earlier pre-release is enough to qualify, or whether the first public release ships unsigned (Q7).
 

@@ -183,7 +183,7 @@ Rules:
 | Q4 | Postman import/export | Not related to this project. Out of scope. | Decided |
 | Q5 | Secrets | Encrypted at rest with a master password, using AES-GCM and PBKDF2. | Decided |
 | Q6 | OAuth2 | Not in v1. Basic, Bearer and API key only. | Decided |
-| Q7 | Code signing | Apply for free signing through SignPath Foundation's open-source program before the first public release. SignPath requires the project to be already released in signable form, so the first public release may ship unsigned, and signing starts with the next release. If SignPath declines, ship unsigned, with SHA-256 checksums and a note on the SmartScreen bypass. Test Windows 11 Smart App Control on a clean install before release (M7). macOS is out of scope. | Decided (apply before first public release) |
+| Q7 | Code signing | Apply for free signing through SignPath Foundation's open-source program before the first public release. SignPath requires the project to be already released in signable form, so the first public release may ship unsigned, and signing starts with the next release. If SignPath declines, ship unsigned, with SHA-256 checksums and a note on the SmartScreen bypass. Test Windows 11 Smart App Control on a clean install before release (M8). macOS is out of scope. | Decided (apply before first public release) |
 | Q8 | Scripting and tests | Pre-request and post-response scripts are out of v1 (see 6.1). Unit tests are in v1 (section 5.1). | Decided |
 | Q9 | Large responses | Bodies up to 1 MB stay in memory. Larger bodies stream to disk, and the preview is the first 1 MB. Decided 2026-10-24, replacing the earlier 5 MB value. | Decided |
 | Q10 | Application license | Apache-2.0. Full text in `LICENSE`, attribution in `NOTICE`. OSI-approved, so eligible for SignPath (Q7). All planned dependencies are permissive; a license check runs in CI from M0. | Decided |
@@ -211,7 +211,9 @@ Dropping collection sharing removes the main reason for JSON files. The single S
 | M4 | Body editor with syntax highlighting, JSON and XML formatting, form and multipart bodies. |
 | M5 | Environments and variable resolution, secret encryption and master password, auth (Basic, Bearer, API key). |
 | M6 | Tabs and autosave, keyboard shortcuts, settings (timeouts, redirects, SSL, proxy). |
-| M7 | Polish, accessibility pass, portability smoke tests, first packaged release. |
+| M7 | Polish (UX only): accessibility pass, main menu, borders, three-panel layout with splitters, shortcuts. |
+| M8 | Release: portability smoke tests, SignPath application, Smart App Control check, first packaged Windows release. |
+| M9 | Linux verification and the Linux release (when a Linux machine is available). |
 
 Each milestone includes its unit tests. The 80% coverage gate applies from M0 onward.
 
