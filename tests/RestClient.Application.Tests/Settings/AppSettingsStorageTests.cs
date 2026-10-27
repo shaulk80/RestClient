@@ -36,6 +36,7 @@ public class AppSettingsStorageTests
             VerifySsl = false,
             ProxyUrl = "http://proxy:8080",
             OpenOnSingleClick = true,
+            Theme = ThemePreference.Dark,
             SidebarWidth = 300,
             ResponseWidth = 500,
         };
@@ -52,6 +53,9 @@ public class AppSettingsStorageTests
     [TestCase("http.followRedirects", "maybe")]
     [TestCase("http.verifySsl", "1")]
     [TestCase("ui.openOnSingleClick", "yes")]
+    [TestCase("ui.theme", "Purple")]
+    [TestCase("ui.theme", "7")]
+    [TestCase("ui.theme", "")]
     [TestCase("ui.sidebarWidth", "wide")]
     [TestCase("ui.responseWidth", "-1")]
     public async Task UnreadableValueFallsBackToDefault(string key, string value)

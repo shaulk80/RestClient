@@ -19,6 +19,9 @@ public sealed record AppSettings
     // The Collections tree opens a request on a single click. Off means a double-click.
     public bool OpenOnSingleClick { get; init; }
 
+    // The color theme. System follows the operating system.
+    public ThemePreference Theme { get; init; } = ThemePreference.System;
+
     // Panel widths in pixels. Remembered when a splitter is dragged.
     public int SidebarWidth { get; init; } = 260;
 

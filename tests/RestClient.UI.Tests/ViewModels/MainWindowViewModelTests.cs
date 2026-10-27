@@ -184,6 +184,19 @@ public class MainWindowViewModelTests
         Assert.That(window.Layout.ResponseWidth, Is.EqualTo(502));
     }
 
+    [TestCase(ThemePreference.System)]
+    [TestCase(ThemePreference.Light)]
+    [TestCase(ThemePreference.Dark)]
+    public async Task ApplySettingsTakesTheTheme(ThemePreference theme)
+    {
+        var settings = SettingsServiceFactory.Create(AppSettings.Default with { Theme = theme });
+        var window = CreateWindow(A.Fake<IRequestSender>(), settings);
+
+        await window.ApplySettingsAsync();
+
+        Assert.That(window.Theme, Is.EqualTo(theme));
+    }
+
     [Test]
     public async Task ApplySettingsReportsASettingsFailureInTheMessageLine()
     {

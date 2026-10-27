@@ -23,6 +23,11 @@ public static class AppSettingsValidator
             return Invalid($"The redirect limit must be between 1 and {MaxRedirectLimit}.");
         }
 
+        if (!Enum.IsDefined(settings.Theme))
+        {
+            return Invalid("The theme must be System, Light or Dark.");
+        }
+
         if (settings.SidebarWidth is < MinPanelWidth or > MaxPanelWidth || settings.ResponseWidth is < MinPanelWidth or > MaxPanelWidth)
         {
             return Invalid($"A panel width must be between {MinPanelWidth} and {MaxPanelWidth} pixels.");

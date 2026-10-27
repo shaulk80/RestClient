@@ -14,6 +14,7 @@ public sealed class AppSettingsStorage
     private const string VerifySslKey = "http.verifySsl";
     private const string ProxyUrlKey = "http.proxyUrl";
     private const string OpenOnSingleClickKey = "ui.openOnSingleClick";
+    private const string ThemeKey = "ui.theme";
     private const string SidebarWidthKey = "ui.sidebarWidth";
     private const string ResponseWidthKey = "ui.responseWidth";
 
@@ -33,10 +34,11 @@ public sealed class AppSettingsStorage
         var verify = await ReadAsync(VerifySslKey, cancellationToken);
         var proxy = await ReadAsync(ProxyUrlKey, cancellationToken);
         var singleClick = await ReadAsync(OpenOnSingleClickKey, cancellationToken);
+        var theme = await ReadAsync(ThemeKey, cancellationToken);
         var sidebarWidth = await ReadAsync(SidebarWidthKey, cancellationToken);
         var responseWidth = await ReadAsync(ResponseWidthKey, cancellationToken);
 
-        var failed = new[] { timeout, follow, maxRedirects, verify, proxy, singleClick, sidebarWidth, responseWidth }.FirstOrDefault(read => !read.IsSuccess);
+        var failed = new[] { timeout, follow, maxRedirects, verify, proxy, singleClick, theme, sidebarWidth, responseWidth }.FirstOrDefault(read => !read.IsSuccess);
         if (failed is not null)
         {
             return Result<AppSettings>.Failure(failed.Error!);
@@ -50,6 +52,7 @@ public sealed class AppSettingsStorage
             VerifySsl = ParseBool(verify.Value, defaults.VerifySsl),
             ProxyUrl = proxy.Value ?? defaults.ProxyUrl,
             OpenOnSingleClick = ParseBool(singleClick.Value, defaults.OpenOnSingleClick),
+            Theme = ParseTheme(theme.Value, defaults.Theme),
             SidebarWidth = ParseInt(sidebarWidth.Value, defaults.SidebarWidth),
             ResponseWidth = ParseInt(responseWidth.Value, defaults.ResponseWidth),
         });
@@ -65,6 +68,7 @@ public sealed class AppSettingsStorage
             [VerifySslKey] = settings.VerifySsl.ToString(CultureInfo.InvariantCulture),
             [ProxyUrlKey] = settings.ProxyUrl,
             [OpenOnSingleClickKey] = settings.OpenOnSingleClick.ToString(CultureInfo.InvariantCulture),
+            [ThemeKey] = settings.Theme.ToString(),
             [SidebarWidthKey] = settings.SidebarWidth.ToString(CultureInfo.InvariantCulture),
             [ResponseWidthKey] = settings.ResponseWidth.ToString(CultureInfo.InvariantCulture),
         };
@@ -84,6 +88,11 @@ public sealed class AppSettingsStorage
     private static int ParseInt(string? text, int fallback)
     {
         return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var value) ? value : fallback;
+    }
+
+    private static ThemePreference ParseTheme(string? text, ThemePreference fallback)
+    {
+        return Enum.TryParse<ThemePreference>(text, out var value) && Enum.IsDefined(value) ? value : fallback;
     }
 
     private static bool ParseBool(string? text, bool fallback)

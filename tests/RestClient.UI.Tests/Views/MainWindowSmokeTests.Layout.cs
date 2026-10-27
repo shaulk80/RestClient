@@ -266,6 +266,25 @@ public partial class MainWindowSmokeTests
         Assert.That(PanelColumn("RequestPanels", 2).ActualWidth, Is.EqualTo(500).Within(1));
     }
 
+    [TestCase(ThemePreference.Dark)]
+    [TestCase(ThemePreference.Light)]
+    [AvaloniaTest]
+    public void StoredThemeIsAppliedToTheApplicationAtStart(ThemePreference theme)
+    {
+        _initialSettings = AppSettings.Default with { Theme = theme };
+
+        try
+        {
+            OpenWindow();
+
+            Assert.That(Avalonia.Application.Current!.RequestedThemeVariant, Is.EqualTo(RestClient.UI.Services.ThemeVariants.For(theme)));
+        }
+        finally
+        {
+            Avalonia.Application.Current!.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Default;
+        }
+    }
+
     [AvaloniaTest]
     public async Task DraggingTheResponseSplitterResizesAndRemembersTheWidth()
     {

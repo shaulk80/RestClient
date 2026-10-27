@@ -8,6 +8,13 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class SettingsViewModel : ViewModelBase
 {
+    private static readonly IReadOnlyList<ThemeChoice> AllThemes =
+    [
+        new ThemeChoice(ThemePreference.System, "System"),
+        new ThemeChoice(ThemePreference.Light, "Light"),
+        new ThemeChoice(ThemePreference.Dark, "Dark"),
+    ];
+
     private readonly ISettingsService _settings;
     private readonly AsyncRelayCommand _saveCommand;
     private string _timeoutText = string.Empty;
@@ -16,6 +23,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private bool _verifySsl;
     private string _proxyUrl = string.Empty;
     private bool _openOnSingleClick;
+    private ThemeChoice _selectedTheme = AllThemes[0];
     private AppSettings _loaded = AppSettings.Default;
     private string _error = string.Empty;
 
@@ -59,6 +67,15 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _openOnSingleClick;
         set => SetProperty(ref _openOnSingleClick, value);
+    }
+
+    // Shared by all windows, like the other lists, so a combo box never gets a new item list.
+    public IReadOnlyList<ThemeChoice> Themes { get; } = AllThemes;
+
+    public ThemeChoice SelectedTheme
+    {
+        get => _selectedTheme;
+        set => SetProperty(ref _selectedTheme, value);
     }
 
     public string Error
@@ -113,6 +130,7 @@ public sealed class SettingsViewModel : ViewModelBase
         VerifySsl = settings.VerifySsl;
         ProxyUrl = settings.ProxyUrl;
         OpenOnSingleClick = settings.OpenOnSingleClick;
+        SelectedTheme = AllThemes.First(choice => choice.Theme == settings.Theme);
     }
 
     // Sets Error and gives null when a number box does not hold a whole number.
@@ -139,6 +157,7 @@ public sealed class SettingsViewModel : ViewModelBase
             VerifySsl = VerifySsl,
             ProxyUrl = ProxyUrl.Trim(),
             OpenOnSingleClick = OpenOnSingleClick,
+            Theme = SelectedTheme.Theme,
         };
     }
 }

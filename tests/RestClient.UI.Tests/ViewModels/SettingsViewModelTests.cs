@@ -72,6 +72,32 @@ public class SettingsViewModelTests
     }
 
     [Test]
+    public async Task ThemeIsSystemByDefault()
+    {
+        await _viewModel.LoadAsync();
+
+        Assert.That(_viewModel.SelectedTheme.Theme, Is.EqualTo(ThemePreference.System));
+        Assert.That(_viewModel.Themes.Select(choice => choice.Theme), Is.EqualTo(new[] { ThemePreference.System, ThemePreference.Light, ThemePreference.Dark }));
+    }
+
+    [TestCase(ThemePreference.System)]
+    [TestCase(ThemePreference.Light)]
+    [TestCase(ThemePreference.Dark)]
+    public async Task LoadShowsAndSaveStoresTheTheme(ThemePreference theme)
+    {
+        A.CallTo(() => _settings.GetAsync(A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<AppSettings>.Success(AppSettings.Default with { Theme = theme })));
+        await _viewModel.LoadAsync();
+        var shown = _viewModel.SelectedTheme.Theme;
+        _viewModel.SelectedTheme = _viewModel.Themes.Single(choice => choice.Theme == ThemePreference.Dark);
+
+        await _viewModel.SaveAsync();
+
+        Assert.That(shown, Is.EqualTo(theme));
+        Assert.That(_saved?.Theme, Is.EqualTo(ThemePreference.Dark));
+    }
+
+    [Test]
     public async Task SaveKeepsTheSettingsThatHaveNoBox()
     {
         var current = AppSettings.Default with { SidebarWidth = 333, ResponseWidth = 444 };

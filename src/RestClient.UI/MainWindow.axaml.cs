@@ -38,6 +38,7 @@ public partial class MainWindow : Window
         base.OnDataContextChanged(e);
         if (_viewModel is not null)
         {
+            _viewModel.PropertyChanged -= OnViewModelChanged;
             _viewModel.Layout.PropertyChanged -= OnLayoutChanged;
             _viewModel.TabStrip.TabOpened -= OnTabOpened;
         }
@@ -45,6 +46,7 @@ public partial class MainWindow : Window
         _viewModel = DataContext as MainWindowViewModel;
         if (_viewModel is not null)
         {
+            _viewModel.PropertyChanged += OnViewModelChanged;
             _viewModel.Layout.PropertyChanged += OnLayoutChanged;
             _viewModel.TabStrip.TabOpened += OnTabOpened;
             ApplyLayout();
@@ -85,6 +87,15 @@ public partial class MainWindow : Window
     private void OnTabOpened(object? sender, RequestTabViewModel e)
     {
         Dispatcher.UIThread.Post(Details.FocusBody, DispatcherPriority.Background);
+    }
+
+    // The theme belongs to the whole application, so the dialogs follow it too.
+    private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.Theme) && Avalonia.Application.Current is { } application && _viewModel is { } viewModel)
+        {
+            application.RequestedThemeVariant = ThemeVariants.For(viewModel.Theme);
+        }
     }
 
     private void OnLayoutChanged(object? sender, PropertyChangedEventArgs e)

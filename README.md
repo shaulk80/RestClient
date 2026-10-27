@@ -12,7 +12,7 @@ A desktop REST client for Windows. Build requests, send them, and keep them in c
 - Environments with `{{variables}}`. Variables can be marked secret. Secrets are encrypted with a master password.
 - Several request tabs. Open tabs and unsaved edits come back after a restart.
 - Settings for the request timeout, redirects, SSL certificate checks, and a proxy.
-- Light and dark themes, following the system setting.
+- Light and dark themes. The Theme setting is System (follows the operating system, the default), Light or Dark.
 - A main menu (File, Edit, View, Help) with the shortcuts shown next to each item. Settings are in the File menu.
 - Three panels: Collections and History, the request, and the response on the right. Drag the splitters to change the widths. The widths are remembered. The View menu hides the Collections and Response panels.
 - A setting to open a request with a single click in the Collections tree. It is off by default, which keeps the double-click.

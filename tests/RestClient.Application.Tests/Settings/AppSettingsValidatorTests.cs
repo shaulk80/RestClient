@@ -15,6 +15,17 @@ public class AppSettingsValidatorTests
         Assert.That(result.IsSuccess, Is.True);
     }
 
+    [TestCase(ThemePreference.System, true)]
+    [TestCase(ThemePreference.Light, true)]
+    [TestCase(ThemePreference.Dark, true)]
+    [TestCase((ThemePreference)9, false)]
+    public void ThemeMustBeOneOfTheKnownChoices(ThemePreference theme, bool expectedValid)
+    {
+        var result = AppSettingsValidator.Validate(new AppSettings { Theme = theme });
+
+        Assert.That(result.IsSuccess, Is.EqualTo(expectedValid));
+    }
+
     [TestCase(1, true)]
     [TestCase(3600, true)]
     [TestCase(0, false)]

@@ -12,6 +12,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     private readonly ISettingsService _settings;
     private readonly ISettingsDialogs _settingsDialogs;
     private readonly AsyncRelayCommand _settingsCommand;
+    private ThemePreference _theme = AppSettings.Default.Theme;
 
     public MainWindowViewModel(
         CollectionsTreeViewModel sidebar,
@@ -53,7 +54,14 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public ICommand SettingsCommand => _settingsCommand;
 
-    // Takes the settings that the window itself uses: the panel widths and the click that opens a request.
+    // The window applies it to the application, because view models know no Avalonia types.
+    public ThemePreference Theme
+    {
+        get => _theme;
+        private set => SetProperty(ref _theme, value);
+    }
+
+    // Takes the settings that the window itself uses: the panel widths, the click that opens a request and the theme.
     public async Task ApplySettingsAsync()
     {
         var loaded = await _settings.GetAsync(CancellationToken.None);
@@ -65,6 +73,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
         Layout.Apply(loaded.Value!);
         Sidebar.OpensOnSingleClick = loaded.Value!.OpenOnSingleClick;
+        Theme = loaded.Value!.Theme;
     }
 
     public async Task RememberSidebarWidthAsync(double width)
