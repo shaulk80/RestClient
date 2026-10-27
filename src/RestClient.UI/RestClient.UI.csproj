@@ -4,6 +4,8 @@
     <OutputType>WinExe</OutputType>
     <AssemblyName>RestClient</AssemblyName>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- The LibraryImport source generator emits unsafe code for NativeMessageBox. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +32,9 @@
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\RestClient.Infrastructure\Persistence\MigrationScripts\0005\0005_create_open_tabs.sql"
           Link="MigrationScripts\0005\0005_create_open_tabs.sql"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\RestClient.Infrastructure\Persistence\MigrationScripts\0006\0006_history_url_as_typed.sql"
+          Link="MigrationScripts\0006\0006_history_url_as_typed.sql"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

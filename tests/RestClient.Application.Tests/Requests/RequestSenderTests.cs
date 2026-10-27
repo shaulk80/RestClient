@@ -99,7 +99,7 @@ public class RequestSenderTests
     }
 
     [Test]
-    public async Task SendRecordsSuccessfulAttemptWithResolvedUrlAndTiming()
+    public async Task SendRecordsSuccessfulAttemptWithUrlAsTypedAndTiming()
     {
         var executor = A.Fake<IHttpExecutor>();
         A.CallTo(() => executor.SendAsync(A<OutgoingRequest>._, A<CancellationToken>._))
@@ -111,7 +111,7 @@ public class RequestSenderTests
         A.CallTo(() => _history.RecordAsync(
                 A<RequestAttempt>.That.Matches(attempt =>
                     attempt.Outcome.IsSuccess
-                    && attempt.ResolvedUrl == "https://example.com/a"
+                    && attempt.Url == "https://{{host}}/a"
                     && attempt.SentAt == SentAt
                     && attempt.DurationMs >= 0),
                 A<CancellationToken>._))
@@ -132,6 +132,26 @@ public class RequestSenderTests
         A.CallTo(() => executor.SendAsync(A<OutgoingRequest>._, A<CancellationToken>._)).MustNotHaveHappened();
     }
 
+    [Test]
+    public async Task SendRecordsTheUrlWithSecretPlaceholdersUnresolved()
+    {
+        var executor = A.Fake<IHttpExecutor>();
+        A.CallTo(() => executor.SendAsync(A<OutgoingRequest>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<ResponseSnapshot>.Success(CreateSnapshot())));
+        var sender = CreateSender(executor);
+        var definition = CreateDefinition("https://{{host}}/a") with
+        {
+            QueryParams = [new KeyValueEntry("token", "{{host}}", true)],
+        };
+
+        await sender.SendAsync(definition, CancellationToken.None);
+
+        A.CallTo(() => _history.RecordAsync(
+                A<RequestAttempt>.That.Matches(attempt => attempt.Url == "https://{{host}}/a?token={{host}}"),
+                A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+    }
+
     [TestCase("")]
     [TestCase("ftp://example.com")]
     [TestCase("{{missing}}")]
@@ -145,7 +165,7 @@ public class RequestSenderTests
                 A<RequestAttempt>.That.Matches(attempt =>
                     attempt.Outcome.Error != null
                     && attempt.Outcome.Error.Category == ErrorCategory.Validation
-                    && attempt.ResolvedUrl == url),
+                    && attempt.Url == url),
                 A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
     }

@@ -10,7 +10,7 @@ public sealed class HistoryItemViewModel
     {
         Id = entry.Id;
         Method = entry.Method;
-        Url = entry.ResolvedUrl;
+        Url = entry.Url;
         Title = $"{entry.Method.ToString().ToUpperInvariant()} {Outcome(entry)}";
         Details = $"{entry.SentAt.ToLocalTime():yyyy-MM-dd HH:mm:ss}  {Math.Round(entry.DurationMs).ToString(CultureInfo.InvariantCulture)} ms";
     }

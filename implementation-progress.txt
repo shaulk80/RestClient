@@ -6,9 +6,16 @@ Updated:   2026-10-27
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M6 Tabs, Autosave, Settings, Shortcuts is done on branch m6 (from m5, committed as 3033664).
-               Automated checks, scripts\build.ps1 and all manual checks passed. Not committed yet.
-NEXT STAGE:    Commit M6 on branch m6 (on instruction). Then M7 Polish and Release.
+CURRENT STAGE: M7 Polish and Release is in progress on branch m7 (from m6; M6 is committed as 9798311).
+               Code, docs and scripts are done and the automated checks pass. Not committed yet. The manual checks in
+               docs\portability-checklist.md are still to do, and the open decisions are listed under M7.
+NEXT STAGE:    Manual checks (portability, accessibility, Smart App Control), the open decisions, then commit M7
+               (on instruction). The first public release also needs the SignPath step (plan M7 task 5).
+
+COMMIT CONVENTION (2026-10-27, plan M7 task 7)
+    From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
+    "feat(ui): add keyboard shortcuts to the collections tree". The plain "M<n>: ..." subjects were used up to M6.
+    One logical change per commit. The Co-Authored-By rule in CLAUDE.md still applies.
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -404,22 +411,82 @@ MILESTONES
       one from the reload at start. Harmless; moved to M7.
     - A failure to store the tabs is shown in the status bar (red, left) and is cleared by the next
       successful store. Moved to M7 to decide whether it needs a more visible form.
-[ ] M7 Polish and Release
+[~] M7 Polish and Release
     Depends on: all others
     Goal: a first packaged release for Windows. Linux follows in a later version.
-    Carried from M2:
-    - After New folder or New collection, the rename box takes focus (today the user must click it).
-    - Escape closes the tree context menu (today only a click elsewhere closes it).
-    - Decide whether a left-click on a row under an open menu should activate the menu item
-      (today it does, which is standard behavior).
-    - Save dialog (M3): warn when the chosen name is already taken in the folder. Today the request is
-      saved as "Login 2" without a message.
-    - Infrastructure test for delete cascade: after deleting a folder or collection and saving,
-      its requests are gone after reload (plan M2 test list; the application tests cover the
-      in-memory delete only).
-    Carried from M6:
-    - Status bar environment combo box: skip the save when the selection comes from the reload at start.
-    - Autosave failure is shown only as red text in the status bar. Decide whether that is visible enough.
+    Started 2026-10-27 on branch m7 (from m6).
+
+    Tasks:
+    [x] 1.  Accessibility pass (details below)
+    [~] 2.  Portability smoke test: checklist written (docs\portability-checklist.md, section 1). The run on the
+            extracted zip is still to do (manual)
+    [x] 3.  scripts\build.ps1 writes dist\SHA256SUMS.txt (scripts\Checksums.ps1) and verifies it. The zip has no
+            .pdb files any more (DebugType=none, and the native .pdb files are removed before zipping): 44 MB
+            instead of about 70 MB
+    [x] 4.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props)
+    [ ] 5.  SignPath application (not code; checklist section 4). Signing stays out of this milestone
+    [ ] 6.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
+    [x] 7.  Conventional Commits from M7 (see COMMIT CONVENTION above)
+
+    Accessibility pass (task 1):
+    - Every interactive control in the main window and in each dialog has an automation name. Tests:
+      MainWindowSmokeTests.EveryInteractiveControlHasAnAccessibleName and DialogAccessibilityTests.
+    - Dialogs: Cancel is the Esc button, the safe confirm is the Enter button (Delete has no default),
+      and focus starts in the first input (InitialFocus behavior).
+    - Collections tree: F2 rename, Delete, Enter opens a request, Shift+F10 or the Menu key opens the context
+      menu with focus in it, Esc closes it. The rename box takes focus with its text selected.
+    - Code editors: Esc and Shift+Esc move focus out (Tab types a tab there, so the editor was a keyboard trap).
+    - Themes: error and warning text uses theme resources (light and dark). The editor highlighting follows a
+      live theme switch (it was applied only when the language was set).
+    - Status bar messages and dialog errors are live regions.
+
+    Carried items and what was done:
+    [x] M2: after New folder or New collection the rename box takes focus (CollectionsTreeViewInteractionTests)
+    [x] M2: Escape closes the tree context menu
+    [x] M2: decision: a left-click on a row under an open menu activates the menu item. Kept, it is standard behavior
+    [x] M3: the Save dialog warns when the chosen name is taken ("... will be saved as 'Login 2'")
+    [x] M2: Infrastructure tests for the delete cascade (folder subtree and whole collection)
+    [x] M5: CollectionWorkspace merged into Workspace<T> (CollectionWorkspace is gone)
+    [x] M6: the status bar environment selection from the reload at start is no longer saved
+            (EnvironmentSelectorViewModelTests; the selector had no tests before)
+    [x] M6: an autosave failure is now bold, reads "Open tabs are not being saved: ..." and is a live region
+    [x] Known issue: startup errors were on stderr only. A GUI build now shows a message box (Windows), and an
+            exception that escapes the UI loop is logged and shown. Other platforms stay on stderr (Linux stage)
+
+    Other changes:
+    - Program.Main has a last-resort catch around the whole start. It reports through StartupErrorReporter
+      and does not swallow: the exception text goes to stderr and the dialog, and to the log once the host exists.
+    - The save dialog's FolderChoice now carries its Folder, to check names.
+    - TextBlocks use Classes="error" or "warning" instead of Foreground="Red".
+
+    Definition of Done:
+    [x] All tests pass (Domain 95, Application 217, Infrastructure 84, UI 234, Integration 16 = 646)
+    [x] Coverage gate holds (Domain 91.30%, Application 95.20%)
+    [x] Solution builds with warnings as errors on
+    [x] scripts\build.ps1 ran on 2026-10-27 after the headers editor and migration 0006 (the zip holds the 0006 script): restore, license check (89 packages),
+        build, tests, win-x64 publish, zip, checksum file and smoke test of the extracted zip all passed (exit code 0)
+    [ ] Manual: portability checklist section 1 on the extracted zip
+    [ ] Manual: accessibility checklist section 2 (keyboard, light and dark, Narrator)
+    [ ] Manual: Smart App Control (section 3)
+
+    Decided 2026-10-27 and done:
+    [x] Headers and query params editor (open since M1 and M4). RequestTabViewModel has Headers and QueryParams
+        (KeyValueEditorViewModel, rows with an enable box). The request area is now four tabs: Params, Headers,
+        Body, Authorization; the first two show their row count. Rows are sent only when enabled, and
+        {{variables}} work in them (RequestBuilder already did this). They are part of save, the draft and restore.
+        Params typed in the URL and rows in the Params tab are both sent and are not synced.
+    [x] Security finding fixed: history used to store the URL as sent, so a secret used in the URL or query
+        (including an API key sent in the query) was stored as plain text. History now stores the URL as typed
+        plus the enabled query params as typed (HistoryUrl.For), with {{placeholders}} unresolved.
+        - HistoryEntry.ResolvedUrl, RequestAttempt.ResolvedUrl and the DTO are renamed Url.
+        - Migration 0006 renames the column resolved_url to url, replaces the index, and rewrites every existing
+          row from its stored request, so resolved URLs already in a user's database are overwritten
+          (HistoryUrlMigrationTests runs it on an old-schema database with a secret in the URL).
+        - Search by URL now matches the typed URL, so searching for a resolved host name no longer finds a
+          request that used {{host}}.
+        - Spilled body files and response data are unaffected. The request snapshot already held the unresolved
+          request.
+    - test.txt at the repository root is tracked and contains "1". It looks like a stray file. Not touched.
 
 
 LINUX VERIFICATION (deferred to a later version, plan section 8.1)
@@ -459,11 +526,9 @@ Open:
 
 KNOWN ISSUES AND NOTES
 ----------------------
-- The release zips include .pdb files (about 100 MB uncompressed). Consider
-  DebugType=none for release publishes; not changed yet.
-- Startup errors (data folder cannot be created, migration fails, or an unhandled exception
-  before the window opens) are written to stderr only. The Windows build is a GUI app with
-  no console, so the user sees nothing. Deferred to M7: show a visible error dialog.
+- The release zips no longer include .pdb files (M7). dist\ may still hold older output (RestClient-linux-x64.zip,
+  dist\linux-x64) from before Linux was deferred. dist\ is not tracked.
+- Startup errors show a message box on Windows (M7). Other platforms print to stderr only.
 - Spilled bodies in data/temp/ are deleted when their history entry is removed by retention (M3).
   Bodies of responses whose history entry is still kept stay on disk until then.
 - Headless UI smoke tests (MainWindowSmokeTests) exist since M6. They start the real main window with fake services.

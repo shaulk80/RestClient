@@ -13,16 +13,16 @@ namespace RestClient.Infrastructure.Persistence;
 public sealed class SqliteHistoryRepository : IHistoryRepository
 {
     private const string SelectColumnsSql =
-        "SELECT id, sent_at, method, resolved_url, request_json, status_code, duration_ms, error_message, body_file_path FROM history_entries";
+        "SELECT id, sent_at, method, url, request_json, status_code, duration_ms, error_message, body_file_path FROM history_entries";
     private const string SearchSql =
         SelectColumnsSql +
-        " WHERE ($url = '' OR instr(lower(resolved_url), lower($url)) > 0)" +
+        " WHERE ($url = '' OR instr(lower(url), lower($url)) > 0)" +
         " AND ($method IS NULL OR method = $method)" +
         " ORDER BY sent_at DESC, rowid DESC;";
     private const string GetSql = SelectColumnsSql + " WHERE id = $id;";
     private const string InsertSql =
-        "INSERT INTO history_entries (id, sent_at, method, resolved_url, request_json, status_code, duration_ms, error_message, body_file_path) " +
-        "VALUES ($id, $sentAt, $method, $resolvedUrl, $request, $statusCode, $durationMs, $errorMessage, $bodyFilePath);";
+        "INSERT INTO history_entries (id, sent_at, method, url, request_json, status_code, duration_ms, error_message, body_file_path) " +
+        "VALUES ($id, $sentAt, $method, $url, $request, $statusCode, $durationMs, $errorMessage, $bodyFilePath);";
     private const string DeleteSql = "DELETE FROM history_entries WHERE id = $id;";
 
     private static readonly Action<ILogger, Exception?> AddFailed = LoggerMessage.Define(
@@ -149,7 +149,7 @@ public sealed class SqliteHistoryRepository : IHistoryRepository
         command.Parameters.AddWithValue("$id", dto.Id);
         command.Parameters.AddWithValue("$sentAt", dto.SentAtUnixMs);
         command.Parameters.AddWithValue("$method", dto.Method.ToString());
-        command.Parameters.AddWithValue("$resolvedUrl", dto.ResolvedUrl);
+        command.Parameters.AddWithValue("$url", dto.Url);
         command.Parameters.AddWithValue("$request", RequestJson.Serialize(dto.Request));
         command.Parameters.AddWithValue("$statusCode", (object?)dto.StatusCode ?? DBNull.Value);
         command.Parameters.AddWithValue("$durationMs", dto.DurationMs);

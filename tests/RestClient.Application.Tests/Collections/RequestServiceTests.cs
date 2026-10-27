@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using RestClient.Application.Collections;
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -11,7 +12,7 @@ public class RequestServiceTests
     private static readonly string[] LoginCopyLast = ["Login", "Login copy", "Last"];
 
     private CollectionStore _store = null!;
-    private CollectionWorkspace _workspace = null!;
+    private Workspace<Collection> _workspace = null!;
     private RequestService _service = null!;
     private Folder _root = null!;
     private RequestDefinition _login = null!;
@@ -22,7 +23,7 @@ public class RequestServiceTests
         _login = Fixtures.Request("Login");
         _root = Fixtures.Folder(string.Empty, [], [_login]);
         _store = new CollectionStore([Fixtures.Collection("Auth", _root)]);
-        _workspace = new CollectionWorkspace(CollectionRepositoryFake.Create(_store));
+        _workspace = CollectionRepositoryFake.CreateWorkspace(_store);
         _service = new RequestService(_workspace, Fixtures.CreateIdGenerator());
     }
 

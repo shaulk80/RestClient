@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:RestClient.UI.ViewModels"
+        xmlns:behaviors="using:RestClient.UI.Behaviors"
         x:Class="RestClient.UI.Views.UnlockDialogWindow"
         x:DataType="vm:UnlockDialogViewModel"
         Title="Unlock secrets"
@@ -14,13 +15,16 @@
              PasswordChar="*"
              Text="{Binding Password}"
              PlaceholderText="Master password"
+             AutomationProperties.Name="Master password"
+             behaviors:InitialFocus.IsTarget="True"
              KeyDown="OnKeyDown" />
     <TextBlock Grid.Row="2"
-               Foreground="Red"
+               Classes="error"
                Text="{Binding Message}"
-               TextWrapping="Wrap" />
+               TextWrapping="Wrap"
+               AutomationProperties.LiveSetting="Polite" />
     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel" Click="OnCancelClick" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
       <Button Content="Unlock" Command="{Binding UnlockCommand}" />
     </StackPanel>
   </Grid>

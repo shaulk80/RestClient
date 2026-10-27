@@ -78,7 +78,7 @@ public sealed class HistoryService : IHistoryService, IDisposable
             _idGenerator.NewId(),
             attempt.SentAt,
             attempt.Request.Method,
-            attempt.ResolvedUrl,
+            attempt.Url,
             attempt.Request,
             outcome.Value?.StatusCode,
             attempt.DurationMs,

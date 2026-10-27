@@ -9,18 +9,34 @@
         <DataTemplate x:DataType="vm:MultipartRowViewModel">
           <StackPanel Spacing="4" Margin="0,2">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-              <TextBox Grid.Column="0" Text="{Binding Name}" PlaceholderText="Name" />
-              <CheckBox Grid.Column="1" Content="File" IsChecked="{Binding IsFile}" />
-              <Button Grid.Column="2" Content="Remove" Command="{Binding RemoveCommand}" />
+              <TextBox Grid.Column="0" Text="{Binding Name}" PlaceholderText="Name" AutomationProperties.Name="Part name" />
+              <CheckBox Grid.Column="1"
+                        Content="File"
+                        IsChecked="{Binding IsFile}"
+                        AutomationProperties.Name="Part is a file" />
+              <Button Grid.Column="2"
+                      Content="Remove"
+                      Command="{Binding RemoveCommand}"
+                      AutomationProperties.Name="Remove part" />
             </Grid>
-            <TextBox IsVisible="{Binding !IsFile}" Text="{Binding Value}" PlaceholderText="Value" />
+            <TextBox IsVisible="{Binding !IsFile}"
+                     Text="{Binding Value}"
+                     PlaceholderText="Value"
+                     AutomationProperties.Name="Part value" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" IsVisible="{Binding IsFile}">
-              <TextBox Grid.Column="0" Text="{Binding FilePath}" PlaceholderText="File path" />
-              <Button Grid.Column="1" Content="Browse..." Command="{Binding BrowseCommand}" />
+              <TextBox Grid.Column="0"
+                       Text="{Binding FilePath}"
+                       PlaceholderText="File path"
+                       AutomationProperties.Name="Part file path" />
+              <Button Grid.Column="1"
+                      Content="Browse..."
+                      Command="{Binding BrowseCommand}"
+                      AutomationProperties.Name="Browse for part file" />
             </Grid>
             <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="Red"
-                       TextWrapping="Wrap" />
+                       Classes="error"
+                       TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite" />
           </StackPanel>
         </DataTemplate>
       </ItemsControl.ItemTemplate>

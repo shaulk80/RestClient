@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:RestClient.UI.ViewModels"
         xmlns:views="using:RestClient.UI.Views"
+        xmlns:behaviors="using:RestClient.UI.Behaviors"
         x:Class="RestClient.UI.Views.EnvironmentEditorWindow"
         x:DataType="vm:EnvironmentEditorViewModel"
         Title="Environments"
@@ -15,17 +16,22 @@
       <TextBlock Grid.Row="0" Text="Environments" />
       <ListBox Grid.Row="1"
                ItemsSource="{Binding Environments}"
-               SelectedItem="{Binding SelectedEnvironment}">
+               SelectedItem="{Binding SelectedEnvironment}"
+               AutomationProperties.Name="Environments"
+               behaviors:InitialFocus.IsTarget="True">
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="vm:EnvironmentItem">
             <TextBlock Text="{Binding Name}" />
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-      <TextBox Grid.Row="2" PlaceholderText="New environment name" Text="{Binding NewName}" />
+      <TextBox Grid.Row="2"
+               PlaceholderText="New environment name"
+               Text="{Binding NewName}"
+               AutomationProperties.Name="New environment name" />
       <Button Grid.Row="3" Content="Create" Command="{Binding CreateCommand}" />
       <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-        <TextBox Grid.Column="0" Text="{Binding RenameTo}" />
+        <TextBox Grid.Column="0" Text="{Binding RenameTo}" AutomationProperties.Name="Rename selected environment to" />
         <Button Grid.Column="1" Content="Rename" Command="{Binding RenameCommand}" />
       </Grid>
     </Grid>
@@ -35,7 +41,11 @@
         <Button Grid.Column="1" Content="Delete environment" Command="{Binding DeleteCommand}" />
       </Grid>
       <views:VariablesEditorView Grid.Row="1" DataContext="{Binding Variables}" />
-      <TextBlock Grid.Row="2" Text="{Binding Message}" Foreground="Red" TextWrapping="Wrap" />
+      <TextBlock Grid.Row="2"
+                 Text="{Binding Message}"
+                 Classes="error"
+                 TextWrapping="Wrap"
+                 AutomationProperties.LiveSetting="Polite" />
     </Grid>
   </Grid>
 </Window>

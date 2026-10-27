@@ -1,4 +1,5 @@
 using RestClient.Application.Abstractions;
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -6,10 +7,10 @@ namespace RestClient.Application.Collections;
 
 public sealed class CollectionService : ICollectionService
 {
-    private readonly CollectionWorkspace _workspace;
+    private readonly Workspace<Collection> _workspace;
     private readonly IIdGenerator _idGenerator;
 
-    public CollectionService(CollectionWorkspace workspace, IIdGenerator idGenerator)
+    public CollectionService(Workspace<Collection> workspace, IIdGenerator idGenerator)
     {
         _workspace = workspace;
         _idGenerator = idGenerator;

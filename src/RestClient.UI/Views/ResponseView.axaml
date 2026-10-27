@@ -8,9 +8,12 @@
   <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="8">
     <StackPanel Grid.Row="0" Spacing="4">
       <TextBlock Text="{Binding Response.ErrorMessage}"
-                 Foreground="Red"
-                 TextWrapping="Wrap" />
-      <TextBlock Text="{Binding Response.StatusText}" FontWeight="SemiBold" />
+                 Classes="error"
+                 TextWrapping="Wrap"
+                 AutomationProperties.LiveSetting="Polite" />
+      <TextBlock Text="{Binding Response.StatusText}"
+                 FontWeight="SemiBold"
+                 AutomationProperties.LiveSetting="Polite" />
       <TextBlock Text="{Binding Response.TimingText}" />
       <TextBlock Text="{Binding Response.SizeText}" />
       <TextBlock Text="{Binding Response.BodyNote}" FontStyle="Italic" />
@@ -24,7 +27,9 @@
                      IsChecked="{Binding Response.IsRawView}" />
       </StackPanel>
     </StackPanel>
-    <ItemsControl Grid.Row="1" ItemsSource="{Binding Response.Headers}">
+    <ItemsControl Grid.Row="1"
+                  ItemsSource="{Binding Response.Headers}"
+                  AutomationProperties.Name="Response headers">
       <ItemsControl.ItemTemplate>
         <DataTemplate x:DataType="domain:KeyValueEntry">
           <TextBlock TextWrapping="Wrap">
@@ -39,6 +44,7 @@
                          EditorText="{Binding Response.BodyText}"
                          Language="{Binding Response.Language}"
                          IsReadOnly="True"
-                         WordWrap="True" />
+                         WordWrap="True"
+                         AutomationProperties.Name="Response body" />
   </Grid>
 </UserControl>

@@ -9,9 +9,17 @@
               Margin="0,0,0,8"
               HorizontalAlignment="Stretch"
               Content="New collection"
-              Command="{Binding NewCollectionCommand}" />
-      <TreeView ItemsSource="{Binding Roots}"
-                SelectedItem="{Binding SelectedNode}">
+              Command="{Binding NewCollectionCommand}"
+              AutomationProperties.Name="New collection" />
+      <TreeView x:Name="Tree"
+                ItemsSource="{Binding Roots}"
+                SelectedItem="{Binding SelectedNode}"
+                AutomationProperties.Name="Collections">
+        <TreeView.KeyBindings>
+          <KeyBinding Gesture="F2" Command="{Binding RenameSelectedCommand}" />
+          <KeyBinding Gesture="Delete" Command="{Binding DeleteSelectedCommand}" />
+          <KeyBinding Gesture="Enter" Command="{Binding OpenSelectedCommand}" />
+        </TreeView.KeyBindings>
         <TreeView.Styles>
           <Style Selector="TreeViewItem">
             <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=TwoWay}" />
@@ -21,12 +29,13 @@
           <TreeDataTemplate DataType="vm:TreeNodeViewModel" ItemsSource="{Binding Children}">
             <!-- Background makes the whole row hit-testable, so right-click works on blank row space too.
                  A TextBlock only hit-tests on its glyphs. -->
-            <Grid Background="Transparent">
+            <Grid Background="Transparent" AutomationProperties.Name="{Binding Name}">
               <TextBlock Text="{Binding Name}"
                          VerticalAlignment="Center"
                          IsVisible="{Binding !IsEditing}" />
               <TextBox Classes="rename"
                        Text="{Binding EditName}"
+                       AutomationProperties.Name="New name"
                        IsVisible="{Binding IsEditing}">
                 <TextBox.KeyBindings>
                   <KeyBinding Gesture="Enter" Command="{Binding CommitRenameCommand}" />

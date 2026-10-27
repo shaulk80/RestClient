@@ -1,6 +1,9 @@
 using Avalonia;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
+using RestClient.UI.Behaviors;
 using RestClient.UI.Services;
 using TextMateInstallation = AvaloniaEdit.TextMate.TextMate.Installation;
 using TextMateSharp.Grammars;
@@ -33,6 +36,8 @@ public sealed class CodeEditor : TextEditor
     public CodeEditor()
     {
         TextChanged += OnTextChanged;
+        ActualThemeVariantChanged += OnThemeVariantChanged;
+        AddHandler(KeyDownEvent, OnEscapeKeyDown, RoutingStrategies.Tunnel);
     }
 
     // Themes are looked up by exact type. Without this override, the TextEditor theme (and its template) is not applied.
@@ -48,6 +53,27 @@ public sealed class CodeEditor : TextEditor
     {
         get => GetValue(EditorTextProperty);
         set => SetValue(EditorTextProperty, value);
+    }
+
+    // Tab types a tab character in an editor, so it cannot also leave the editor. Escape leaves it instead
+    // (Shift+Escape goes back), which keeps the body editor from being a keyboard trap.
+    private void OnEscapeKeyDown(object? sender, KeyEventArgs e)
+    {
+        var modifiers = e.KeyModifiers;
+        if (e.Key != Key.Escape || (modifiers != KeyModifiers.None && modifiers != KeyModifiers.Shift))
+        {
+            return;
+        }
+
+        var target = FocusNeighbor.Find(this, forward: modifiers != KeyModifiers.Shift);
+        e.Handled = target is not null;
+        target?.Focus();
+    }
+
+    // The highlighting colors belong to the theme, so a switch between light and dark installs the matching set.
+    private void OnThemeVariantChanged(object? sender, EventArgs e)
+    {
+        ApplyLanguage();
     }
 
     private void OnTextChanged(object? sender, EventArgs e)

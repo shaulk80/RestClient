@@ -17,7 +17,7 @@ public static class FolderChoices
     private static IEnumerable<FolderChoice> FromFolder(string path, Folder folder, Guid expandId)
     {
         return [
-            new FolderChoice(folder.Id, expandId, path),
+            new FolderChoice(folder.Id, expandId, path, folder),
             .. folder.Folders.SelectMany(child => FromFolder($"{path}{Separator}{child.Name}", child, child.Id)),
         ];
     }

@@ -4,10 +4,10 @@ using RestClient.Domain.Results;
 
 namespace RestClient.Application.Requests;
 
-// One send, successful or not. ResolvedUrl is the URL as sent, or as typed when the send failed before it was built.
+// One send, successful or not. Url is the URL as typed (see HistoryUrl), never the resolved one, so secret values stay out of history.
 public sealed record RequestAttempt(
     RequestDefinition Request,
-    string ResolvedUrl,
+    string Url,
     DateTimeOffset SentAt,
     double DurationMs,
     Result<ResponseSnapshot> Outcome);

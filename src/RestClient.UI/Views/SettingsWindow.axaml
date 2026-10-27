@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:RestClient.UI.ViewModels"
+        xmlns:behaviors="using:RestClient.UI.Behaviors"
         x:Class="RestClient.UI.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
@@ -10,7 +11,9 @@
         WindowStartupLocation="CenterOwner">
   <StackPanel Margin="12" Spacing="8">
     <TextBlock Text="Request timeout (seconds)" />
-    <TextBox Text="{Binding TimeoutText}" AutomationProperties.Name="Request timeout in seconds" />
+    <TextBox Text="{Binding TimeoutText}"
+             AutomationProperties.Name="Request timeout in seconds"
+             behaviors:InitialFocus.IsTarget="True" />
     <CheckBox Content="Follow redirects"
               IsChecked="{Binding FollowRedirects}"
               AutomationProperties.Name="Follow redirects" />
@@ -25,10 +28,13 @@
     <TextBox Text="{Binding ProxyUrl}"
              PlaceholderText="http://proxy:8080"
              AutomationProperties.Name="Proxy URL" />
-    <TextBlock Text="{Binding Error}" Foreground="Red" TextWrapping="Wrap" />
+    <TextBlock Text="{Binding Error}"
+               Classes="error"
+               TextWrapping="Wrap"
+               AutomationProperties.LiveSetting="Polite" />
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel" Click="OnCancelClick" />
-      <Button Content="Save" Command="{Binding SaveCommand}" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
+      <Button Content="Save" IsDefault="True" Command="{Binding SaveCommand}" />
     </StackPanel>
   </StackPanel>
 </Window>

@@ -7,8 +7,12 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class KeyValueEditorViewModel
 {
-    public KeyValueEditorViewModel(IEnumerable<KeyValueEntry> entries)
+    private readonly string _itemLabel;
+
+    public KeyValueEditorViewModel(IEnumerable<KeyValueEntry> entries, string itemLabel = "Field")
     {
+        _itemLabel = itemLabel;
+        AddRowText = $"Add {itemLabel.ToLowerInvariant()}";
         foreach (var entry in entries)
         {
             Rows.Add(CreateRow(entry));
@@ -22,6 +26,8 @@ public sealed class KeyValueEditorViewModel
     public ObservableCollection<KeyValueRowViewModel> Rows { get; } = [];
 
     public ICommand AddRowCommand { get; }
+
+    public string AddRowText { get; }
 
     public IReadOnlyList<KeyValueEntry> ToEntries()
     {
@@ -42,7 +48,7 @@ public sealed class KeyValueEditorViewModel
 
     private KeyValueRowViewModel CreateRow(KeyValueEntry entry)
     {
-        var row = new KeyValueRowViewModel(entry);
+        var row = new KeyValueRowViewModel(entry, _itemLabel);
         row.Changed += OnRowChanged;
         row.RemoveRequested += (_, _) => RemoveRow(row);
         return row;

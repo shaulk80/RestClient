@@ -8,14 +8,25 @@
       <ItemsControl.ItemTemplate>
         <DataTemplate x:DataType="vm:KeyValueRowViewModel">
           <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="6" Margin="0,2">
-            <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
-            <TextBox Grid.Column="1" Text="{Binding Key}" PlaceholderText="Name" />
-            <TextBox Grid.Column="2" Text="{Binding Value}" PlaceholderText="Value" />
-            <Button Grid.Column="3" Content="Remove" Command="{Binding RemoveCommand}" />
+            <CheckBox Grid.Column="0"
+                      IsChecked="{Binding IsEnabled}"
+                      AutomationProperties.Name="{Binding EnabledAutomationName}" />
+            <TextBox Grid.Column="1"
+                     Text="{Binding Key}"
+                     PlaceholderText="Name"
+                     AutomationProperties.Name="{Binding NameAutomationName}" />
+            <TextBox Grid.Column="2"
+                     Text="{Binding Value}"
+                     PlaceholderText="Value"
+                     AutomationProperties.Name="{Binding ValueAutomationName}" />
+            <Button Grid.Column="3"
+                    Content="Remove"
+                    Command="{Binding RemoveCommand}"
+                    AutomationProperties.Name="{Binding RemoveAutomationName}" />
           </Grid>
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
-    <Button HorizontalAlignment="Left" Content="Add field" Command="{Binding AddRowCommand}" />
+    <Button HorizontalAlignment="Left" Content="{Binding AddRowText}" Command="{Binding AddRowCommand}" />
   </StackPanel>
 </UserControl>

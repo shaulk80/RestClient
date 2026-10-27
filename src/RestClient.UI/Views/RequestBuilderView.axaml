@@ -9,24 +9,57 @@
       <ComboBox Grid.Column="0"
                 MinWidth="110"
                 ItemsSource="{Binding Methods}"
-                SelectedItem="{Binding Method}" />
+                SelectedItem="{Binding Method}"
+                AutomationProperties.Name="HTTP method" />
       <TextBox Grid.Column="1"
                Text="{Binding Url}"
-               PlaceholderText="https://example.com/resource" />
+               PlaceholderText="https://example.com/resource"
+               AutomationProperties.Name="Request URL" />
       <Button Grid.Column="2"
               Content="Send"
-              Command="{Binding SendCommand}" />
+              Command="{Binding SendCommand}"
+              ToolTip.Tip="Send (Ctrl+Enter)"
+              AutomationProperties.AcceleratorKey="Ctrl+Enter" />
       <Button Grid.Column="3"
               Content="Cancel"
               Command="{Binding CancelCommand}" />
       <Button Grid.Column="4"
               Content="Save"
-              Command="{Binding SaveCommand}" />
+              Command="{Binding SaveCommand}"
+              ToolTip.Tip="Save (Ctrl+S)"
+              AutomationProperties.AcceleratorKey="Ctrl+S" />
     </Grid>
     <TextBlock Text="{Binding SaveError}"
-               Foreground="Red"
-               TextWrapping="Wrap" />
-    <views:BodyEditorView DataContext="{Binding BodyEditor}" />
-    <views:AuthEditorView DataContext="{Binding AuthEditor}" />
+               Classes="error"
+               TextWrapping="Wrap"
+               AutomationProperties.LiveSetting="Polite" />
+    <TabControl AutomationProperties.Name="Request details">
+      <TabItem Header="{Binding QueryParams.Rows.Count, StringFormat='Params ({0})'}">
+        <StackPanel Margin="0,8,0,0" Spacing="6">
+          <TextBlock Text="{}Added to the URL when the request is sent. Enabled rows only. {{variables}} are allowed."
+                     TextWrapping="Wrap"
+                     Opacity="0.7" />
+          <ScrollViewer MaxHeight="240">
+            <views:KeyValueEditorView DataContext="{Binding QueryParams}" />
+          </ScrollViewer>
+        </StackPanel>
+      </TabItem>
+      <TabItem Header="{Binding Headers.Rows.Count, StringFormat='Headers ({0})'}">
+        <StackPanel Margin="0,8,0,0" Spacing="6">
+          <TextBlock Text="Sent with the request. Enabled rows only. The body's Content-Type and the authorization replace a header of the same name."
+                     TextWrapping="Wrap"
+                     Opacity="0.7" />
+          <ScrollViewer MaxHeight="240">
+            <views:KeyValueEditorView DataContext="{Binding Headers}" />
+          </ScrollViewer>
+        </StackPanel>
+      </TabItem>
+      <TabItem Header="Body">
+        <views:BodyEditorView Margin="0,8,0,0" DataContext="{Binding BodyEditor}" />
+      </TabItem>
+      <TabItem Header="Authorization">
+        <views:AuthEditorView Margin="0,8,0,0" DataContext="{Binding AuthEditor}" />
+      </TabItem>
+    </TabControl>
   </StackPanel>
 </UserControl>

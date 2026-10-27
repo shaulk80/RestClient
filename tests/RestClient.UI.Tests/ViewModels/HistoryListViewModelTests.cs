@@ -79,7 +79,7 @@ public class HistoryListViewModelTests
     public async Task RestoreRaisesRestoreRequestedWithTheUnsavedDefinition()
     {
         var entry = CreateEntry(Now, "https://example.com/login");
-        var restored = new RequestDefinition { Id = Guid.NewGuid(), Name = "Login", Url = entry.ResolvedUrl };
+        var restored = new RequestDefinition { Id = Guid.NewGuid(), Name = "Login", Url = entry.Url };
         SetSearchResult([entry]);
         await _viewModel.ReloadAsync();
         _viewModel.SelectedItem = _viewModel.Items[0];

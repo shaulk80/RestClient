@@ -11,7 +11,7 @@
   <Grid Margin="12" RowDefinitions="*,Auto" RowSpacing="8">
     <TextBlock Grid.Row="0" Text="{Binding Message}" TextWrapping="Wrap" />
     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel" Click="OnCancelClick" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
       <Button Content="Delete" Click="OnConfirmClick" />
     </StackPanel>
   </Grid>

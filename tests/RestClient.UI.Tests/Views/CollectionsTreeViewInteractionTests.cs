@@ -137,6 +137,88 @@ public class CollectionsTreeViewInteractionTests
         A.CallTo(() => _fixtures.Folders.CreateAsync(folder.Id, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 
+    [AvaloniaTest]
+    public async Task NewCollectionMovesFocusToItsRenameBox()
+    {
+        var sidebar = await OpenSidebarAsync();
+        var created = new Collection(Guid.NewGuid(), "New collection", TreeFixtures.CreateFolder(string.Empty));
+        A.CallTo(() => _fixtures.Collections.CreateAsync(A<string>._, A<CancellationToken>._))
+            .Invokes(() => _fixtures.SetCollections([.. sidebar.Roots.Select(root => new Collection(root.Id, root.Name, TreeFixtures.CreateFolder(string.Empty))), created]))
+            .Returns(Task.FromResult(Result<Guid>.Success(created.Id)));
+
+        sidebar.NewCollectionCommand.Execute(null);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+
+        var focused = _window.FocusManager?.GetFocusedElement();
+        Assert.That(focused, Is.TypeOf<TextBox>());
+        Assert.That(((TextBox)focused!).Text, Is.EqualTo("New collection"));
+        Assert.That(sidebar.SelectedNode?.IsEditing, Is.True);
+    }
+
+    [AvaloniaTest]
+    public async Task EscapeClosesTheMenu()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        RightClick(Center(FindItem(folder)));
+
+        _window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(MenuOpenFor(folder), Is.False, "menu closes on Escape");
+    }
+
+    [AvaloniaTest]
+    public async Task ShiftF10OpensTheMenuForTheSelectedNode()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        sidebar.SelectedNode = folder;
+        FindItem(folder).Focus();
+
+        _window.KeyPressQwerty(PhysicalKey.F10, RawInputModifiers.Shift);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(MenuOpenFor(folder), Is.True, "menu opens for the selected folder");
+        Assert.That(_window.FocusManager?.GetFocusedElement(), Is.TypeOf<MenuItem>());
+    }
+
+    [AvaloniaTest]
+    public async Task F2StartsRenamingTheSelectedNode()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        sidebar.SelectedNode = folder;
+        FindItem(folder).Focus();
+
+        _window.KeyPressQwerty(PhysicalKey.F2, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(folder.IsEditing, Is.True);
+    }
+
+    [AvaloniaTest]
+    public async Task DeleteKeyDeletesTheSelectedNodeAfterConfirmation()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        A.CallTo(() => _fixtures.Folders.DeleteAsync(folder.Id, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result.Success()));
+        sidebar.SelectedNode = folder;
+        FindItem(folder).Focus();
+
+        _window.KeyPressQwerty(PhysicalKey.Delete, RawInputModifiers.None);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+
+        A.CallTo(() => _fixtures.Folders.DeleteAsync(folder.Id, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+    }
+
     private async Task<CollectionsTreeViewModel> OpenSidebarAsync()
     {
         var fixtures = new TreeFixtures();

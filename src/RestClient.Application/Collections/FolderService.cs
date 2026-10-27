@@ -1,4 +1,5 @@
 using RestClient.Application.Abstractions;
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -6,10 +7,10 @@ namespace RestClient.Application.Collections;
 
 public sealed class FolderService : IFolderService
 {
-    private readonly CollectionWorkspace _workspace;
+    private readonly Workspace<Collection> _workspace;
     private readonly IIdGenerator _idGenerator;
 
-    public FolderService(CollectionWorkspace workspace, IIdGenerator idGenerator)
+    public FolderService(Workspace<Collection> workspace, IIdGenerator idGenerator)
     {
         _workspace = workspace;
         _idGenerator = idGenerator;

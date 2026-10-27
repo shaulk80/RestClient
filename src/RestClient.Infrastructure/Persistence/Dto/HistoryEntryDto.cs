@@ -6,7 +6,7 @@ public sealed record HistoryEntryDto(
     Guid Id,
     long SentAtUnixMs,
     RequestMethod Method,
-    string ResolvedUrl,
+    string Url,
     RequestDto Request,
     int? StatusCode,
     double DurationMs,

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using RestClient.Application.Collections;
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -13,14 +14,14 @@ public class CollectionServiceTests
     private static readonly string[] OneOnly = ["One"];
 
     private CollectionStore _store = null!;
-    private CollectionWorkspace _workspace = null!;
+    private Workspace<Collection> _workspace = null!;
     private CollectionService _service = null!;
 
     [SetUp]
     public void SetUp()
     {
         _store = new CollectionStore([]);
-        _workspace = new CollectionWorkspace(CollectionRepositoryFake.Create(_store));
+        _workspace = CollectionRepositoryFake.CreateWorkspace(_store);
         _service = new CollectionService(_workspace, Fixtures.CreateIdGenerator());
     }
 

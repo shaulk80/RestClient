@@ -46,6 +46,10 @@ public sealed class RequestTabViewModel : ViewModelBase
         _name = definition.Name;
         _method = definition.Method;
         _url = definition.Url;
+        QueryParams = new KeyValueEditorViewModel(definition.QueryParams, "Parameter");
+        QueryParams.Changed += OnBodyEdited;
+        Headers = new KeyValueEditorViewModel(definition.Headers, "Header");
+        Headers.Changed += OnBodyEdited;
         BodyEditor = new BodyEditorViewModel(services.Formatting, services.Files, definition.Body);
         BodyEditor.Edited += OnBodyEdited;
         AuthEditor = new AuthEditorViewModel(definition.Auth);
@@ -90,6 +94,10 @@ public sealed class RequestTabViewModel : ViewModelBase
         get => _url;
         set => EditField(ref _url, value, nameof(Url));
     }
+
+    public KeyValueEditorViewModel QueryParams { get; }
+
+    public KeyValueEditorViewModel Headers { get; }
 
     public BodyEditorViewModel BodyEditor { get; }
 
@@ -296,13 +304,14 @@ public sealed class RequestTabViewModel : ViewModelBase
         return await _sender.SendAsync(ApplyEdits(_saved), cancellationToken);
     }
 
-    // Headers and query params are not editable yet, so they stay as stored.
     private RequestDefinition ApplyEdits(RequestDefinition definition)
     {
         return definition with
         {
             Method = Method,
             Url = Url.Trim(),
+            QueryParams = QueryParams.ToEntries(),
+            Headers = Headers.ToEntries(),
             Body = BodyEditor.Build(),
             Auth = AuthEditor.Build(),
         };

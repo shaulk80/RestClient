@@ -115,6 +115,37 @@ public class SqliteCollectionRepositoryTests
         Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Storage));
     }
 
+    [Test]
+    public async Task DeletingFolderAndSavingRemovesItsSubtreeFromStorage()
+    {
+        var workspace = CreateDeepWorkspace();
+        await _repository.SaveAsync(workspace, CancellationToken.None);
+        var deep = workspace[0];
+        var withoutMiddle = deep with { Root = deep.Root with { Folders = [deep.Root.Folders[0]] } };
+
+        await _repository.SaveAsync([withoutMiddle, workspace[1]], CancellationToken.None);
+        var loaded = await _repository.LoadAsync(CancellationToken.None);
+
+        Assert.That(CollectionDescriber.Describe(loaded.Value!), Is.EqualTo(CollectionDescriber.Describe([withoutMiddle, workspace[1]])));
+        Assert.That(await CountAsync("requests"), Is.EqualTo(1), "only the root request is left");
+        Assert.That(await CountAsync("folders"), Is.EqualTo(3), "the two collection roots and First are left");
+    }
+
+    [Test]
+    public async Task DeletingCollectionAndSavingRemovesItsFoldersAndRequestsFromStorage()
+    {
+        var workspace = CreateDeepWorkspace();
+        await _repository.SaveAsync(workspace, CancellationToken.None);
+
+        await _repository.SaveAsync([workspace[1]], CancellationToken.None);
+        var loaded = await _repository.LoadAsync(CancellationToken.None);
+
+        Assert.That(loaded.Value!.Single().Name, Is.EqualTo("Second"));
+        Assert.That(await CountAsync("requests"), Is.Zero);
+        Assert.That(await CountAsync("folders"), Is.EqualTo(1));
+        Assert.That(await CountAsync("collections"), Is.EqualTo(1));
+    }
+
     private static IReadOnlyList<Collection> CreateDeepWorkspace()
     {
         var leaf = new Folder(Guid.NewGuid(), "Leaf", [], [
@@ -166,6 +197,15 @@ public class SqliteCollectionRepositoryTests
             new SqliteConnectionFactory(_connectionString),
             migrationSetBuilder,
             NullLogger<SqliteMigrator>.Instance);
+    }
+
+    private async Task<long> CountAsync(string tableAndFilter)
+    {
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"SELECT COUNT(*) FROM {tableAndFilter};";
+        return (long)(await command.ExecuteScalarAsync())!;
     }
 
     private async Task ExecuteAsync(string sql)

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using RestClient.UI.ViewModels;
 
@@ -18,6 +19,12 @@ public partial class CollectionsTreeView : UserControl
     private Point _pressPoint;
     private TopLevel? _topLevel;
 
+    static CollectionsTreeView()
+    {
+        Visual.IsVisibleProperty.Changed.AddClassHandler<TextBox>((box, e) => FocusRenameBox(box, e.NewValue is true));
+        Control.LoadedEvent.AddClassHandler<TextBox>((box, _) => FocusRenameBox(box, box.IsVisible));
+    }
+
     public CollectionsTreeView()
     {
         InitializeComponent();
@@ -28,6 +35,7 @@ public partial class CollectionsTreeView : UserControl
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
         AddHandler(DoubleTappedEvent, OnDoubleTapped);
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         MenuItems.AddHandler(MenuItem.ClickEvent, OnMenuItemClick);
         MenuItems.AddHandler(PointerPressedEvent, OnMenuPointerPressed, RoutingStrategies.Tunnel);
     }
@@ -63,6 +71,42 @@ public partial class CollectionsTreeView : UserControl
     private void OnMenuItemClick(object? sender, RoutedEventArgs e)
     {
         CloseMenu();
+        Tree.Focus();
+    }
+
+    // A new or renamed node shows a rename box. Typing starts at once, with the name selected.
+    private static void FocusRenameBox(TextBox box, bool isVisible)
+    {
+        if (!box.Classes.Contains("rename") || !isVisible)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            box.Focus();
+            box.SelectAll();
+        }, DispatcherPriority.Background);
+    }
+
+    // Escape closes the context menu and returns to the tree. Shift+F10 and the Menu key open it for the
+    // selected node, as on any Windows list.
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && MenuPopup.IsOpen)
+        {
+            e.Handled = true;
+            CloseMenu();
+            Tree.Focus();
+            return;
+        }
+
+        var opensMenu = e.Key == Key.Apps || (e.Key == Key.F10 && e.KeyModifiers == KeyModifiers.Shift);
+        if (opensMenu && ViewModel?.SelectedNode is { IsEditing: false } node)
+        {
+            e.Handled = true;
+            OpenMenu(node, Tree.ContainerFromItem(node) as Control, focusMenu: true);
+        }
     }
 
     // The menu covers the rows below the pointer. A right-press on one of those rows must still select
@@ -84,7 +128,7 @@ public partial class CollectionsTreeView : UserControl
         OpenMenu(node, hit as Control);
     }
 
-    private void OpenMenu(TreeNodeViewModel node, Control? target)
+    private void OpenMenu(TreeNodeViewModel node, Control? target, bool focusMenu = false)
     {
         if (ViewModel is null)
         {
@@ -96,6 +140,15 @@ public partial class CollectionsTreeView : UserControl
         MenuPopup.DataContext = node;
         MenuPopup.PlacementTarget = target ?? this;
         MenuPopup.IsOpen = true;
+        if (focusMenu)
+        {
+            Dispatcher.UIThread.Post(FocusFirstMenuItem);
+        }
+    }
+
+    private void FocusFirstMenuItem()
+    {
+        MenuItems.Items.OfType<MenuItem>().FirstOrDefault(item => item.IsVisible)?.Focus();
     }
 
     private void CloseMenu()

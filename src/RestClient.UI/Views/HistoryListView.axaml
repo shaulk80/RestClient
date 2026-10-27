@@ -6,7 +6,8 @@
   <DockPanel Margin="8" LastChildFill="True">
     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8" Spacing="6">
       <TextBox Text="{Binding UrlFilter}"
-               PlaceholderText="Search by URL">
+               PlaceholderText="Search by URL"
+               AutomationProperties.Name="Search history by URL">
         <TextBox.KeyBindings>
           <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
         </TextBox.KeyBindings>
@@ -14,15 +15,21 @@
       <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
         <ComboBox Grid.Column="0"
                   ItemsSource="{Binding MethodChoices}"
-                  SelectedItem="{Binding SelectedMethod}" />
+                  SelectedItem="{Binding SelectedMethod}"
+                  AutomationProperties.Name="Filter history by method" />
         <Button Grid.Column="1" Content="Search" Command="{Binding SearchCommand}" />
-        <Button Grid.Column="2" Content="Restore" Command="{Binding RestoreCommand}" />
+        <Button Grid.Column="2"
+                Content="Restore"
+                Command="{Binding RestoreCommand}"
+                AutomationProperties.Name="Restore selected request" />
       </Grid>
       <TextBlock Text="{Binding StatusMessage}"
-                 Foreground="Red"
+                 Classes="error"
                  TextWrapping="Wrap" />
     </StackPanel>
-    <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+    <ListBox ItemsSource="{Binding Items}"
+             SelectedItem="{Binding SelectedItem}"
+             AutomationProperties.Name="History">
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="vm:HistoryItemViewModel">
           <StackPanel Spacing="2">

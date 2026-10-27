@@ -1,4 +1,7 @@
+using RestClient.Domain.Collections;
+
 namespace RestClient.UI.ViewModels;
 
 // A folder the save dialog can target. Path reads "Collection / Folder / Subfolder".
-public sealed record FolderChoice(Guid FolderId, Guid ExpandId, string Path);
+// Folder is kept to check a chosen name against the names already used in it.
+public sealed record FolderChoice(Guid FolderId, Guid ExpandId, string Path, Folder Folder);

@@ -10,8 +10,13 @@ public sealed class KeyValueRowViewModel : ViewModelBase
     private string _value;
     private bool _isEnabled;
 
-    public KeyValueRowViewModel(KeyValueEntry entry)
+    // The label names the row for screen readers: "Header" gives "Header name", "Header value" and so on.
+    public KeyValueRowViewModel(KeyValueEntry entry, string itemLabel = "Field")
     {
+        NameAutomationName = $"{itemLabel} name";
+        ValueAutomationName = $"{itemLabel} value";
+        EnabledAutomationName = $"{itemLabel} enabled";
+        RemoveAutomationName = $"Remove {itemLabel.ToLowerInvariant()}";
         _key = entry.Key;
         _value = entry.Value;
         _isEnabled = entry.IsEnabled;
@@ -41,6 +46,14 @@ public sealed class KeyValueRowViewModel : ViewModelBase
     }
 
     public ICommand RemoveCommand { get; }
+
+    public string NameAutomationName { get; }
+
+    public string ValueAutomationName { get; }
+
+    public string EnabledAutomationName { get; }
+
+    public string RemoveAutomationName { get; }
 
     public KeyValueEntry ToEntry()
     {

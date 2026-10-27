@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using RestClient.Application.Abstractions;
+using RestClient.Application.History;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
@@ -40,8 +41,7 @@ public sealed class RequestSender : IRequestSender
             ? await _executor.SendAsync(prepared.Value!, cancellationToken)
             : Result<ResponseSnapshot>.Failure(prepared.Error!);
 
-        var resolvedUrl = prepared.Value?.Url ?? definition.Url;
-        var attempt = new RequestAttempt(definition, resolvedUrl, sentAt, timer.Elapsed.TotalMilliseconds, result);
+        var attempt = new RequestAttempt(definition, HistoryUrl.For(definition), sentAt, timer.Elapsed.TotalMilliseconds, result);
         await _history.RecordAsync(attempt, CancellationToken.None);
         return result;
     }

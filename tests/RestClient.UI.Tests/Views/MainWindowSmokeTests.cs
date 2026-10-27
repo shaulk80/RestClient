@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
@@ -132,6 +133,8 @@ public class MainWindowSmokeTests
                 Method = RequestMethod.Post,
                 Body = new FormUrlEncodedBody([new KeyValueEntry("a", "1", true), new KeyValueEntry("b", "2", false)]),
                 Auth = new BearerAuth("token"),
+                Headers = [new KeyValueEntry("X-Form", "1", true), new KeyValueEntry("X-Off", "2", false)],
+                QueryParams = [new KeyValueEntry("a", "b", false)],
             },
             new RequestDefinition
             {
@@ -160,6 +163,9 @@ public class MainWindowSmokeTests
         }
 
         Assert.That(tabs.Select(tab => tab.IsDirty), Is.All.False);
+        Assert.That(tabs[1].Headers.ToEntries(), Has.Count.EqualTo(2));
+        Assert.That(tabs[1].QueryParams.ToEntries(), Is.EqualTo(new[] { new KeyValueEntry("a", "b", false) }));
+        Assert.That(tabs[0].Headers.ToEntries(), Is.Empty);
         Assert.That(
             tabs.Select(tab => tab.Method),
             Is.EqualTo(new[] { RequestMethod.Get, RequestMethod.Post, RequestMethod.Put, RequestMethod.Patch }));
@@ -185,6 +191,43 @@ public class MainWindowSmokeTests
         Dispatcher.UIThread.RunJobs();
 
         Assert.That(_viewModel.TabStrip.Tabs, Is.Empty);
+    }
+
+    [AvaloniaTest]
+    public void EveryInteractiveControlHasAnAccessibleName()
+    {
+        OpenWindow();
+        var tab = _viewModel.TabStrip.SelectedTab!;
+        tab.Headers.AddRowCommand.Execute(null);
+        tab.QueryParams.AddRowCommand.Execute(null);
+        tab.BodyEditor.Form.AddRowCommand.Execute(null);
+        tab.BodyEditor.Multipart.AddRowCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        var unnamed = AccessibleNameChecker.FindUnnamed(_window);
+
+        Assert.That(unnamed, Is.Empty);
+    }
+
+    [TestCase(0, "Parameter name", "Params (1)")]
+    [TestCase(1, "Header name", "Headers (1)")]
+    [AvaloniaTest]
+    public void HeadersAndParamsTabsShowTheirRows(int tabIndex, string expectedAutomationName, string expectedHeader)
+    {
+        OpenWindow();
+        var tab = _viewModel.TabStrip.SelectedTab!;
+        var editor = tabIndex == 0 ? tab.QueryParams : tab.Headers;
+        editor.AddRowCommand.Execute(null);
+        editor.Rows[0].Key = "X-Test";
+        var details = _window.GetVisualDescendants().OfType<TabControl>()
+            .First(candidate => AutomationProperties.GetName(candidate) == "Request details");
+
+        details.SelectedIndex = tabIndex;
+        Dispatcher.UIThread.RunJobs();
+
+        var box = _window.GetVisualDescendants().OfType<TextBox>().First(candidate => candidate.Text == "X-Test");
+        Assert.That(AutomationProperties.GetName(box), Is.EqualTo(expectedAutomationName));
+        Assert.That(((TabItem)details.Items[tabIndex]!).Header, Is.EqualTo(expectedHeader));
     }
 
     private static IHistoryService CreateHistory()

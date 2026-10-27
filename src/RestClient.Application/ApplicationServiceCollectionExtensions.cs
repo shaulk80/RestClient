@@ -9,6 +9,7 @@ using RestClient.Application.Secrets;
 using RestClient.Application.Settings;
 using RestClient.Application.Tabs;
 using RestClient.Application.Workspaces;
+using RestClient.Domain.Collections;
 using RestClient.Domain.Environments;
 
 namespace RestClient.Application;
@@ -32,7 +33,11 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<ITabService, TabService>();
         services.AddSingleton<RequestBuilder>();
         services.AddSingleton<IRequestSender, RequestSender>();
-        services.AddSingleton<CollectionWorkspace>();
+        services.AddSingleton(provider =>
+        {
+            var repository = provider.GetRequiredService<ICollectionRepository>();
+            return new Workspace<Collection>(repository.LoadAsync, repository.SaveAsync);
+        });
         services.AddSingleton<ICollectionService, CollectionService>();
         services.AddSingleton<IFolderService, FolderService>();
         services.AddSingleton<IRequestService, RequestService>();

@@ -59,7 +59,7 @@ public class HistoryServiceTests
                     && entry.StatusCode == 200
                     && entry.BodyFilePath == "temp/body.body"
                     && entry.ErrorMessage == null
-                    && entry.ResolvedUrl == "https://example.com/a"
+                    && entry.Url == "https://example.com/a"
                     && entry.Method == RequestMethod.Post
                     && entry.SentAt == Now
                     && entry.DurationMs == 12.5),

@@ -308,6 +308,93 @@ public class RequestTabViewModelTests
         Assert.That(viewModel.IsDirty, Is.True);
     }
 
+    [Test]
+    public void EditorsStartWithTheStoredHeadersAndQueryParams()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), definition: CreateDefinitionWithHeadersAndParams());
+
+        Assert.That(viewModel.Headers.ToEntries(), Is.EqualTo(new[] { new KeyValueEntry("Accept", "application/json", true), new KeyValueEntry("X-Debug", "1", false) }));
+        Assert.That(viewModel.QueryParams.ToEntries(), Is.EqualTo(new[] { new KeyValueEntry("page", "2", true) }));
+        Assert.That(viewModel.IsDirty, Is.False);
+    }
+
+    [Test]
+    public async Task SendPassesEditedHeadersAndQueryParamsToSender()
+    {
+        RequestDefinition? sent = null;
+        var sender = A.Fake<IRequestSender>();
+        A.CallTo(() => sender.SendAsync(A<RequestDefinition>._, A<CancellationToken>._))
+            .Invokes((RequestDefinition definition, CancellationToken _) => sent = definition)
+            .Returns(Task.FromResult(Result<ResponseSnapshot>.Failure(new Error(ErrorCategory.Network, "Not sent."))));
+        var viewModel = CreateViewModel(sender, definition: CreateDefinitionWithHeadersAndParams());
+        viewModel.Headers.Rows[0].Value = "text/plain";
+        viewModel.Headers.Rows[1].IsEnabled = true;
+        viewModel.QueryParams.AddRowCommand.Execute(null);
+        viewModel.QueryParams.Rows[1].Key = "sort";
+        viewModel.QueryParams.Rows[1].Value = "{{order}}";
+
+        await viewModel.SendAsync();
+
+        Assert.That(sent?.Headers, Is.EqualTo(new[] { new KeyValueEntry("Accept", "text/plain", true), new KeyValueEntry("X-Debug", "1", true) }));
+        Assert.That(sent?.QueryParams, Is.EqualTo(new[] { new KeyValueEntry("page", "2", true), new KeyValueEntry("sort", "{{order}}", true) }));
+    }
+
+    [Test]
+    public async Task SaveWritesEditedHeadersAndQueryParams()
+    {
+        var requests = A.Fake<IRequestService>();
+        Func<RequestDefinition, RequestDefinition>? applied = null;
+        A.CallTo(() => requests.UpdateAsync(A<Guid>._, A<Func<RequestDefinition, RequestDefinition>>._, A<CancellationToken>._))
+            .Invokes((Guid _, Func<RequestDefinition, RequestDefinition> change, CancellationToken _) => applied = change)
+            .Returns(Task.FromResult(Result.Success()));
+        var definition = CreateDefinitionWithHeadersAndParams();
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), requests, definition: definition);
+        viewModel.Headers.Rows.RemoveAt(1);
+        viewModel.QueryParams.Rows[0].Key = "offset";
+
+        await viewModel.SaveAsync();
+
+        var stored = applied!(definition);
+        Assert.That(stored.Headers, Is.EqualTo(new[] { new KeyValueEntry("Accept", "application/json", true) }));
+        Assert.That(stored.QueryParams, Is.EqualTo(new[] { new KeyValueEntry("offset", "2", true) }));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void EditingHeadersOrQueryParamsMarksTheTabDirtyAndRaisesChanged(bool editHeaders)
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), definition: CreateDefinitionWithHeadersAndParams());
+        var changed = 0;
+        viewModel.Changed += (_, _) => changed++;
+
+        var editor = editHeaders ? viewModel.Headers : viewModel.QueryParams;
+        editor.Rows[0].Value = "edited";
+
+        Assert.That(viewModel.IsDirty, Is.True);
+        Assert.That(changed, Is.GreaterThan(0));
+    }
+
+    [Test]
+    public void RowsAreNamedAfterTheirEditorForScreenReaders()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>(), definition: CreateDefinitionWithHeadersAndParams());
+
+        Assert.That(viewModel.Headers.Rows[0].NameAutomationName, Is.EqualTo("Header name"));
+        Assert.That(viewModel.Headers.Rows[0].RemoveAutomationName, Is.EqualTo("Remove header"));
+        Assert.That(viewModel.Headers.AddRowText, Is.EqualTo("Add header"));
+        Assert.That(viewModel.QueryParams.Rows[0].ValueAutomationName, Is.EqualTo("Parameter value"));
+        Assert.That(viewModel.QueryParams.AddRowText, Is.EqualTo("Add parameter"));
+    }
+
+    private static RequestDefinition CreateDefinitionWithHeadersAndParams()
+    {
+        return CreateDefinition() with
+        {
+            Headers = [new KeyValueEntry("Accept", "application/json", true), new KeyValueEntry("X-Debug", "1", false)],
+            QueryParams = [new KeyValueEntry("page", "2", true)],
+        };
+    }
+
     private static BodyTypeChoice RawChoice(RequestTabViewModel viewModel)
     {
         return viewModel.BodyEditor.Types.Single(choice => choice.Type == BodyType.Raw);

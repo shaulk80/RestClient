@@ -62,9 +62,15 @@ public sealed class EnvironmentSelectorViewModel : ViewModelBase
         Message = string.Empty;
     }
 
-    // Called when the user picks a choice in the status bar.
+    // Called when the user picks a choice in the status bar. The combo box also reports the selection that
+    // ReloadAsync made, which is already stored, so that one is skipped.
     public async Task SelectAsync(EnvironmentChoice? choice)
     {
+        if (choice == SelectedChoice)
+        {
+            return;
+        }
+
         SelectedChoice = choice;
         var saved = await _environments.SetActiveAsync(choice?.Id, CancellationToken.None);
         Message = saved.IsSuccess ? string.Empty : ErrorMessageFormatter.Format(saved.Error!);

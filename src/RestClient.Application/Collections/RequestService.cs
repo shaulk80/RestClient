@@ -1,4 +1,5 @@
 using RestClient.Application.Abstractions;
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -10,10 +11,10 @@ public sealed class RequestService : IRequestService
     private const string RestoredRequestName = "Restored request";
     private const string CopySuffix = " copy";
 
-    private readonly CollectionWorkspace _workspace;
+    private readonly Workspace<Collection> _workspace;
     private readonly IIdGenerator _idGenerator;
 
-    public RequestService(CollectionWorkspace workspace, IIdGenerator idGenerator)
+    public RequestService(Workspace<Collection> workspace, IIdGenerator idGenerator)
     {
         _workspace = workspace;
         _idGenerator = idGenerator;

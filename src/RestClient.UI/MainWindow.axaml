@@ -16,7 +16,7 @@
     <KeyBinding Gesture="Ctrl+F4" Command="{Binding TabStrip.CloseSelectedCommand}" />
   </Window.KeyBindings>
   <Grid ColumnDefinitions="260,*" RowDefinitions="*,Auto">
-    <TabControl Grid.Column="0" Grid.Row="0">
+    <TabControl Grid.Column="0" Grid.Row="0" AutomationProperties.Name="Sidebar">
       <TabItem Header="Collections">
         <views:CollectionsTreeView DataContext="{Binding Sidebar}" />
       </TabItem>
@@ -27,7 +27,8 @@
     <TabControl Grid.Column="1"
                 Grid.Row="0"
                 ItemsSource="{Binding TabStrip.Tabs}"
-                SelectedItem="{Binding TabStrip.SelectedTab}">
+                SelectedItem="{Binding TabStrip.SelectedTab}"
+                AutomationProperties.Name="Open requests">
       <TabControl.ItemTemplate>
         <DataTemplate x:DataType="vm:RequestTabViewModel">
           <StackPanel Orientation="Horizontal" Spacing="6">
@@ -61,19 +62,29 @@
           Margin="8,4"
           ColumnDefinitions="*,Auto">
       <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
-        <TextBlock Foreground="Red" Text="{Binding Sidebar.StatusMessage}" />
-        <TextBlock Foreground="Red" Text="{Binding TabStrip.AutosaveError}" />
+        <TextBlock Classes="error"
+                   Text="{Binding Sidebar.StatusMessage}"
+                   AutomationProperties.LiveSetting="Polite" />
+        <!-- Stored tabs are the only copy of unsaved drafts, so a failure is stated in full and in bold. -->
+        <TextBlock Classes="error"
+                   FontWeight="SemiBold"
+                   Text="{Binding TabStrip.AutosaveError, StringFormat='Open tabs are not being saved: {0}'}"
+                   IsVisible="{Binding TabStrip.AutosaveError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   AutomationProperties.LiveSetting="Assertive" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
         <Button Content="Settings"
                 Command="{Binding SettingsCommand}"
                 AutomationProperties.Name="Open settings" />
         <TextBlock VerticalAlignment="Center" Text="{Binding Secrets.Text}" />
-        <Button Content="{Binding Secrets.ButtonText}" Command="{Binding Secrets.ToggleCommand}" />
+        <Button Content="{Binding Secrets.ButtonText}"
+                Command="{Binding Secrets.ToggleCommand}"
+                AutomationProperties.HelpText="Locks or unlocks the secret variables" />
         <TextBlock VerticalAlignment="Center" Text="Environment" />
         <ComboBox MinWidth="180"
                   ItemsSource="{Binding Environments.Choices}"
                   SelectedItem="{Binding Environments.SelectedChoice, Mode=OneWay}"
+                  AutomationProperties.Name="Active environment"
                   SelectionChanged="OnEnvironmentSelectionChanged">
           <ComboBox.ItemTemplate>
             <DataTemplate x:DataType="vm:EnvironmentChoice">
@@ -81,7 +92,9 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
-        <Button Content="Manage" Command="{Binding Environments.ManageCommand}" />
+        <Button Content="Manage"
+                Command="{Binding Environments.ManageCommand}"
+                AutomationProperties.Name="Manage environments" />
       </StackPanel>
     </Grid>
   </Grid>

@@ -1,3 +1,4 @@
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -5,9 +6,9 @@ namespace RestClient.Application.Collections;
 
 public sealed class CollectionTreeService : ICollectionTreeService
 {
-    private readonly CollectionWorkspace _workspace;
+    private readonly Workspace<Collection> _workspace;
 
-    public CollectionTreeService(CollectionWorkspace workspace)
+    public CollectionTreeService(Workspace<Collection> workspace)
     {
         _workspace = workspace;
     }

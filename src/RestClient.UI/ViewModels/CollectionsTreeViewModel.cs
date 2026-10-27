@@ -18,6 +18,9 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
     private readonly ICollectionTreeService _tree;
     private readonly IConfirmationDialogs _confirmations;
     private readonly AsyncRelayCommand _newCollectionCommand;
+    private readonly RelayCommand _renameSelectedCommand;
+    private readonly AsyncRelayCommand _deleteSelectedCommand;
+    private readonly RelayCommand _openSelectedCommand;
     private HashSet<Guid> _expandedIds = [];
     private TreeNodeViewModel? _selectedNode;
     private string _statusMessage = string.Empty;
@@ -35,6 +38,9 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         _tree = tree;
         _confirmations = confirmations;
         _newCollectionCommand = new AsyncRelayCommand(CreateCollectionAsync, () => true);
+        _renameSelectedCommand = new RelayCommand(RenameSelected, () => true);
+        _deleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedAsync, () => true);
+        _openSelectedCommand = new RelayCommand(OpenSelected, () => true);
     }
 
     public event Action<Guid>? RequestOpenRequested;
@@ -56,6 +62,13 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
     }
 
     public ICommand NewCollectionCommand => _newCollectionCommand;
+
+    // Keyboard shortcuts act on the selected node. They do nothing when nothing is selected.
+    public ICommand RenameSelectedCommand => _renameSelectedCommand;
+
+    public ICommand DeleteSelectedCommand => _deleteSelectedCommand;
+
+    public ICommand OpenSelectedCommand => _openSelectedCommand;
 
     public bool WasExpanded(Guid id)
     {
@@ -200,6 +213,31 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
 
         var expandId = target.IsRequest ? target.DropFolderId : target.Id;
         await ReloadAsync(source.Id, expandId);
+    }
+
+    // The keys also reach the tree while a rename box has focus, where Delete and Enter belong to the box.
+    private void RenameSelected()
+    {
+        if (SelectedNode is { IsEditing: false } node)
+        {
+            node.BeginRename();
+        }
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        if (SelectedNode is { IsEditing: false } node)
+        {
+            await DeleteAsync(node);
+        }
+    }
+
+    private void OpenSelected()
+    {
+        if (SelectedNode is RequestNodeViewModel { IsEditing: false } request)
+        {
+            OpenRequest(request.Id);
+        }
     }
 
     private async Task CreateCollectionAsync()

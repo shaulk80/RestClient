@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using RestClient.Application.Collections;
+using RestClient.Application.Workspaces;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -9,7 +10,7 @@ namespace RestClient.Application.Tests.Collections;
 public class FolderServiceTests
 {
     private CollectionStore _store = null!;
-    private CollectionWorkspace _workspace = null!;
+    private Workspace<Collection> _workspace = null!;
     private FolderService _service = null!;
     private Folder _root = null!;
     private Folder _users = null!;
@@ -20,7 +21,7 @@ public class FolderServiceTests
         _users = Fixtures.Folder("Users");
         _root = Fixtures.Folder(string.Empty, [_users]);
         _store = new CollectionStore([Fixtures.Collection("Shop", _root)]);
-        _workspace = new CollectionWorkspace(CollectionRepositoryFake.Create(_store));
+        _workspace = CollectionRepositoryFake.CreateWorkspace(_store);
         _service = new FolderService(_workspace, Fixtures.CreateIdGenerator());
     }
 

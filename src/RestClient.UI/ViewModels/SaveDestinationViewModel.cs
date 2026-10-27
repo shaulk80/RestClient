@@ -1,3 +1,4 @@
+using RestClient.Domain.Collections;
 using RestClient.UI.Services;
 
 namespace RestClient.UI.ViewModels;
@@ -24,6 +25,7 @@ public sealed class SaveDestinationViewModel : ViewModelBase
             if (SetProperty(ref _name, value))
             {
                 RaisePropertyChanged(nameof(CanSave));
+                RaisePropertyChanged(nameof(NameWarning));
             }
         }
     }
@@ -36,11 +38,32 @@ public sealed class SaveDestinationViewModel : ViewModelBase
             if (SetProperty(ref _selectedFolder, value))
             {
                 RaisePropertyChanged(nameof(CanSave));
+                RaisePropertyChanged(nameof(NameWarning));
             }
         }
     }
 
     public bool CanSave => SelectedFolder is not null && !string.IsNullOrWhiteSpace(Name);
+
+    // The save still goes ahead when the name is taken, under the next free name. The warning says which.
+    public string NameWarning
+    {
+        get
+        {
+            if (!CanSave || SelectedFolder is not { } choice)
+            {
+                return string.Empty;
+            }
+
+            var name = Name.Trim();
+            if (ChildNameRules.ValidateChildName(name, choice.Folder, null).IsSuccess)
+            {
+                return string.Empty;
+            }
+
+            return $"'{name}' is already used in this folder. The request will be saved as '{ChildNameRules.NextAvailableName(name, choice.Folder)}'.";
+        }
+    }
 
     public SaveDestination? Destination
     {

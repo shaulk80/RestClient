@@ -98,7 +98,7 @@ public class SqliteHistoryRepositoryTests
 
         var result = await _repository.SearchAsync(HistoryFilter.All, CancellationToken.None);
 
-        Assert.That(result.Value!.Select(entry => entry.ResolvedUrl), Is.EqualTo(NewestFirstUrls));
+        Assert.That(result.Value!.Select(entry => entry.Url), Is.EqualTo(NewestFirstUrls));
     }
 
     [TestCase("", null, 3)]
@@ -163,7 +163,7 @@ public class SqliteHistoryRepositoryTests
         Assert.That(actual.Id, Is.EqualTo(expected.Id));
         Assert.That(actual.SentAt, Is.EqualTo(expected.SentAt));
         Assert.That(actual.Method, Is.EqualTo(expected.Method));
-        Assert.That(actual.ResolvedUrl, Is.EqualTo(expected.ResolvedUrl));
+        Assert.That(actual.Url, Is.EqualTo(expected.Url));
         Assert.That(actual.StatusCode, Is.EqualTo(expected.StatusCode));
         Assert.That(actual.DurationMs, Is.EqualTo(expected.DurationMs));
         Assert.That(actual.ErrorMessage, Is.EqualTo(expected.ErrorMessage));

@@ -8,7 +8,8 @@
   <StackPanel Spacing="8">
     <ComboBox Width="220"
               ItemsSource="{Binding Types}"
-              SelectedItem="{Binding SelectedType}">
+              SelectedItem="{Binding SelectedType}"
+              AutomationProperties.Name="Body type">
       <ComboBox.ItemTemplate>
         <DataTemplate x:DataType="vm:BodyTypeChoice">
           <TextBlock Text="{Binding Label}" />
@@ -23,7 +24,8 @@
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
         <TextBox Grid.Column="0"
                  Text="{Binding ContentType}"
-                 PlaceholderText="Content-Type, for example application/json" />
+                 PlaceholderText="Content-Type, for example application/json"
+                 AutomationProperties.Name="Body content type" />
         <Button Grid.Column="1"
                 Content="Format"
                 Command="{Binding FormatCommand}"
@@ -32,7 +34,8 @@
       <controls:CodeEditor EditorText="{Binding Text}"
                            Language="{Binding Language}"
                            WordWrap="True"
-                           Height="320" />
+                           Height="320"
+                           AutomationProperties.Name="Request body" />
       <TextBlock Text="Highlighting is off for bodies over 1 MB."
                  IsVisible="{Binding IsLargeBody}"
                  FontStyle="Italic" />
@@ -44,7 +47,8 @@
       <views:MultipartEditorView DataContext="{Binding Multipart}" />
     </StackPanel>
     <TextBlock Text="{Binding Message}"
-               Foreground="Red"
-               TextWrapping="Wrap" />
+               Classes="error"
+               TextWrapping="Wrap"
+               AutomationProperties.LiveSetting="Polite" />
   </StackPanel>
 </UserControl>

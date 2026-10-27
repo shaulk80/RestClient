@@ -23,6 +23,7 @@ $reviewedLicenses = @{
 }
 
 . (Join-Path $PSScriptRoot 'LicenseCheck.ps1')
+. (Join-Path $PSScriptRoot 'Checksums.ps1')
 
 function Invoke-DotNet {
     param([string[]] $Arguments)
@@ -102,7 +103,8 @@ Test-DependencyLicenses -Root $root -AllowedLicenses $allowedLicenses -ReviewedL
 Invoke-DotNet @('build', $solution, '-c', $Configuration, '--no-restore')
 Invoke-DotNet @('test', $solution, '-c', $Configuration, '--no-build')
 
-foreach ($runtime in $runtimes) {
+$zipPaths = @()
+foreach ($runtime in $Runtimes) {
     # Clean only this runtime, so a release zip for another runtime survives.
     $publishDir = Join-Path $distRoot $runtime
     $zipPath = Join-Path $distRoot "RestClient-$runtime.zip"
@@ -119,10 +121,17 @@ foreach ($runtime in $runtimes) {
         '--self-contained', 'true',
         '-p:PublishSingleFile=true',
         '-p:IncludeNativeLibrariesForSelfExtract=true',
+        # Debug symbols are about 100 MB uncompressed and are not needed by users.
+        '-p:DebugType=none',
+        '-p:DebugSymbols=false',
         '-o', $publishDir
     )
 
+    # Native packages (SkiaSharp, HarfBuzz) bring their own .pdb files, which DebugType=none does not remove.
+    Get-ChildItem -LiteralPath $publishDir -Recurse -Filter '*.pdb' | Remove-Item -Force
+
     New-ReleaseZip -SourceDir $publishDir -ZipPath $zipPath
+    $zipPaths += $zipPath
 
     $isHostWindows = $env:OS -eq 'Windows_NT'
     if (-not $SkipSmokeTest -and $isHostWindows -and $runtime -eq 'win-x64') {
@@ -140,5 +149,14 @@ foreach ($runtime in $runtimes) {
         Write-Host "Smoke test passed for $runtime."
     }
 }
+
+# One checksum file covers every zip built in this run, and is checked right after it is written.
+$checksumPath = Join-Path $distRoot 'SHA256SUMS.txt'
+Write-Checksums -ZipPaths $zipPaths -ChecksumPath $checksumPath
+$mismatches = @(Get-ChecksumMismatches -ChecksumPath $checksumPath)
+if ($mismatches.Count -gt 0) {
+    throw "Checksum verification failed for: $($mismatches -join ', ')"
+}
+Get-Content -LiteralPath $checksumPath | ForEach-Object { Write-Host $_ }
 
 Write-Host "Build complete. Output in $distRoot."

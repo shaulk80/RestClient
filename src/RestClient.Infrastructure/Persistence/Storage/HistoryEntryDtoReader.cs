@@ -25,7 +25,7 @@ public static class HistoryEntryDtoReader
         return Result<IReadOnlyList<HistoryEntryDto>>.Success(dtos);
     }
 
-    // Columns: id, sent_at, method, resolved_url, request_json, status_code, duration_ms, error_message, body_file_path.
+    // Columns: id, sent_at, method, url, request_json, status_code, duration_ms, error_message, body_file_path.
     private static HistoryEntryDto? ReadRow(SqliteDataReader reader)
     {
         var request = RequestJson.Deserialize(reader.GetString(4));
