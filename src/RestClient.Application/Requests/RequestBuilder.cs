@@ -1,3 +1,4 @@
+using RestClient.Application.Settings;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Results;
 
@@ -5,16 +6,14 @@ namespace RestClient.Application.Requests;
 
 public sealed class RequestBuilder
 {
-    public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
-
     private const string ContentTypeHeader = "Content-Type";
 
-    private readonly TimeSpan _timeout;
+    private readonly ISettingsService _settings;
     private readonly RequestBodyResolver _bodies;
 
-    public RequestBuilder(TimeSpan timeout, RequestBodyResolver bodies)
+    public RequestBuilder(ISettingsService settings, RequestBodyResolver bodies)
     {
-        _timeout = timeout;
+        _settings = settings;
         _bodies = bodies;
     }
 
@@ -23,6 +22,12 @@ public sealed class RequestBuilder
         IReadOnlyDictionary<string, string> variables,
         CancellationToken cancellationToken)
     {
+        var settings = await _settings.GetAsync(cancellationToken);
+        if (!settings.IsSuccess)
+        {
+            return Result<OutgoingRequest>.Failure(settings.Error!);
+        }
+
         var auth = AuthResolver.Resolve(definition.Auth, variables);
         if (!auth.IsSuccess)
         {
@@ -52,7 +57,7 @@ public sealed class RequestBuilder
             url.Value!,
             headers.Value!,
             body.Value!.Content,
-            _timeout));
+            settings.Value!.Timeout));
     }
 
     private static Result<string> ResolveUrl(

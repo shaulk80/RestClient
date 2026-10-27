@@ -2,6 +2,7 @@ using FakeItEasy;
 using NUnit.Framework;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Requests;
+using RestClient.Application.Settings;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
@@ -167,7 +168,7 @@ public class RequestSenderTests
 
     private RequestSender CreateSender(IHttpExecutor executor)
     {
-        return new RequestSender(RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout), executor, _history, _clock, _variables);
+        return new RequestSender(RequestBuilderFactory.Create(AppSettings.Default.Timeout), executor, _history, _clock, _variables);
     }
 
     private static IRequestVariables CreateVariables(Result<IReadOnlyDictionary<string, string>>? result = null)

@@ -5,6 +5,8 @@ namespace RestClient.UI;
 
 public partial class MainWindow : Window
 {
+    private bool _tabsStored;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -19,7 +21,23 @@ public partial class MainWindow : Window
             await viewModel.History.ReloadAsync();
             await viewModel.Environments.ReloadAsync();
             await viewModel.Secrets.ReloadAsync();
+            await viewModel.TabStrip.RestoreAsync();
         }
+    }
+
+    // The open tabs are stored a moment after each change. Closing waits for the last store, so no edit is lost.
+    protected override async void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        if (_tabsStored || DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        await viewModel.TabStrip.FlushAsync();
+        _tabsStored = true;
+        Close();
     }
 
     // A cleared list also clears the selection. Only a real choice is saved as the active environment.

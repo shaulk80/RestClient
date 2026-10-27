@@ -148,6 +148,22 @@ public class SecretServiceTests
         Assert.That(decrypted.Error?.Category, Is.EqualTo(ErrorCategory.Security));
     }
 
+    [TestCase("secrets.salt", "not base64!")]
+    [TestCase("secrets.salt", "AAAA")]
+    [TestCase("secrets.iterations", "many")]
+    [TestCase("secrets.iterations", "0")]
+    public async Task UnlockReportsStorageErrorWhenSetupSettingIsCorrupt(string key, string value)
+    {
+        await _service.SetUpAsync(MasterPassword, CancellationToken.None);
+        _service.Lock();
+        _settings.Values[key] = value;
+
+        var result = await _service.UnlockAsync(MasterPassword, CancellationToken.None);
+
+        Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Storage));
+        Assert.That(_service.IsUnlocked, Is.False);
+    }
+
     [Test]
     public async Task DecryptFailsWhileLocked()
     {

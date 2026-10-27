@@ -2,13 +2,13 @@ REST CLIENT - IMPLEMENTATION PROGRESS
 =====================================
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-26
+Updated:   2026-10-27
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M5 Environments, Variables, Secrets, Auth is closed on branch m5 (from main, which holds M4).
-               Not committed yet.
-NEXT STAGE:    Commit M5 on branch m5 (on instruction). M6 Tabs, Autosave, Settings, Shortcuts.
+CURRENT STAGE: M6 Tabs, Autosave, Settings, Shortcuts is done on branch m6 (from m5, committed as 3033664).
+               Automated checks, scripts\build.ps1 and all manual checks passed. Not committed yet.
+NEXT STAGE:    Commit M6 on branch m6 (on instruction). Then M7 Polish and Release.
 
 PLAN CHANGE (2026-10-21)
     No Linux machine is available now. Order is amended (plan section 8.1):
@@ -277,7 +277,7 @@ MILESTONES
 [x] M5 Environments, Variables, Secrets, Auth
     Depends on: M1, M2
     Goal: reuse values across requests, keep secrets encrypted, and send authenticated requests.
-    Started 2026-10-25 on branch m5 (from main). Closed 2026-10-26. Not committed yet.
+    Started 2026-10-25 on branch m5 (from main). Closed 2026-10-26. Committed as 3033664 on branch m5.
 
     Tasks:
     [x] 1.  Domain: RequestEnvironment (plan name Environment), Variable, VariableNameRules
@@ -333,22 +333,77 @@ MILESTONES
     - Secret rows: a stored secret shows no value, and typing one replaces it. Turning Secret off clears the value,
       because the ciphertext has no plain form.
     - The app does not lock on a timer. Locking happens on Lock, on exit, and by the user.
-    - Open: a corrupt salt or iteration setting throws FormatException when unlocking, because it is not caught
-      in the Application layer (which has no logger). Fix it in M6, when the settings store gets typed values.
+    - Fixed in M6: a corrupt salt or iteration setting now gives a Storage error when unlocking
+      (it threw FormatException before).
     - Open: request headers and query params still have no editor (carried from M1 and M4).
     - Open: the Application coverage fell from 95.83% to 92.42% because of the new services. The gate holds.
     - Note: scripts\build.ps1 fails while a sample API process holds tests\RestClient.SampleApi\bin\...\apphost.exe.
       Close the sample API before running it.
 
-[ ] M6 Tabs, Autosave, Settings, Shortcuts
+[x] M6 Tabs, Autosave, Settings, Shortcuts
     Depends on: M1, M2
     Goal: a working multi-tab editor that survives restarts, with configurable transport settings.
-    Carried from M2:
-    - Tab strip close button.
-    - Ctrl+S saves the active tab.
-    - Closing an unsaved tab (not linked to a collection) with edits asks to save or discard. M3 added
-      unsaved tabs and nothing closes them yet.
+    Started 2026-10-26 on branch m6 (from m5). Closed 2026-10-27.
 
+    Tasks:
+    [x] 1.  AppSettings (Application, plan 5.4): TimeoutSeconds, FollowRedirects, MaxRedirects, VerifySsl, ProxyUrl
+    [x] 2.  Application: TabService, SettingsService, AppSettingsStorage, AppSettingsValidator, IOpenTabsStore
+    [x] 3.  Infrastructure: migration 0005 (open_tabs), SqliteOpenTabsStore. Settings are typed in
+            AppSettingsStorage over the existing SqliteSettingsStore. The HTTP executor reads AppSettings on
+            every send, so a change applies to the next request without a restart
+    [x] 4.  UI: tab strip with close buttons, TabStripViewModel, SettingsViewModel and SettingsWindow
+            (Settings button in the status bar), shortcuts Ctrl+Enter, Ctrl+S, Ctrl+T, Ctrl+F4 (close tab)
+    [x] 5.  Autosave: the tabs are stored 1 second after the last change, restored at start (tabs with unsaved
+            edits come back dirty), and stored once more when the window closes
+
+    Carried from M2 (done in M6):
+    [x] Tab strip close button.
+    [x] Ctrl+S saves the active tab.
+    [x] Closing a dirty tab, linked or not, asks Save / Don't save / Cancel.
+
+    Definition of Done:
+    [x] All tests pass (Domain 95, Application 212, Infrastructure 79, UI 191, Integration 16 = 593)
+    [x] Coverage gate holds (Domain 91.30%, Application 95.19%)
+    [x] Solution builds with warnings as errors on. scripts\build.ps1 ran again on 2026-10-27, after the tab switch
+        fix and the Ctrl+F4 change: restore, license check (89 packages, no new ones), build, tests, win-x64
+        publish, zip and smoke test all passed (exit code 0)
+    [x] Manual: edit two tabs without saving, close the app, reopen it, and confirm both tabs and drafts are restored
+    [x] Manual: change timeout, redirects, SSL verification and proxy in Settings, and confirm the next send follows them
+    [x] Manual: Ctrl+Enter, Ctrl+S, Ctrl+T and Ctrl+F4 in the running app (close tab moved from Ctrl+W to Ctrl+F4
+        after the manual run)
+    [x] Manual: switch between tabs by clicking the headers and opening requests from the tree, and confirm that
+        no tab becomes changed ("*") and no field changes (passed after the fix below)
+
+    Bug found in manual testing and fixed:
+    - Switching tabs marked the target tab as changed. The tab content view is reused, so the combo boxes (method,
+      body type, auth type, API key location) got a new item list from the new tab, and wrote their old selection
+      into it. This changed the value as well as the flag. The lists are now shared by all tabs.
+      MainWindowSmokeTests.SwitchingTabsKeepsCleanTabsClean covers it with tabs of different method, body and auth.
+
+    Deviations from plan and open points:
+    - TabService does not track open and dirty state. That stays in the tab view models (TabStripViewModel owns
+      the list). TabService stores and restores the list: a snapshot of every tab, with a draft for each tab that is
+      dirty or not linked. The plan's "open, close, dirty tracking" is done in the UI layer.
+    - OpenTab, TabSnapshot and RestoredTab are Application records. The plan said no new types beyond AppSettings.
+    - A restored tab whose request was deleted keeps its draft as an unsaved tab. Without a draft it is dropped.
+      A restored linked tab takes its name from the collection, and its content from the draft.
+    - Closing any dirty tab asks to save, not only unsaved ones. Drafts are stored, but closing a tab discards its draft.
+    - Debounce is 1 second (AutosaveScheduler.DefaultDelay). Storing starts only after the restore has run,
+      so a failed or slow restore cannot overwrite the stored tabs with an empty list.
+    - A tab that sends while it is closed is cancelled.
+    - Settings: timeout 1 to 3600 s, redirect limit 1 to 50 (kept when redirects are off), proxy empty (system proxy)
+      or an absolute http, https or socks URL. A stored value that cannot be read falls back to its default.
+      A proxy with credentials is not supported.
+    - RequestBuilder takes ISettingsService, not a fixed timeout. RequestBuilder.DefaultTimeout is gone
+      (AppSettings.Default.Timeout replaces it). HttpTransportOptions is built from AppSettings on each send.
+    - RequestHttpClientFactoryTests are not a separate class. SocketsHttpHandler cannot be inspected without
+      reflection, so the settings are tested through real requests (Integration SettingsAppliedTests: redirects,
+      redirect limit, timeout, SSL against a self-signed HTTPS server, proxy).
+    - Turning SSL verification off disables all certificate checks (CA5359 is suppressed on RequestHttpClientFactory.Create).
+    - The combo box in the status bar saves the active environment on every selection change, including the
+      one from the reload at start. Harmless; moved to M7.
+    - A failure to store the tabs is shown in the status bar (red, left) and is cleared by the next
+      successful store. Moved to M7 to decide whether it needs a more visible form.
 [ ] M7 Polish and Release
     Depends on: all others
     Goal: a first packaged release for Windows. Linux follows in a later version.
@@ -362,6 +417,9 @@ MILESTONES
     - Infrastructure test for delete cascade: after deleting a folder or collection and saving,
       its requests are gone after reload (plan M2 test list; the application tests cover the
       in-memory delete only).
+    Carried from M6:
+    - Status bar environment combo box: skip the save when the selection comes from the reload at start.
+    - Autosave failure is shown only as red text in the status bar. Decide whether that is visible enough.
 
 
 LINUX VERIFICATION (deferred to a later version, plan section 8.1)
@@ -408,4 +466,4 @@ KNOWN ISSUES AND NOTES
   no console, so the user sees nothing. Deferred to M7: show a visible error dialog.
 - Spilled bodies in data/temp/ are deleted when their history entry is removed by retention (M3).
   Bodies of responses whose history entry is still kept stay on disk until then.
-- Integration and UI test projects contain M1 tests. Headless UI smoke tests come with M6.
+- Headless UI smoke tests (MainWindowSmokeTests) exist since M6. They start the real main window with fake services.

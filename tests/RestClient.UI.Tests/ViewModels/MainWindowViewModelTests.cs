@@ -40,10 +40,10 @@ public class MainWindowViewModelTests
     {
         await _window.OpenRequestAsync(_fixtures.Login.Id);
 
-        Assert.That(_window.Tabs.Count, Is.EqualTo(1));
-        Assert.That(_window.SelectedTab?.RequestId, Is.EqualTo(_fixtures.Login.Id));
-        Assert.That(_window.SelectedTab?.IsLinked, Is.True);
-        Assert.That(_window.HasTabs, Is.True);
+        Assert.That(_window.TabStrip.Tabs.Count, Is.EqualTo(1));
+        Assert.That(_window.TabStrip.SelectedTab?.RequestId, Is.EqualTo(_fixtures.Login.Id));
+        Assert.That(_window.TabStrip.SelectedTab?.IsLinked, Is.True);
+        Assert.That(_window.TabStrip.HasTabs, Is.True);
     }
 
     [Test]
@@ -52,7 +52,7 @@ public class MainWindowViewModelTests
         await _window.OpenRequestAsync(_fixtures.Login.Id);
         await _window.OpenRequestAsync(_fixtures.Login.Id);
 
-        Assert.That(_window.Tabs.Count, Is.EqualTo(1));
+        Assert.That(_window.TabStrip.Tabs.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -63,7 +63,7 @@ public class MainWindowViewModelTests
 
         await _window.OpenRequestAsync(Guid.NewGuid());
 
-        Assert.That(_window.Tabs, Is.Empty);
+        Assert.That(_window.TabStrip.Tabs, Is.Empty);
         Assert.That(_window.Sidebar.StatusMessage, Is.EqualTo("The request was not found."));
     }
 
@@ -75,8 +75,8 @@ public class MainWindowViewModelTests
 
         await _window.Sidebar.ReloadAsync();
 
-        Assert.That(_window.Tabs, Is.Empty);
-        Assert.That(_window.SelectedTab, Is.Null);
+        Assert.That(_window.TabStrip.Tabs, Is.Empty);
+        Assert.That(_window.TabStrip.SelectedTab, Is.Null);
     }
 
     [Test]
@@ -87,7 +87,7 @@ public class MainWindowViewModelTests
 
         await _window.Sidebar.ReloadAsync();
 
-        Assert.That(_window.Tabs.Count, Is.EqualTo(1));
+        Assert.That(_window.TabStrip.Tabs.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -96,8 +96,8 @@ public class MainWindowViewModelTests
         _window.OpenUnsaved(_fixtures.Login);
         _window.OpenUnsaved(_fixtures.Login);
 
-        Assert.That(_window.Tabs.Count, Is.EqualTo(2));
-        Assert.That(_window.Tabs.All(tab => !tab.IsLinked), Is.True);
+        Assert.That(_window.TabStrip.Tabs.Count, Is.EqualTo(2));
+        Assert.That(_window.TabStrip.Tabs.All(tab => !tab.IsLinked), Is.True);
     }
 
     [Test]
@@ -114,8 +114,8 @@ public class MainWindowViewModelTests
 
         await _window.History.RestoreAsync();
 
-        Assert.That(_window.Tabs.Count, Is.EqualTo(1));
-        Assert.That(_window.Tabs[0].IsLinked, Is.False);
+        Assert.That(_window.TabStrip.Tabs.Count, Is.EqualTo(1));
+        Assert.That(_window.TabStrip.Tabs[0].IsLinked, Is.False);
         A.CallTo(() => _fixtures.Collections.ListAsync(A<CancellationToken>._)).MustNotHaveHappened();
     }
 
@@ -133,11 +133,11 @@ public class MainWindowViewModelTests
         var window = CreateWindow(A.Fake<IRequestSender>());
         window.OpenUnsaved(CreateUnsavedDefinition());
 
-        await window.Tabs[0].SaveAsync();
+        await window.TabStrip.Tabs[0].SaveAsync();
 
-        Assert.That(window.Tabs.Count, Is.EqualTo(1));
-        Assert.That(window.Tabs[0].IsLinked, Is.True);
-        Assert.That(window.Tabs[0].RequestId, Is.EqualTo(savedId));
+        Assert.That(window.TabStrip.Tabs.Count, Is.EqualTo(1));
+        Assert.That(window.TabStrip.Tabs[0].IsLinked, Is.True);
+        Assert.That(window.TabStrip.Tabs[0].RequestId, Is.EqualTo(savedId));
         A.CallTo(() => _fixtures.Collections.ListAsync(A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
 
@@ -150,7 +150,7 @@ public class MainWindowViewModelTests
         var window = CreateWindow(sender);
         await window.OpenRequestAsync(_fixtures.Login.Id);
 
-        await window.Tabs[0].SendAsync();
+        await window.TabStrip.Tabs[0].SendAsync();
 
         A.CallTo(() => _historyService.SearchAsync(A<HistoryFilter>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
     }
@@ -165,7 +165,7 @@ public class MainWindowViewModelTests
 
         await _window.Sidebar.ReloadAsync();
 
-        Assert.That(_window.Tabs[0].Name, Is.EqualTo("Sign in"));
+        Assert.That(_window.TabStrip.Tabs[0].Name, Is.EqualTo("Sign in"));
     }
 
     private MainWindowViewModel CreateWindow(IRequestSender sender)
@@ -174,12 +174,8 @@ public class MainWindowViewModelTests
         var history = new HistoryListViewModel(_historyService);
         var environments = new EnvironmentSelectorViewModel(A.Fake<IEnvironmentService>(), A.Fake<IEnvironmentDialogs>());
         var secrets = new SecretStatusViewModel(A.Fake<ISecretService>(), A.Fake<ISecretPrompt>());
-        return new MainWindowViewModel(
-            sidebar,
-            history,
-            RequestTabServicesFactory.Create(sender, _fixtures.Requests, _destinations),
-            environments,
-            secrets);
+        var tabs = TabStripFactory.Create(RequestTabServicesFactory.Create(sender, _fixtures.Requests, _destinations));
+        return new MainWindowViewModel(sidebar, history, tabs, environments, secrets, A.Fake<ISettingsDialogs>());
     }
 
     private static RequestDefinition CreateUnsavedDefinition()

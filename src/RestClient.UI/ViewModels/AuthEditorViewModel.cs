@@ -4,6 +4,9 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class AuthEditorViewModel : ViewModelBase
 {
+    private static readonly IReadOnlyList<AuthType> AllTypes = Enum.GetValues<AuthType>();
+    private static readonly IReadOnlyList<ApiKeyLocation> AllLocations = Enum.GetValues<ApiKeyLocation>();
+
     private AuthType _type;
     private string _username;
     private string _password;
@@ -26,9 +29,10 @@ public sealed class AuthEditorViewModel : ViewModelBase
     // Raised after any change a user makes. The tab uses it to mark itself dirty.
     public event EventHandler? Edited;
 
-    public IReadOnlyList<AuthType> Types { get; } = Enum.GetValues<AuthType>();
+    // Shared by all tabs, see BodyEditorViewModel.Types.
+    public IReadOnlyList<AuthType> Types { get; } = AllTypes;
 
-    public IReadOnlyList<ApiKeyLocation> Locations { get; } = Enum.GetValues<ApiKeyLocation>();
+    public IReadOnlyList<ApiKeyLocation> Locations { get; } = AllLocations;
 
     public AuthType Type
     {

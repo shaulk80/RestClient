@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RestClient.UI.ViewModels"
+        x:Class="RestClient.UI.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings"
+        Width="460"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="12" Spacing="8">
+    <TextBlock Text="Request timeout (seconds)" />
+    <TextBox Text="{Binding TimeoutText}" AutomationProperties.Name="Request timeout in seconds" />
+    <CheckBox Content="Follow redirects"
+              IsChecked="{Binding FollowRedirects}"
+              AutomationProperties.Name="Follow redirects" />
+    <TextBlock Text="Maximum redirects" />
+    <TextBox Text="{Binding MaxRedirectsText}"
+             IsEnabled="{Binding FollowRedirects}"
+             AutomationProperties.Name="Maximum redirects" />
+    <CheckBox Content="Verify SSL certificates"
+              IsChecked="{Binding VerifySsl}"
+              AutomationProperties.Name="Verify SSL certificates" />
+    <TextBlock Text="Proxy URL (empty uses the system proxy)" />
+    <TextBox Text="{Binding ProxyUrl}"
+             PlaceholderText="http://proxy:8080"
+             AutomationProperties.Name="Proxy URL" />
+    <TextBlock Text="{Binding Error}" Foreground="Red" TextWrapping="Wrap" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancelClick" />
+      <Button Content="Save" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </StackPanel>
+</Window>

@@ -182,11 +182,16 @@ public sealed class SecretService : ISecretService
             return Result<SecretSetup?>.Failure(new Error(ErrorCategory.Storage, "The master password settings are incomplete."));
         }
 
-        if (salt.Value is null || !int.TryParse(iterations.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var count))
+        var saltBytes = new byte[SaltLength];
+        if (salt.Value is null
+            || !int.TryParse(iterations.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var count)
+            || count <= 0
+            || !Convert.TryFromBase64String(salt.Value, saltBytes, out var written)
+            || written != SaltLength)
         {
             return Result<SecretSetup?>.Failure(new Error(ErrorCategory.Storage, "The master password settings are incomplete."));
         }
 
-        return Result<SecretSetup?>.Success(new SecretSetup(Convert.FromBase64String(salt.Value), count, verifierText));
+        return Result<SecretSetup?>.Success(new SecretSetup(saltBytes, count, verifierText));
     }
 }

@@ -47,6 +47,12 @@ public sealed class TestHttpServer : IAsyncDisposable
             await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             return Results.Text("late");
         });
+        app.MapGet("/redirect/{hops:int}", (int hops) => Results.Redirect(hops <= 1 ? "/ok" : $"/redirect/{hops - 1}"));
+        app.MapGet("/delay/{milliseconds:int}", async (int milliseconds, CancellationToken cancellationToken) =>
+        {
+            await Task.Delay(milliseconds, cancellationToken);
+            return Results.Text("done");
+        });
         app.MapGet("/bytes/{size:int}", (int size) => Results.Bytes(new byte[size]));
     }
 }

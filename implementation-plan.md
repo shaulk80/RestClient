@@ -173,7 +173,7 @@ Grouped by folder. Every type is a separate file.
 - **Settings:** `SettingsViewModel` and `SettingsWindow`.
 - **Editor integration:** `EditorLanguageMapper` maps body type to a TextMate grammar (JSON, XML, plain text). AvaloniaEdit with `AvaloniaEdit.TextMate`.
 - **Services:** `IDialogService`, `IFilePickerService`, `IClipboardService`, `ErrorMessageFormatter` (turns `Error` into user text).
-- **Keyboard shortcuts:** defined in `MainWindow` (Ctrl+Enter sends, Ctrl+S saves, Ctrl+T opens a new tab, Ctrl+W closes one).
+- **Keyboard shortcuts:** defined in `MainWindow` (Ctrl+Enter sends, Ctrl+S saves, Ctrl+T opens a new tab, Ctrl+F4 closes one).
 
 ViewModels contain no Avalonia types where possible, so they can be tested with plain NUnit.
 
@@ -310,7 +310,7 @@ Tasks:
 1. Domain: no new types beyond `AppSettings` (Application).
 2. Application: `TabService` (open, close, dirty tracking, draft storage), `SettingsService`, `AppSettings`, `IOpenTabsStore`.
 3. Infrastructure: `Migration0005OpenTabs` (open tabs and drafts), `SqliteOpenTabsStore`, `SqliteSettingsStore` (typed values). `RequestHttpClientFactory` reads `AppSettings` and applies changes without restart.
-4. UI: tab strip with close buttons, `SettingsViewModel` and `SettingsWindow` (timeouts, redirects, SSL verification, proxy), keyboard shortcuts (Ctrl+Enter, Ctrl+S, Ctrl+T, Ctrl+W).
+4. UI: tab strip with close buttons, `SettingsViewModel` and `SettingsWindow` (timeouts, redirects, SSL verification, proxy), keyboard shortcuts (Ctrl+Enter, Ctrl+S, Ctrl+T, Ctrl+F4).
 5. Autosave: drafts are written on change, debounced (proposed 1 second). On startup, open tabs are restored, including unsaved drafts, and marked dirty.
 
 Tests:

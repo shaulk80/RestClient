@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Requests;
+using RestClient.Application.Settings;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
 
@@ -20,26 +21,32 @@ public sealed class HttpRequestExecutor : IHttpExecutor
         "HTTP request failed unexpectedly: {Reason}");
 
     private readonly ResponseBodyReader _bodyReader;
-    private readonly HttpTransportOptions _options;
+    private readonly ISettingsService _settings;
     private readonly ILogger<HttpRequestExecutor> _logger;
 
     public HttpRequestExecutor(
         ResponseBodyReader bodyReader,
-        HttpTransportOptions options,
+        ISettingsService settings,
         ILogger<HttpRequestExecutor> logger)
     {
         _bodyReader = bodyReader;
-        _options = options;
+        _settings = settings;
         _logger = logger;
     }
 
     public async Task<Result<ResponseSnapshot>> SendAsync(OutgoingRequest request, CancellationToken cancellationToken)
     {
+        var settings = await _settings.GetAsync(cancellationToken);
+        if (!settings.IsSuccess)
+        {
+            return Result<ResponseSnapshot>.Failure(settings.Error!);
+        }
+
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(request.Timeout);
 
         var recorder = new ConnectTimingRecorder();
-        using var client = RequestHttpClientFactory.Create(_options, recorder);
+        using var client = RequestHttpClientFactory.Create(HttpTransportOptions.From(settings.Value!), recorder);
         try
         {
             return await ExecuteAsync(client, request, recorder, deadline.Token);

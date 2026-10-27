@@ -14,6 +14,10 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<ISecretPrompt, SecretPrompt>();
         services.AddSingleton<IEnvironmentDialogs, EnvironmentDialogs>();
         services.AddSingleton<IConfirmationDialogs, ConfirmationDialogs>();
+        services.AddSingleton<ISaveChangesPrompt, SaveChangesPrompt>();
+        services.AddSingleton<ISettingsDialogs, SettingsDialogs>();
+        services.AddSingleton(new AutosaveScheduler(AutosaveScheduler.DefaultDelay));
+        services.AddSingleton<TabStripViewModel>();
         services.AddSingleton<BodyFormatting>();
         services.AddSingleton<RequestTabServices>();
         services.AddSingleton<CollectionsTreeViewModel>();

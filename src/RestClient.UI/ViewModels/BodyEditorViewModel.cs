@@ -8,6 +8,14 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class BodyEditorViewModel : ViewModelBase
 {
+    private static readonly IReadOnlyList<BodyTypeChoice> AllTypes =
+    [
+        new BodyTypeChoice(BodyType.None, "None"),
+        new BodyTypeChoice(BodyType.Raw, "Raw"),
+        new BodyTypeChoice(BodyType.FormUrlEncoded, "Form URL-encoded"),
+        new BodyTypeChoice(BodyType.Multipart, "Multipart form-data"),
+    ];
+
     private readonly BodyFormatting _formatting;
     private readonly RelayCommand _formatCommand;
     private BodyTypeChoice _selectedType;
@@ -35,13 +43,9 @@ public sealed class BodyEditorViewModel : ViewModelBase
     // Raised after any change a user makes, including a format. The tab uses it to mark itself dirty.
     public event EventHandler? Edited;
 
-    public IReadOnlyList<BodyTypeChoice> Types { get; } =
-    [
-        new BodyTypeChoice(BodyType.None, "None"),
-        new BodyTypeChoice(BodyType.Raw, "Raw"),
-        new BodyTypeChoice(BodyType.FormUrlEncoded, "Form URL-encoded"),
-        new BodyTypeChoice(BodyType.Multipart, "Multipart form-data"),
-    ];
+    // Shared by all tabs. The tab content view is reused when the selected tab changes, and a combo box whose
+    // item list is replaced writes its old selection back to the new tab.
+    public IReadOnlyList<BodyTypeChoice> Types { get; } = AllTypes;
 
     public BodyTypeChoice SelectedType
     {

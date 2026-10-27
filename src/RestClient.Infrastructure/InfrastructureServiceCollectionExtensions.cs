@@ -35,12 +35,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IHistoryRepository, SqliteHistoryRepository>();
         services.AddSingleton<IEnvironmentRepository, SqliteEnvironmentRepository>();
         services.AddSingleton<ISettingsStore, SqliteSettingsStore>();
+        services.AddSingleton<IOpenTabsStore, SqliteOpenTabsStore>();
         services.AddSingleton<ISecretCipher, AesGcmSecretCipher>();
         services.AddSingleton<IKeyDeriver, Pbkdf2KeyDeriver>();
         services.AddSingleton<IRandomBytes, SecureRandomBytes>();
 
         services.AddSingleton(options);
-        services.AddSingleton(new HttpTransportOptions(FollowRedirects: true, MaxRedirects: 10));
         services.AddSingleton<ResponseBodyReader>();
         services.AddSingleton<IHttpExecutor, HttpRequestExecutor>();
         services.AddSingleton<IBodyFileStore, BodyFileStore>();

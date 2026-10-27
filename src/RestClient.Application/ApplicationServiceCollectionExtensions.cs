@@ -6,6 +6,8 @@ using RestClient.Application.Environments;
 using RestClient.Application.History;
 using RestClient.Application.Requests;
 using RestClient.Application.Secrets;
+using RestClient.Application.Settings;
+using RestClient.Application.Tabs;
 using RestClient.Application.Workspaces;
 using RestClient.Domain.Environments;
 
@@ -25,9 +27,10 @@ public static class ApplicationServiceCollectionExtensions
         });
         services.AddSingleton<MultipartBodyEncoder>();
         services.AddSingleton<RequestBodyResolver>();
-        services.AddSingleton(provider => new RequestBuilder(
-            RequestBuilder.DefaultTimeout,
-            provider.GetRequiredService<RequestBodyResolver>()));
+        services.AddSingleton<AppSettingsStorage>();
+        services.AddSingleton<ISettingsService, SettingsService>();
+        services.AddSingleton<ITabService, TabService>();
+        services.AddSingleton<RequestBuilder>();
         services.AddSingleton<IRequestSender, RequestSender>();
         services.AddSingleton<CollectionWorkspace>();
         services.AddSingleton<ICollectionService, CollectionService>();

@@ -3,6 +3,7 @@ using FakeItEasy;
 using NUnit.Framework;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Requests;
+using RestClient.Application.Settings;
 using RestClient.Domain.Auth;
 using RestClient.Domain.Bodies;
 using RestClient.Domain.Collections;
@@ -24,7 +25,7 @@ public class RequestBuilderTests
 
     private static readonly Guid BoundaryId = Guid.Parse("0123456789abcdef0123456789abcdef");
 
-    private readonly RequestBuilder _builder = RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout);
+    private readonly RequestBuilder _builder = RequestBuilderFactory.Create(AppSettings.Default.Timeout);
 
     [Test]
     public async Task BuildAppendsEnabledQueryParamsEncoded()
@@ -120,6 +121,19 @@ public class RequestBuilderTests
     }
 
     [Test]
+    public async Task BuildFailsWhenSettingsCannotBeRead()
+    {
+        var settings = A.Fake<ISettingsService>();
+        A.CallTo(() => settings.GetAsync(A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<AppSettings>.Failure(new Error(ErrorCategory.Storage, "Unreadable."))));
+        var builder = RequestBuilderFactory.Create(settings);
+
+        var result = await builder.BuildAsync(CreateDefinition("https://example.com"), Variables, CancellationToken.None);
+
+        Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Storage));
+    }
+
+    [Test]
     public async Task BuildFailsWhenVariableIsUnresolved()
     {
         var result = await _builder.BuildAsync(CreateDefinition("https://{{missing}}"), Variables, CancellationToken.None);
@@ -209,7 +223,7 @@ public class RequestBuilderTests
             .Returns(Task.FromResult(Result<byte[]>.Success(Encoding.UTF8.GetBytes("FILE"))));
         var ids = A.Fake<IIdGenerator>();
         A.CallTo(() => ids.NewId()).Returns(BoundaryId);
-        var builder = RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout, files, ids);
+        var builder = RequestBuilderFactory.Create(AppSettings.Default.Timeout, files, ids);
         var definition = CreateDefinition("https://example.com") with
         {
             Body = new MultipartBody(
@@ -231,7 +245,7 @@ public class RequestBuilderTests
         var files = A.Fake<IFileReader>();
         A.CallTo(() => files.ReadAllBytesAsync(FilePath, A<CancellationToken>._))
             .Returns(Task.FromResult(Result<byte[]>.Failure(new Error(ErrorCategory.NotFound, "The file was not found."))));
-        var builder = RequestBuilderFactory.Create(RequestBuilder.DefaultTimeout, files);
+        var builder = RequestBuilderFactory.Create(AppSettings.Default.Timeout, files);
         var definition = CreateDefinition("https://example.com") with
         {
             Body = new MultipartBody([new MultipartPart("file", null, FilePath)]),

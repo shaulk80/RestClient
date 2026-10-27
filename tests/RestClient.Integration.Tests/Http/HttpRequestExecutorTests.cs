@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using RestClient.Application.Requests;
+using RestClient.Application.Settings;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
@@ -62,7 +63,7 @@ public class HttpRequestExecutorTests
     [TestCase(false, 302)]
     public async Task SendFollowsRedirectsOnlyWhenEnabled(bool followRedirects, int expectedStatus)
     {
-        var result = await SendAsync(Get(UrlFor("/redirect")), new HttpTransportOptions(followRedirects, 10));
+        var result = await SendAsync(Get(UrlFor("/redirect")), new AppSettings { FollowRedirects = followRedirects });
 
         Assert.That(result.Value?.StatusCode, Is.EqualTo(expectedStatus));
     }
@@ -82,7 +83,7 @@ public class HttpRequestExecutorTests
     {
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
 
-        var result = await CreateExecutor(new HttpTransportOptions(true, 10))
+        var result = await CreateExecutor(new AppSettings())
             .SendAsync(Get(UrlFor("/slow")), cancellation.Token);
 
         Assert.That(result.Error?.Category, Is.EqualTo(ErrorCategory.Cancelled));
@@ -120,13 +121,18 @@ public class HttpRequestExecutorTests
         return new OutgoingRequest(RequestMethod.Get, url, [], null, GenerousTimeout);
     }
 
-    private Task<Result<ResponseSnapshot>> SendAsync(OutgoingRequest request, HttpTransportOptions? transportOptions = null)
+    private Task<Result<ResponseSnapshot>> SendAsync(OutgoingRequest request, AppSettings? settings = null)
     {
-        return CreateExecutor(transportOptions ?? new HttpTransportOptions(true, 10))
+        return CreateExecutor(settings ?? new AppSettings())
             .SendAsync(request, CancellationToken.None);
     }
 
-    private HttpRequestExecutor CreateExecutor(HttpTransportOptions transportOptions)
+    private HttpRequestExecutor CreateExecutor(AppSettings settings)
+    {
+        return CreateExecutor(new MutableSettingsService(settings));
+    }
+
+    private HttpRequestExecutor CreateExecutor(ISettingsService settings)
     {
         var infrastructureOptions = new InfrastructureOptions(_dataFolder);
         var bodyReader = new ResponseBodyReader(
@@ -134,6 +140,6 @@ public class HttpRequestExecutorTests
             new IdGenerator(),
             NullLogger<ResponseBodyReader>.Instance);
 
-        return new HttpRequestExecutor(bodyReader, transportOptions, NullLogger<HttpRequestExecutor>.Instance);
+        return new HttpRequestExecutor(bodyReader, settings, NullLogger<HttpRequestExecutor>.Instance);
     }
 }

@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using RestClient.Application.Abstractions;
 using RestClient.Application.Collections;
+using RestClient.Application.Tabs;
 using RestClient.Domain.Collections;
 using RestClient.Domain.Responses;
 using RestClient.Domain.Results;
@@ -11,6 +12,8 @@ namespace RestClient.UI.ViewModels;
 
 public sealed class RequestTabViewModel : ViewModelBase
 {
+    private static readonly IReadOnlyList<RequestMethod> AllMethods = Enum.GetValues<RequestMethod>();
+
     private readonly IRequestSender _sender;
     private readonly IRequestService _requests;
     private readonly IDestinationPicker _destinations;
@@ -18,6 +21,7 @@ public sealed class RequestTabViewModel : ViewModelBase
     private readonly AsyncRelayCommand _sendCommand;
     private readonly AsyncRelayCommand _saveCommand;
     private readonly RelayCommand _cancelCommand;
+    private readonly RelayCommand _closeCommand;
     private RequestDefinition _saved;
     private bool _isLinked;
     private CancellationTokenSource? _cancellation;
@@ -29,7 +33,8 @@ public sealed class RequestTabViewModel : ViewModelBase
     private string _saveError = string.Empty;
 
     // An unlinked tab holds a request that is not in any collection yet. It starts dirty, because it has to be saved.
-    public RequestTabViewModel(RequestTabServices services, RequestDefinition definition, bool isLinked)
+    // A restored tab with unsaved edits is passed as dirty.
+    public RequestTabViewModel(RequestTabServices services, RequestDefinition definition, bool isLinked, bool? isDirty = null)
     {
         _sender = services.Sender;
         _requests = services.Requests;
@@ -37,7 +42,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         _secrets = services.SecretPrompt;
         _saved = definition;
         _isLinked = isLinked;
-        _isDirty = !isLinked;
+        _isDirty = isDirty ?? !isLinked;
         _name = definition.Name;
         _method = definition.Method;
         _url = definition.Url;
@@ -49,6 +54,7 @@ public sealed class RequestTabViewModel : ViewModelBase
         _sendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending);
         _saveCommand = new AsyncRelayCommand(SaveAsync, () => true);
         _cancelCommand = new RelayCommand(Cancel, () => IsSending);
+        _closeCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty), () => true);
     }
 
     // The saved request's identifier. It means nothing for an unlinked tab, so check IsLinked first.
@@ -70,7 +76,8 @@ public sealed class RequestTabViewModel : ViewModelBase
 
     public string Header => IsDirty ? $"{Name} *" : Name;
 
-    public IReadOnlyList<RequestMethod> Methods { get; } = Enum.GetValues<RequestMethod>();
+    // Shared by all tabs, see BodyEditorViewModel.Types.
+    public IReadOnlyList<RequestMethod> Methods { get; } = AllMethods;
 
     public RequestMethod Method
     {
@@ -96,6 +103,7 @@ public sealed class RequestTabViewModel : ViewModelBase
             if (SetProperty(ref _isDirty, value))
             {
                 RaisePropertyChanged(nameof(Header));
+                Changed?.Invoke(this, EventArgs.Empty);
             }
         }
     }
@@ -126,6 +134,14 @@ public sealed class RequestTabViewModel : ViewModelBase
     public ICommand SaveCommand => _saveCommand;
 
     public ICommand CancelCommand => _cancelCommand;
+
+    public ICommand CloseCommand => _closeCommand;
+
+    // Raised on every edit and whenever the dirty state changes, so the open tabs can be stored again.
+    public event EventHandler? Changed;
+
+    // Raised when the user asks to close the tab. The tab strip decides whether it closes.
+    public event EventHandler? CloseRequested;
 
     // Raised after every send, including failed and cancelled ones, because each one adds a history entry.
     public event EventHandler? RequestSent;
@@ -166,6 +182,12 @@ public sealed class RequestTabViewModel : ViewModelBase
     public void Cancel()
     {
         _cancellation?.Cancel();
+    }
+
+    // The request as edited now, including changes that are not saved yet.
+    public TabSnapshot Snapshot(bool isSelected)
+    {
+        return new TabSnapshot(ApplyEdits(_saved), IsLinked, IsDirty, isSelected);
     }
 
     private async Task SaveLinkedAsync()
@@ -223,13 +245,19 @@ public sealed class RequestTabViewModel : ViewModelBase
     {
         if (SetProperty(ref field, value, propertyName))
         {
-            IsDirty = true;
+            MarkEdited();
         }
     }
 
     private void OnBodyEdited(object? sender, EventArgs e)
     {
+        MarkEdited();
+    }
+
+    private void MarkEdited()
+    {
         IsDirty = true;
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private void ShowResult(Result<ResponseSnapshot> result)
