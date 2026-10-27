@@ -49,6 +49,44 @@ public class CollectionsTreeViewInteractionTests
         Assert.That(FindItem(sidebar.Roots[1]).IsExpanded, Is.True, "second collection expanded in view");
     }
 
+    // The click area of the expander is the whole cell between the left edge of the row and the row text, not only
+    // the small chevron: from the first pixels of the row to just before the text, over the full height of the row.
+    [TestCase(4, 0.1)]
+    [TestCase(4, 0.9)]
+    [TestCase(20, 0.5)]
+    [TestCase(-4, 0.1)]
+    [TestCase(-4, 0.9)]
+    [AvaloniaTest]
+    public async Task ClickingAnywhereInTheCellLeftOfTheRowTextExpands(double offset, double fractionY)
+    {
+        var sidebar = await OpenSidebarAsync();
+        var item = FindItem(sidebar.Roots[0]);
+        var text = item.GetVisualDescendants().OfType<TextBlock>().First(block => block.Text == sidebar.Roots[0].Name);
+        var rowTop = item.TranslatePoint(new Point(0, 0), _window)!.Value;
+        var textLeft = text.TranslatePoint(new Point(0, 0), _window)!.Value.X;
+        var x = offset > 0 ? rowTop.X + offset : textLeft + offset;
+
+        Click(new Point(x, rowTop.Y + text.Bounds.Height * 2 * fractionY));
+
+        Assert.That(sidebar.Roots[0].IsExpanded, Is.True);
+    }
+
+    [AvaloniaTest]
+    public async Task ExpanderButtonSpansFromTheRowEdgeToTheTextAndTheHeightOfTheRow()
+    {
+        var sidebar = await OpenSidebarAsync();
+        var item = FindItem(sidebar.Roots[0]);
+        var expander = FindExpander(sidebar.Roots[0]);
+        var text = item.GetVisualDescendants().OfType<TextBlock>().First(block => block.Text == sidebar.Roots[0].Name);
+        var left = expander.TranslatePoint(new Point(0, 0), item)!.Value.X;
+        var right = left + expander.Bounds.Width;
+        var textLeft = text.TranslatePoint(new Point(0, 0), item)!.Value.X;
+
+        Assert.That(left, Is.LessThanOrEqualTo(2), "starts at the left edge of the row");
+        Assert.That(right, Is.GreaterThanOrEqualTo(textLeft - 2), "reaches the text");
+        Assert.That(expander.Bounds.Height, Is.GreaterThanOrEqualTo(text.Bounds.Height + 8), "as high as the row");
+    }
+
     [AvaloniaTest]
     public async Task ExpanderClickWithSlightMouseMovementStillExpands()
     {

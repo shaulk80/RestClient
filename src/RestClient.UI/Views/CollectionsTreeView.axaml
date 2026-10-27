@@ -63,6 +63,36 @@
           <Style Selector="TreeViewItem">
             <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=TwoWay}" />
           </Style>
+          <!-- The expand and collapse button is the whole cell left of the row text, as high as the row, not only the
+               small chevron. Fluent puts the button in a panel with a 12 px margin on each side, set in the template, so
+               a style cannot remove it. The negative margin lets the button reach over it: it spans from the left edge of
+               the row to the text, and the panel keeps its old size, so the text stays where it was. Fluent's template
+               also sizes the border of the button to the glyph, so the button gets a template of its own. -->
+          <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron">
+            <Setter Property="Margin" Value="-12,0" />
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="NaN" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+              <ControlTemplate>
+                <Border Background="Transparent">
+                  <Path Name="ChevronPath"
+                        Width="12"
+                        Height="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Stretch="Uniform"
+                        Data="{DynamicResource TreeViewItemCollapsedChevronPathData}"
+                        Stroke="{TemplateBinding Foreground}"
+                        StrokeThickness="1" />
+                </Border>
+              </ControlTemplate>
+            </Setter>
+          </Style>
+          <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron:checked /template/ Path#ChevronPath">
+            <Setter Property="Data" Value="{DynamicResource TreeViewItemExpandedChevronPathData}" />
+          </Style>
         </TreeView.Styles>
         <TreeView.DataTemplates>
           <TreeDataTemplate DataType="vm:TreeNodeViewModel" ItemsSource="{Binding Children}">
