@@ -24,8 +24,8 @@
                TextWrapping="Wrap"
                AutomationProperties.LiveSetting="Polite" />
     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
       <Button Content="Unlock" Command="{Binding UnlockCommand}" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
     </StackPanel>
   </Grid>
 </Window>

@@ -16,6 +16,18 @@ public sealed class BodyEditorViewModel : ViewModelBase
         new BodyTypeChoice(BodyType.Multipart, "Multipart form-data"),
     ];
 
+    private static readonly IReadOnlyList<string> AllContentTypes =
+    [
+        "application/json",
+        "application/xml",
+        "application/javascript",
+        "application/octet-stream",
+        "text/plain",
+        "text/html",
+        "text/xml",
+        "text/csv",
+    ];
+
     private readonly BodyFormatting _formatting;
     private readonly RelayCommand _formatCommand;
     private BodyTypeChoice _selectedType;
@@ -52,6 +64,9 @@ public sealed class BodyEditorViewModel : ViewModelBase
         get => _selectedType;
         set => EditField(ref _selectedType, value, nameof(SelectedType));
     }
+
+    // The suggestions of the content type box. The box is editable, so any other value can be typed or cleared.
+    public IReadOnlyList<string> ContentTypes { get; } = AllContentTypes;
 
     public BodyType Type => _selectedType.Type;
 
@@ -113,6 +128,21 @@ public sealed class BodyEditorViewModel : ViewModelBase
             BodyType.Multipart => new MultipartBody(Multipart.ToParts()),
             _ => new NoBody(),
         };
+    }
+
+    // For a method that usually carries a body: a request with no body becomes a JSON raw body. A body the user has
+    // already chosen, and a content type already typed, are kept.
+    public void PrepareJsonBody()
+    {
+        if (Type == BodyType.None)
+        {
+            SelectedType = Types.First(choice => choice.Type == BodyType.Raw);
+        }
+
+        if (Type == BodyType.Raw && ContentType.Length == 0)
+        {
+            ContentType = AllContentTypes[0];
+        }
     }
 
     private static BodyType TypeOf(BodyDefinition body)

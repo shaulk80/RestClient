@@ -108,6 +108,7 @@ public sealed class ResponseViewModel : ViewModelBase
         Language = EditorLanguageMapper.Map(FindContentType(snapshot.Headers), Encoding.UTF8.GetByteCount(_rawBody));
         var pretty = PrettyPrint(Language, _rawBody);
         _prettyBody = pretty.Value;
+        RaisePropertyChanged(nameof(CanPrettyPrint));
         IsPrettyView = CanPrettyPrint;
         BodyNote = JoinNotes(FormatBodyNote(snapshot), pretty.Note);
         UpdateBodyText();
@@ -127,6 +128,7 @@ public sealed class ResponseViewModel : ViewModelBase
         Headers = [];
         _rawBody = string.Empty;
         _prettyBody = null;
+        RaisePropertyChanged(nameof(CanPrettyPrint));
         Language = EditorLanguage.PlainText;
         BodyNote = string.Empty;
         ErrorMessage = string.Empty;

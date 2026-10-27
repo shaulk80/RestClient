@@ -87,7 +87,17 @@ public sealed class RequestTabViewModel : ViewModelBase
     public RequestMethod Method
     {
         get => _method;
-        set => EditField(ref _method, value, nameof(Method));
+        set
+        {
+            if (SetProperty(ref _method, value))
+            {
+                MarkEdited();
+                if (value is RequestMethod.Post or RequestMethod.Put or RequestMethod.Patch)
+                {
+                    BodyEditor.PrepareJsonBody();
+                }
+            }
+        }
     }
 
     public string Url

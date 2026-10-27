@@ -23,6 +23,7 @@ public partial class CollectionsTreeView : UserControl
     {
         Visual.IsVisibleProperty.Changed.AddClassHandler<TextBox>((box, e) => FocusRenameBox(box, e.NewValue is true));
         Control.LoadedEvent.AddClassHandler<TextBox>((box, _) => FocusRenameBox(box, box.IsVisible));
+        InputElement.LostFocusEvent.AddClassHandler<TextBox>((box, _) => CommitRename(box));
     }
 
     public CollectionsTreeView()
@@ -87,6 +88,15 @@ public partial class CollectionsTreeView : UserControl
             box.Focus();
             box.SelectAll();
         }, DispatcherPriority.Background);
+    }
+
+    // Leaving the rename box with the mouse or Tab keeps the edit, the same as Enter.
+    private static void CommitRename(TextBox box)
+    {
+        if (box.Classes.Contains("rename") && box.DataContext is TreeNodeViewModel node)
+        {
+            node.CommitRenameCommand.Execute(null);
+        }
     }
 
     // Escape closes the context menu and returns to the tree. Shift+F10 and the Menu key open it for the

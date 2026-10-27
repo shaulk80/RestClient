@@ -15,6 +15,8 @@ public sealed class CollectionNodeViewModel : TreeNodeViewModel
 
     public override bool CanContainChildren => true;
 
+    public override bool IsCollection => true;
+
     public override Guid DropFolderId => _rootFolderId;
 
     public override Guid? DropBeforeId => null;

@@ -23,21 +23,27 @@
                FontStyle="Italic" />
     <StackPanel IsVisible="{Binding IsRaw}" Spacing="8">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-        <TextBox Grid.Column="0"
-                 Text="{Binding ContentType}"
-                 PlaceholderText="Content-Type, for example application/json"
-                 AutomationProperties.Name="Body content type" />
+        <!-- Editable: pick a common type, type another one, or clear the box. -->
+        <ComboBox Grid.Column="0"
+                  HorizontalAlignment="Stretch"
+                  IsEditable="True"
+                  ItemsSource="{Binding ContentTypes}"
+                  Text="{Binding ContentType}"
+                  PlaceholderText="Content-Type, for example application/json"
+                  AutomationProperties.Name="Body content type" />
         <Button Grid.Column="1"
                 Content="Format"
                 Command="{Binding FormatCommand}"
                 IsEnabled="{Binding CanFormat}" />
       </Grid>
-      <controls:CodeEditor x:Name="BodyCodeEditor"
-                           EditorText="{Binding Text}"
-                           Language="{Binding Language}"
-                           WordWrap="True"
-                           Height="320"
-                           AutomationProperties.Name="Request body" />
+      <Border Classes="panel">
+        <controls:CodeEditor x:Name="BodyCodeEditor"
+                             EditorText="{Binding Text}"
+                             Language="{Binding Language}"
+                             WordWrap="True"
+                             Height="320"
+                             AutomationProperties.Name="Request body" />
+      </Border>
       <TextBlock Text="Highlighting is off for bodies over 1 MB."
                  IsVisible="{Binding IsLargeBody}"
                  FontStyle="Italic" />

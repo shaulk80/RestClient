@@ -346,6 +346,16 @@ Tasks, UX changes (details decided 2026-10-27):
 12. **Save All.** Ctrl+Shift+S saves every changed tab. A tab that is not linked to a collection asks for a folder and a name, one after the other, and Cancel stops the rest.
 13. **Ctrl+Tab.** Ctrl+Tab and Ctrl+Shift+Tab switch the open request tabs in the order they were last used, not in strip order. The request tabs are the only tabs affected. The sidebar tabs (Collections, History) and the Params, Headers, Body, Authorization tabs do not change. The most-recently-used order lives in `TabStripViewModel`. Each press moves one step in the order, with no pop-up list.
 
+Tasks, UX follow-ups (from `C:\zzz_temp\update.txt`, 2026-10-27):
+14. **Rename commits on focus loss.** In the Collections tree, leaving the rename box with the mouse or Tab commits the name, like Enter. Escape still cancels.
+15. **Selected tab.** The selected tab header has a gray fill (a theme resource, light and dark) instead of the underline.
+16. **Response panel order.** From the top: a thin Pretty and Raw bar, the body, a splitter, and the other response information (error, status, timing, size, note, headers). The body and the information have borders.
+17. **Collections toolbar.** Three small icon buttons with tooltips: New collection, New folder, New request. New folder and New request create in the selected node and need a selection. The context menu of a collection also has New collection.
+18. **Dialog buttons.** Cancel is the rightmost button in every dialog that has one.
+19. **Body for a new request.** Choosing POST, PUT or PATCH on a request that has no body selects the Raw body type with Content-Type `application/json`. A body type or content type already chosen is kept.
+20. **Content-Type box.** The Content-Type of a raw body is an editable combo box: choose a common type, type another, or clear it.
+21. **Pretty switch bug.** After switching the response from Pretty to Raw, Pretty stayed disabled. Fixed.
+
 Tests:
 - UI: `TabStripViewModelTests` for the recently used order (parameterized: switch, close, reopen, wrap around, one tab only) and for Save All (changed linked tabs, unlinked tab asks for a name, cancel stops).
 - Application and UI: `SettingsServiceTests` and `SettingsViewModelTests` for `OpenOnSingleClick` (default, store, read back). Panel widths too, if they are stored.

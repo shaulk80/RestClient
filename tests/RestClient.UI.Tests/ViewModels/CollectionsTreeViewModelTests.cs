@@ -105,6 +105,68 @@ public class CollectionsTreeViewModelTests
     }
 
     [Test]
+    public async Task CommitRenameTwiceRenamesOnce()
+    {
+        var sidebar = _fixtures.CreateSidebar();
+        await sidebar.ReloadAsync();
+        var node = sidebar.FindRequest(_fixtures.Login.Id)!;
+        node.BeginRename();
+        node.EditName = "Sign in";
+        A.CallTo(() => _fixtures.Requests.RenameAsync(A<Guid>._, A<string>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result.Success()));
+
+        await sidebar.CommitRenameAsync(node);
+        await sidebar.CommitRenameAsync(node);
+
+        A.CallTo(() => _fixtures.Requests.RenameAsync(A<Guid>._, A<string>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Test]
+    public async Task CommitRenameAfterCancelDoesNotRename()
+    {
+        var sidebar = _fixtures.CreateSidebar();
+        await sidebar.ReloadAsync();
+        var node = sidebar.FindRequest(_fixtures.Login.Id)!;
+        node.BeginRename();
+        node.EditName = "Sign in";
+        node.CancelRenameCommand.Execute(null);
+
+        await sidebar.CommitRenameAsync(node);
+
+        A.CallTo(() => _fixtures.Requests.RenameAsync(A<Guid>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
+    }
+
+    [Test]
+    public async Task ToolbarCommandsNeedASelectedNode()
+    {
+        var sidebar = _fixtures.CreateSidebar();
+        await sidebar.ReloadAsync();
+
+        Assert.That(sidebar.NewFolderCommand.CanExecute(null), Is.False);
+        Assert.That(sidebar.NewRequestCommand.CanExecute(null), Is.False);
+
+        sidebar.SelectedNode = sidebar.Roots[0];
+
+        Assert.That(sidebar.NewFolderCommand.CanExecute(null), Is.True);
+        Assert.That(sidebar.NewRequestCommand.CanExecute(null), Is.True);
+    }
+
+    [Test]
+    public async Task NewFolderCommandCreatesInTheSelectedNode()
+    {
+        var sidebar = _fixtures.CreateSidebar();
+        await sidebar.ReloadAsync();
+        var collection = sidebar.Roots[0];
+        sidebar.SelectedNode = collection;
+        A.CallTo(() => _fixtures.Folders.CreateAsync(A<Guid>._, A<CancellationToken>._))
+            .Returns(Task.FromResult(Result<Guid>.Success(Guid.NewGuid())));
+
+        await sidebar.CreateFolderAsync(sidebar.SelectedNode);
+
+        A.CallTo(() => _fixtures.Folders.CreateAsync(collection.DropFolderId, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Test]
     public async Task OpenRequestRaisesRequestOpenedWithRequestId()
     {
         var sidebar = _fixtures.CreateSidebar();

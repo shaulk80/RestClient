@@ -170,6 +170,25 @@ public class BodyEditorViewModelTests
         Assert.That(raised, Is.EqualTo(1));
     }
 
+    [TestCaseSource(nameof(JsonBodyPreparations))]
+    public void PrepareJsonBodyChoosesRawJsonOnlyWhenNothingIsChosen(BodyDefinition body, BodyType expectedType, string expectedContentType)
+    {
+        var viewModel = CreateEditor(body);
+
+        viewModel.PrepareJsonBody();
+
+        Assert.That(viewModel.Type, Is.EqualTo(expectedType));
+        Assert.That(viewModel.ContentType, Is.EqualTo(expectedContentType));
+    }
+
+    public static IEnumerable<TestCaseData> JsonBodyPreparations()
+    {
+        yield return new TestCaseData(new NoBody(), BodyType.Raw, "application/json");
+        yield return new TestCaseData(new RawBody(string.Empty, "x"), BodyType.Raw, "application/json");
+        yield return new TestCaseData(new RawBody("text/plain", "x"), BodyType.Raw, "text/plain");
+        yield return new TestCaseData(new FormUrlEncodedBody([]), BodyType.FormUrlEncoded, string.Empty);
+    }
+
     public static IEnumerable<TestCaseData> StoredBodyTypes()
     {
         return

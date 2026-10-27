@@ -73,6 +73,32 @@ public class ResponseViewModelTests
         Assert.That(viewModel.CanPrettyPrint, Is.False);
     }
 
+    [Test]
+    public void ShowRaisesCanPrettyPrintChangedSoThePrettySwitchStaysEnabled()
+    {
+        var viewModel = new ResponseViewModel(RequestTabServicesFactory.CreateFormatting());
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        viewModel.Show(CreateSnapshot("application/json", Json));
+
+        Assert.That(changed, Does.Contain(nameof(ResponseViewModel.CanPrettyPrint)));
+    }
+
+    [Test]
+    public void SwitchingFromPrettyToRawAndBackKeepsPrettyAvailable()
+    {
+        var viewModel = new ResponseViewModel(RequestTabServicesFactory.CreateFormatting());
+        viewModel.Show(CreateSnapshot("application/json", Json));
+
+        viewModel.IsRawView = true;
+        viewModel.IsPrettyView = true;
+
+        Assert.That(viewModel.CanPrettyPrint, Is.True);
+        Assert.That(viewModel.IsPrettyView, Is.True);
+        Assert.That(viewModel.BodyText, Is.Not.EqualTo(Json));
+    }
+
     private static ResponseSnapshot CreateSnapshot(string contentType, string body)
     {
         KeyValueEntry[] headers = [new KeyValueEntry("Content-Type", contentType, true)];

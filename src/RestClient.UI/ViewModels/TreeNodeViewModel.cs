@@ -25,6 +25,7 @@ public abstract class TreeNodeViewModel : ViewModelBase
         NewRequestCommand = new AsyncRelayCommand(() => _owner.CreateRequestAsync(this), () => true);
         DuplicateCommand = new AsyncRelayCommand(() => _owner.DuplicateAsync(this), () => true);
         OpenCommand = new RelayCommand(() => _owner.OpenRequest(Id), () => true);
+        NewCollectionCommand = _owner.NewCollectionCommand;
     }
 
     public Guid Id { get; }
@@ -55,6 +56,8 @@ public abstract class TreeNodeViewModel : ViewModelBase
 
     public virtual bool IsRequest => false;
 
+    public virtual bool IsCollection => false;
+
     // Folder that receives a node dropped on this one, and the sibling to insert before (null appends).
     public abstract Guid DropFolderId { get; }
 
@@ -75,6 +78,8 @@ public abstract class TreeNodeViewModel : ViewModelBase
     public ICommand DuplicateCommand { get; }
 
     public ICommand OpenCommand { get; }
+
+    public ICommand NewCollectionCommand { get; }
 
     public void BeginRename()
     {

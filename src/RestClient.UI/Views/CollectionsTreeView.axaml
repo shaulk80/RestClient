@@ -5,12 +5,51 @@
              x:DataType="vm:CollectionsTreeViewModel">
   <Grid>
     <DockPanel Margin="8" LastChildFill="True">
-      <Button DockPanel.Dock="Top"
-              Margin="0,0,0,8"
-              HorizontalAlignment="Stretch"
-              Content="New collection"
-              Command="{Binding NewCollectionCommand}"
-              AutomationProperties.Name="New collection" />
+      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,0,0,8">
+        <StackPanel.Styles>
+          <Style Selector="Button.tool">
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="MinHeight" Value="0" />
+          </Style>
+          <Style Selector="Button.tool Path">
+            <Setter Property="Stroke" Value="{Binding $parent[Button].Foreground}" />
+            <Setter Property="StrokeThickness" Value="1.2" />
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+          </Style>
+          <Style Selector="Button.tool TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+          </Style>
+        </StackPanel.Styles>
+        <Button Classes="tool"
+                Command="{Binding NewCollectionCommand}"
+                ToolTip.Tip="New collection"
+                AutomationProperties.Name="New collection">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Path Data="M8,1.5 L14.5,4.5 L8,7.5 L1.5,4.5 Z M1.5,8 L8,11 L14.5,8 M1.5,11 L8,14 L14.5,11" />
+            <TextBlock Text="+" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool"
+                Command="{Binding NewFolderCommand}"
+                ToolTip.Tip="New folder in the selected collection or folder"
+                AutomationProperties.Name="New folder">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Path Data="M1.5,3.5 H6 L7.5,5 H14.5 V12.5 H1.5 Z" />
+            <TextBlock Text="+" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool"
+                Command="{Binding NewRequestCommand}"
+                ToolTip.Tip="New request in the selected collection or folder"
+                AutomationProperties.Name="New request">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Path Data="M3.5,1.5 H10 L13,4.5 V14.5 H3.5 Z M10,1.5 V4.5 H13" />
+            <TextBlock Text="+" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
       <TreeView x:Name="Tree"
                 ItemsSource="{Binding Roots}"
                 SelectedItem="{Binding SelectedNode}"
@@ -54,6 +93,7 @@
            IsLightDismissEnabled="False">
       <MenuFlyoutPresenter x:Name="MenuItems" x:DataType="vm:TreeNodeViewModel">
         <MenuItem Header="Open" Command="{Binding OpenCommand}" IsVisible="{Binding IsRequest}" />
+        <MenuItem Header="New collection" Command="{Binding NewCollectionCommand}" IsVisible="{Binding IsCollection}" />
         <MenuItem Header="New folder" Command="{Binding NewFolderCommand}" IsVisible="{Binding CanContainChildren}" />
         <MenuItem Header="New request" Command="{Binding NewRequestCommand}" IsVisible="{Binding CanContainChildren}" />
         <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" IsVisible="{Binding IsRequest}" />

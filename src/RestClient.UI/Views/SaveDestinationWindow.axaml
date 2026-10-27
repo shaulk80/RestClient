@@ -28,8 +28,8 @@
     </ListBox>
     <TextBlock Grid.Row="4" Text="{Binding NameWarning}" Classes="warning" TextWrapping="Wrap" />
     <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
       <Button Content="Save" IsDefault="True" IsEnabled="{Binding CanSave}" Click="OnSaveClick" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
     </StackPanel>
   </Grid>
 </Window>

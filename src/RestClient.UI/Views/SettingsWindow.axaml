@@ -36,8 +36,8 @@
                TextWrapping="Wrap"
                AutomationProperties.LiveSetting="Polite" />
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
       <Button Content="Save" IsDefault="True" Command="{Binding SaveCommand}" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
     </StackPanel>
   </StackPanel>
 </Window>

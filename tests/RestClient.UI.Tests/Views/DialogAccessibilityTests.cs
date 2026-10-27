@@ -2,6 +2,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using NUnit.Framework;
 using RestClient.UI.Behaviors;
 using RestClient.UI.Views;
@@ -97,6 +98,25 @@ public class DialogAccessibilityTests
         Show(new SaveChangesWindow());
 
         Assert.That(AccessibleNameChecker.FindUnnamed(_window!), Is.Empty);
+    }
+
+    [TestCase(typeof(ConfirmationWindow))]
+    [TestCase(typeof(SaveChangesWindow))]
+    [TestCase(typeof(SaveDestinationWindow))]
+    [TestCase(typeof(UnlockDialogWindow))]
+    [TestCase(typeof(MasterPasswordSetupWindow))]
+    [TestCase(typeof(SettingsWindow))]
+    [AvaloniaTest]
+    public void CancelIsTheRightmostButton(Type windowType)
+    {
+        Show((Window)Activator.CreateInstance(windowType)!);
+
+        var buttons = _window!.GetVisualDescendants().OfType<Button>().ToList();
+        var cancel = buttons.Single(button => button.IsCancel);
+        var siblings = buttons.Where(button => button.Parent == cancel.Parent && button != cancel).ToList();
+
+        Assert.That(siblings, Is.Not.Empty);
+        Assert.That(siblings.Select(button => button.Bounds.X), Is.All.LessThan(cancel.Bounds.X));
     }
 
     [AvaloniaTest]

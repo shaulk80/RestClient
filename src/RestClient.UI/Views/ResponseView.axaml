@@ -5,56 +5,70 @@
              xmlns:controls="using:RestClient.UI.Controls"
              x:Class="RestClient.UI.Views.ResponseView"
              x:DataType="vm:RequestTabViewModel">
-  <Grid Margin="12" RowDefinitions="Auto,Auto,*" RowSpacing="8">
-    <StackPanel Grid.Row="0" Spacing="4">
-      <!-- A line with no text is hidden, so an empty response does not leave a gap above the body. -->
-      <TextBlock Text="{Binding Response.ErrorMessage}"
-                 IsVisible="{Binding Response.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                 Classes="error"
-                 TextWrapping="Wrap"
-                 AutomationProperties.LiveSetting="Polite" />
-      <TextBlock Text="{Binding Response.StatusText}"
-                 IsVisible="{Binding Response.StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                 FontWeight="SemiBold"
-                 AutomationProperties.LiveSetting="Polite" />
-      <TextBlock Text="{Binding Response.TimingText}"
-                 IsVisible="{Binding Response.TimingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-      <TextBlock Text="{Binding Response.SizeText}"
-                 IsVisible="{Binding Response.SizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-      <TextBlock Text="{Binding Response.BodyNote}"
-                 IsVisible="{Binding Response.BodyNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                 FontStyle="Italic" />
+  <!-- From the top: the Pretty and Raw switch (a thin bar), the body, and the rest of the response below a splitter. -->
+  <Grid RowDefinitions="Auto,*,Auto,160">
+    <Border Grid.Row="0"
+            Classes="panel"
+            BorderThickness="0,0,0,1"
+            Padding="8,2">
       <StackPanel Orientation="Horizontal" Spacing="12">
         <RadioButton Content="Pretty"
+                     MinHeight="22"
                      GroupName="ResponseBodyView"
                      IsChecked="{Binding Response.IsPrettyView}"
                      IsEnabled="{Binding Response.CanPrettyPrint}" />
         <RadioButton Content="Raw"
+                     MinHeight="22"
                      GroupName="ResponseBodyView"
                      IsChecked="{Binding Response.IsRawView}" />
       </StackPanel>
-    </StackPanel>
-    <!-- Many headers scroll here, so they cannot push the body out of the panel. -->
-    <ScrollViewer Grid.Row="1" MaxHeight="160">
-      <ItemsControl ItemsSource="{Binding Response.Headers}"
-                    AutomationProperties.Name="Response headers">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="domain:KeyValueEntry">
-            <TextBlock TextWrapping="Wrap">
-              <Run FontWeight="SemiBold" Text="{Binding Key}" />
-              <Run Text=": " />
-              <Run Text="{Binding Value}" />
-            </TextBlock>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+    </Border>
+    <Border Grid.Row="1" Classes="panel" BorderThickness="0,0,0,1" MinHeight="80">
+      <controls:CodeEditor EditorText="{Binding Response.BodyText}"
+                           Language="{Binding Response.Language}"
+                           IsReadOnly="True"
+                           WordWrap="True"
+                           VerticalScrollBarVisibility="Visible"
+                           AutomationProperties.Name="Response body" />
+    </Border>
+    <GridSplitter Grid.Row="2"
+                  Height="6"
+                  ResizeDirection="Rows"
+                  HorizontalAlignment="Stretch"
+                  AutomationProperties.Name="Resize the response details" />
+    <!-- Status, timing, size and headers. A line with no text is hidden, so an empty response leaves no gap. -->
+    <ScrollViewer Grid.Row="3" MinHeight="40">
+      <StackPanel Margin="8" Spacing="4">
+        <TextBlock Text="{Binding Response.ErrorMessage}"
+                   IsVisible="{Binding Response.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Classes="error"
+                   TextWrapping="Wrap"
+                   AutomationProperties.LiveSetting="Polite" />
+        <TextBlock Text="{Binding Response.StatusText}"
+                   IsVisible="{Binding Response.StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontWeight="SemiBold"
+                   AutomationProperties.LiveSetting="Polite" />
+        <TextBlock Text="{Binding Response.TimingText}"
+                   IsVisible="{Binding Response.TimingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Text="{Binding Response.SizeText}"
+                   IsVisible="{Binding Response.SizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Text="{Binding Response.BodyNote}"
+                   IsVisible="{Binding Response.BodyNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontStyle="Italic"
+                   TextWrapping="Wrap" />
+        <ItemsControl ItemsSource="{Binding Response.Headers}"
+                      AutomationProperties.Name="Response headers">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="domain:KeyValueEntry">
+              <TextBlock TextWrapping="Wrap">
+                <Run FontWeight="SemiBold" Text="{Binding Key}" />
+                <Run Text=": " />
+                <Run Text="{Binding Value}" />
+              </TextBlock>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
     </ScrollViewer>
-    <controls:CodeEditor Grid.Row="2"
-                         EditorText="{Binding Response.BodyText}"
-                         Language="{Binding Response.Language}"
-                         IsReadOnly="True"
-                         WordWrap="True"
-                         VerticalScrollBarVisibility="Visible"
-                         AutomationProperties.Name="Response body" />
   </Grid>
 </UserControl>

@@ -202,6 +202,51 @@ public class CollectionsTreeViewInteractionTests
     }
 
     [AvaloniaTest]
+    public async Task ClickingAnotherRowWhileRenamingCommitsTheEdit()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        A.CallTo(() => _fixtures.Folders.RenameAsync(folder.Id, "Renamed", A<CancellationToken>._))
+            .Returns(Task.FromResult(Result.Success()));
+        sidebar.SelectedNode = folder;
+        FindItem(folder).Focus();
+        _window.KeyPressQwerty(PhysicalKey.F2, RawInputModifiers.None);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+        var box = (TextBox)_window.FocusManager!.GetFocusedElement()!;
+        box.Text = "Renamed";
+
+        Click(Center(FindItem(sidebar.Roots[0])));
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+
+        A.CallTo(() => _fixtures.Folders.RenameAsync(folder.Id, "Renamed", A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [AvaloniaTest]
+    public async Task EscapeWhileRenamingDoesNotCommitTheEdit()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        sidebar.SelectedNode = folder;
+        FindItem(folder).Focus();
+        _window.KeyPressQwerty(PhysicalKey.F2, RawInputModifiers.None);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+        var box = (TextBox)_window.FocusManager!.GetFocusedElement()!;
+        box.Text = "Renamed";
+
+        _window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+
+        A.CallTo(() => _fixtures.Folders.RenameAsync(A<Guid>._, A<string>._, A<CancellationToken>._)).MustNotHaveHappened();
+        Assert.That(folder.IsEditing, Is.False);
+    }
+
+    [AvaloniaTest]
     public async Task DeleteKeyDeletesTheSelectedNodeAfterConfirmation()
     {
         var sidebar = await OpenSidebarAsync();

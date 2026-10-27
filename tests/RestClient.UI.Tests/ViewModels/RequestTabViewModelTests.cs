@@ -395,6 +395,33 @@ public class RequestTabViewModelTests
         };
     }
 
+    [TestCase(RequestMethod.Post, BodyType.Raw, "application/json")]
+    [TestCase(RequestMethod.Put, BodyType.Raw, "application/json")]
+    [TestCase(RequestMethod.Patch, BodyType.Raw, "application/json")]
+    [TestCase(RequestMethod.Delete, BodyType.None, "")]
+    [TestCase(RequestMethod.Head, BodyType.None, "")]
+    public void ChoosingAMethodWithAnOptionalBodySelectsRawJson(RequestMethod method, BodyType expectedType, string expectedContentType)
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>());
+
+        viewModel.Method = method;
+
+        Assert.That(viewModel.BodyEditor.Type, Is.EqualTo(expectedType));
+        Assert.That(viewModel.BodyEditor.ContentType, Is.EqualTo(expectedContentType));
+        Assert.That(viewModel.IsDirty, Is.True);
+    }
+
+    [Test]
+    public void ChoosingPostKeepsABodyTypeThatWasAlreadyChosen()
+    {
+        var viewModel = CreateViewModel(A.Fake<IRequestSender>());
+        viewModel.BodyEditor.SelectedType = viewModel.BodyEditor.Types.Single(choice => choice.Type == BodyType.Multipart);
+
+        viewModel.Method = RequestMethod.Post;
+
+        Assert.That(viewModel.BodyEditor.Type, Is.EqualTo(BodyType.Multipart));
+    }
+
     private static BodyTypeChoice RawChoice(RequestTabViewModel viewModel)
     {
         return viewModel.BodyEditor.Types.Single(choice => choice.Type == BodyType.Raw);

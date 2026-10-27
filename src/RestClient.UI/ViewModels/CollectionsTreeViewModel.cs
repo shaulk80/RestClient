@@ -18,6 +18,8 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
     private readonly ICollectionTreeService _tree;
     private readonly IConfirmationDialogs _confirmations;
     private readonly AsyncRelayCommand _newCollectionCommand;
+    private readonly AsyncRelayCommand _newFolderCommand;
+    private readonly AsyncRelayCommand _newRequestCommand;
     private readonly RelayCommand _renameSelectedCommand;
     private readonly AsyncRelayCommand _deleteSelectedCommand;
     private readonly RelayCommand _openSelectedCommand;
@@ -38,6 +40,8 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         _tree = tree;
         _confirmations = confirmations;
         _newCollectionCommand = new AsyncRelayCommand(CreateCollectionAsync, () => true);
+        _newFolderCommand = new AsyncRelayCommand(CreateFolderInSelectedAsync, () => SelectedNode is not null);
+        _newRequestCommand = new AsyncRelayCommand(CreateRequestInSelectedAsync, () => SelectedNode is not null);
         _renameSelectedCommand = new RelayCommand(RenameSelected, () => true);
         _deleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedAsync, () => true);
         _openSelectedCommand = new RelayCommand(OpenSelected, () => true);
@@ -52,7 +56,14 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
     public TreeNodeViewModel? SelectedNode
     {
         get => _selectedNode;
-        set => SetProperty(ref _selectedNode, value);
+        set
+        {
+            if (SetProperty(ref _selectedNode, value))
+            {
+                _newFolderCommand.RaiseCanExecuteChanged();
+                _newRequestCommand.RaiseCanExecuteChanged();
+            }
+        }
     }
 
     // From the settings. A single click on a request opens it. Otherwise it takes a double-click.
@@ -65,6 +76,11 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
     }
 
     public ICommand NewCollectionCommand => _newCollectionCommand;
+
+    // The toolbar buttons create inside the selected node (next to it, for a request). They need a selection.
+    public ICommand NewFolderCommand => _newFolderCommand;
+
+    public ICommand NewRequestCommand => _newRequestCommand;
 
     // Keyboard shortcuts act on the selected node. They do nothing when nothing is selected.
     public ICommand RenameSelectedCommand => _renameSelectedCommand;
@@ -114,17 +130,23 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         RequestOpenRequested?.Invoke(requestId);
     }
 
+    // Enter and losing the focus both commit. The second call finds the rename already over and does nothing,
+    // which also keeps Escape (cancel, then focus lost) from committing.
     public async Task CommitRenameAsync(TreeNodeViewModel node)
     {
+        if (!node.IsEditing)
+        {
+            return;
+        }
+
         var name = node.EditName.Trim();
+        node.EndRename();
         if (name.Length == 0 || name == node.Name)
         {
-            node.EndRename();
             return;
         }
 
         var result = await RenameNodeAsync(node, name);
-        node.EndRename();
         if (!result.IsSuccess)
         {
             StatusMessage = ErrorMessageFormatter.Format(result.Error!);
@@ -240,6 +262,22 @@ public sealed class CollectionsTreeViewModel : ViewModelBase
         if (SelectedNode is RequestNodeViewModel { IsEditing: false } request)
         {
             OpenRequest(request.Id);
+        }
+    }
+
+    private async Task CreateFolderInSelectedAsync()
+    {
+        if (SelectedNode is { } node)
+        {
+            await CreateFolderAsync(node);
+        }
+    }
+
+    private async Task CreateRequestInSelectedAsync()
+    {
+        if (SelectedNode is { } node)
+        {
+            await CreateRequestAsync(node);
         }
     }
 

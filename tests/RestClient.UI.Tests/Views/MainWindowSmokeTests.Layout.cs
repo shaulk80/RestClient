@@ -302,13 +302,13 @@ public partial class MainWindowSmokeTests
     }
 
     [AvaloniaTest]
-    public void BothSplittersAreNamedAndKeyboardReachable()
+    public void AllSplittersAreNamedAndKeyboardReachable()
     {
         OpenWindow();
 
         var splitters = _window.GetVisualDescendants().OfType<GridSplitter>().ToList();
 
-        Assert.That(splitters, Has.Count.EqualTo(2));
+        Assert.That(splitters, Has.Count.EqualTo(3));
         Assert.That(splitters.Select(AutomationProperties.GetName), Is.All.Not.Empty);
         Assert.That(splitters.Select(splitter => splitter.Focusable), Is.All.True);
     }

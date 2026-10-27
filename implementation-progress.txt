@@ -8,7 +8,8 @@ Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
 CURRENT STAGE: M7 Polish (UX only) is in progress on branch m7 (from m6; M6 is committed as 9798311). The work done before
                the plan change (accessibility pass, headers and params editor, release tooling) is committed as 6002322.
-               The UX tasks 4 to 13 are implemented and tested (725 tests, build.ps1 passes). Not committed yet.
+               The UX tasks 4 to 13 are implemented and tested (725 tests, build.ps1 passes). Follow-ups 14 to 21
+               (from update.txt) are implemented (749 tests). Not committed yet; build.ps1 not rerun since the follow-ups.
 NEXT STAGE:    The manual checks of M7 (dark theme, mouse use of the menu, splitters, the accessibility checklist), then
                commit M7 (on instruction). Then M8 Release (portability, SignPath, Smart App Control). M9 is Linux
                verification.
@@ -447,6 +448,25 @@ MILESTONES
     [x] 11. Setting "Open a request with a single click" (AppSettings.OpenOnSingleClick, default off)
     [x] 12. Save All, Ctrl+Shift+S
     [x] 13. Ctrl+Tab and Ctrl+Shift+Tab switch request tabs in recently used order. Only request tabs are affected
+
+    Tasks, UX follow-ups (plan M7 tasks 14 to 21, from C:\zzz_temp\update.txt), implemented 2026-10-27:
+    [x] 14. Tree rename commits when the rename box loses focus (Escape still cancels; CommitRenameAsync does nothing
+            when the rename is already over, so Enter followed by focus loss renames once)
+    [x] 15. Selected tab header: gray fill, no underline (Fluent TabItem resources overridden per theme)
+    [x] 16. ResponseView: Pretty/Raw bar, body, splitter, then status, timing, size, note and headers. Borders on both parts
+    [x] 17. Collections toolbar with three icon buttons and tooltips. New folder and New request act on the selected node.
+            "New collection" is also in the context menu of a collection
+    [x] 18. Cancel is the rightmost dialog button (confirmation, save changes, save destination, unlock, master password, settings)
+    [x] 19. POST, PUT or PATCH on a request without a body selects Raw and Content-Type application/json
+    [x] 20. Content-Type is an editable combo box (suggestions: json, xml, javascript, octet-stream, text/plain, html, xml, csv)
+    [x] 21. Pretty switch bug: ResponseViewModel did not raise CanPrettyPrint, so the Pretty button kept a stale enabled state
+    Checked in the running app (UI Automation and screenshots of the window only): gray selected tab, toolbar, the new response
+    layout, POST selecting Raw with application/json, and Pretty and Raw switching back and forth on a JSON response.
+    Not checked in the running app: the dark theme, and a click-away commit of a rename (covered by a headless test).
+    Other notes: the raw body editor now has a border (it was borderless on a white background and looked missing).
+    A third splitter exists now (body and information), so the splitter smoke test expects three.
+    Tests after the follow-ups: Domain 95, Application 224, Infrastructure 84, UI 330, Integration 16 = 749, all passing.
+    Not committed.
 
     Decided 2026-10-27 (all details are in the plan, M7):
     - Menu contents (task 4): File, Edit, View and Help items as listed in the plan.

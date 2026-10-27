@@ -40,12 +40,31 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="0" />
   </Style>
+  <!-- The selected header has a gray fill instead of Fluent's underline (the pipe). -->
   <Style Selector="TabItem">
     <Setter Property="FontSize" Value="{DynamicResource TabHeaderFontSize}" />
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Padding" Value="10,4" />
     <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Style.Resources>
+      <ResourceDictionary>
+        <ResourceDictionary.ThemeDictionaries>
+          <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#D6D6D6" />
+            <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#CBCBCB" />
+            <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPressed" Color="#CBCBCB" />
+            <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
+          </ResourceDictionary>
+          <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#4A4A4A" />
+            <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#555555" />
+            <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPressed" Color="#555555" />
+            <SolidColorBrush x:Key="TabItemHeaderSelectedPipeFill" Color="Transparent" />
+          </ResourceDictionary>
+        </ResourceDictionary.ThemeDictionaries>
+      </ResourceDictionary>
+    </Style.Resources>
   </Style>
   <Style Selector="Button, TextBox, ComboBox">
     <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
