@@ -355,6 +355,8 @@ Tasks, UX follow-ups (from `C:\zzz_temp\update.txt`, 2026-10-27):
 19. **Body for a new request.** Choosing POST, PUT or PATCH on a request that has no body selects the Raw body type with Content-Type `application/json`. A body type or content type already chosen is kept.
 20. **Content-Type box.** The Content-Type of a raw body is an editable combo box: choose a common type, type another, or clear it.
 21. **Pretty switch bug.** After switching the response from Pretty to Raw, Pretty stayed disabled. Fixed.
+22. **Compact body tab.** The controls that belong to the body type are to its right: Content-Type and Format for Raw, Add field or Add part for the form and multipart types.
+23. **Theme setting.** A new setting, "Theme" (`AppSettings.Theme`: System, Light or Dark, default System), is shown in the Settings window, stored with the other settings and applied to the whole application without a restart. System follows the operating system.
 
 Tests:
 - UI: `TabStripViewModelTests` for the recently used order (parameterized: switch, close, reopen, wrap around, one tab only) and for Save All (changed linked tabs, unlinked tab asks for a name, cancel stops).

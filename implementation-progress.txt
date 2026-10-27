@@ -466,7 +466,31 @@ MILESTONES
     Other notes: the raw body editor now has a border (it was borderless on a white background and looked missing).
     A third splitter exists now (body and information), so the splitter smoke test expects three.
     Tests after the follow-ups: Domain 95, Application 224, Infrastructure 84, UI 330, Integration 16 = 749, all passing.
-    Not committed.
+    Committed as 322bd38.
+    Body tab made more compact (after the follow-ups commit): the controls of the body type are to its right: for Raw the
+    Content-Type box and Format, for Form and Multipart the Add field / Add part button (KeyValueEditorView and
+    MultipartEditorView have ShowAddButton, on by default, off in the body tab). Params and Headers are unchanged.
+
+    Theme setting (plan M7 task 23, asked for 2026-10-27, not committed): AppSettings.Theme (ThemePreference System, Light,
+    Dark; default System), stored as ui.theme (an unknown value falls back to System; the validator rejects an undefined
+    value), a Theme combo box in the Settings window. MainWindowViewModel.Theme is set by ApplySettingsAsync (at start and
+    after the Settings window closes). MainWindow sets Application.RequestedThemeVariant from it (ThemeVariants.For), so
+    the dialogs follow too. Checked in the running app: a stored Dark is applied at start, and the dark window looks
+    right (borders, selected tab, toolbar). Not tried by eye: the live switch from the Settings window (UI Automation
+    cannot reach the open combo list); the view model and a headless start test cover it.
+    Tests: Domain 95, Application 231, Infrastructure 84, UI 342, Integration 16 = 768, all passing.
+    Found: the combo box value that screen readers get was the record's ToString ("ThemeChoice { ... }"). ThemeChoice now
+    overrides ToString. BodyTypeChoice and EnvironmentChoice have the same problem and are not changed yet.
+
+    Tree expander hit area (asked for 2026-10-27, not committed): the expand/collapse button of a tree row now spans the whole
+    cell from the left edge of the row to the row text (52 px) and the height of the row, instead of the 12 px chevron.
+    First try (28 px, no negative margin) left the 12 px on the left of the cell inactive: Fluent puts the button in a panel with
+    a 12 px margin on each side, set in the template, which a style cannot override. Now the button has a negative margin
+    (-12,0) and Width 52, so it reaches over that margin and the text stays where it was. Fluent's template also sizes the
+    button's border to the glyph, so CollectionsTreeView.axaml gives the button a template of its own (a border that fills the
+    cell, the chevron centered at 12 x 12, Fluent's path data). Tests: clicks at the left edge, near the text, and at the top and
+    bottom of the row expand; the button spans edge to text (they fail with the first try). For nested rows the cell starts at
+    the indent of that level, not at the left edge of the panel.
 
     Decided 2026-10-27 (all details are in the plan, M7):
     - Menu contents (task 4): File, Edit, View and Help items as listed in the plan.
