@@ -7,18 +7,19 @@ using RestClient.UI.Services;
 
 namespace RestClient.UI.ViewModels;
 
+// The environments window. Names are edited in place in the list: Create adds an environment with a default
+// name and starts renaming it. One environment is the current one, which requests use. It is marked in the list.
 public sealed class EnvironmentEditorViewModel : ViewModelBase
 {
     private readonly IEnvironmentService _environments;
     private readonly ISecretPrompt _secrets;
     private readonly IConfirmationDialogs _confirmations;
     private readonly AsyncRelayCommand _createCommand;
-    private readonly AsyncRelayCommand _renameCommand;
+    private readonly RelayCommand _renameCommand;
     private readonly AsyncRelayCommand _deleteCommand;
+    private readonly AsyncRelayCommand _setCurrentCommand;
     private EnvironmentItem? _selected;
     private VariablesEditorViewModel? _variables;
-    private string _newName = string.Empty;
-    private string _renameTo = string.Empty;
     private string _message = string.Empty;
 
     public EnvironmentEditorViewModel(IEnvironmentService environments, ISecretPrompt secrets, IConfirmationDialogs confirmations)
@@ -26,9 +27,10 @@ public sealed class EnvironmentEditorViewModel : ViewModelBase
         _environments = environments;
         _secrets = secrets;
         _confirmations = confirmations;
-        _createCommand = new AsyncRelayCommand(() => CreateAsync(), () => NewName.Trim().Length > 0);
-        _renameCommand = new AsyncRelayCommand(() => RenameAsync(), () => _selected is not null);
+        _createCommand = new AsyncRelayCommand(() => CreateAsync(), () => true);
+        _renameCommand = new RelayCommand(BeginRename, () => _selected is { IsEditing: false });
         _deleteCommand = new AsyncRelayCommand(() => DeleteAsync(), () => _selected is not null);
+        _setCurrentCommand = new AsyncRelayCommand(() => SetCurrentAsync(), () => _selected is { IsCurrent: false });
     }
 
     public ObservableCollection<EnvironmentItem> Environments { get; } = [];
@@ -41,9 +43,7 @@ public sealed class EnvironmentEditorViewModel : ViewModelBase
             if (SetProperty(ref _selected, value))
             {
                 Variables = value is null ? null : CreateVariables(value);
-                RenameTo = value?.Name ?? string.Empty;
-                _renameCommand.RaiseCanExecuteChanged();
-                _deleteCommand.RaiseCanExecuteChanged();
+                RaiseSelectionCommands();
             }
         }
     }
@@ -52,24 +52,6 @@ public sealed class EnvironmentEditorViewModel : ViewModelBase
     {
         get => _variables;
         private set => SetProperty(ref _variables, value);
-    }
-
-    public string NewName
-    {
-        get => _newName;
-        set
-        {
-            if (SetProperty(ref _newName, value))
-            {
-                _createCommand.RaiseCanExecuteChanged();
-            }
-        }
-    }
-
-    public string RenameTo
-    {
-        get => _renameTo;
-        set => SetProperty(ref _renameTo, value);
     }
 
     public string Message
@@ -84,20 +66,24 @@ public sealed class EnvironmentEditorViewModel : ViewModelBase
 
     public ICommand DeleteCommand => _deleteCommand;
 
+    public ICommand SetCurrentCommand => _setCurrentCommand;
+
     public async Task ReloadAsync()
     {
         var listed = await _environments.ListAsync(CancellationToken.None);
-        if (!listed.IsSuccess)
+        var current = await _environments.GetActiveAsync(CancellationToken.None);
+        if (!listed.IsSuccess || !current.IsSuccess)
         {
-            Message = ErrorMessageFormatter.Format(listed.Error!);
+            Message = ErrorMessageFormatter.Format((listed.Error ?? current.Error)!);
             return;
         }
 
+        Message = string.Empty;
         var selectedId = _selected?.Id;
         Environments.Clear();
         foreach (var environment in listed.Value!)
         {
-            Environments.Add(new EnvironmentItem(environment.Id, environment.Name, environment.Variables));
+            Environments.Add(new EnvironmentItem(this, environment.Id, environment.Name, environment.Variables, environment.Id == current.Value?.Id));
         }
 
         SelectedEnvironment = Environments.FirstOrDefault(item => item.Id == selectedId) ?? Environments.FirstOrDefault();
@@ -105,27 +91,39 @@ public sealed class EnvironmentEditorViewModel : ViewModelBase
 
     public async Task<bool> CreateAsync()
     {
-        var created = await _environments.CreateAsync(NewName, CancellationToken.None);
+        var name = NewEnvironmentName.NextAvailable(Environments.Select(item => item.Name));
+        var created = await _environments.CreateAsync(name, CancellationToken.None);
         if (!created.IsSuccess)
         {
             Message = ErrorMessageFormatter.Format(created.Error!);
             return false;
         }
 
-        NewName = string.Empty;
         await ReloadAsync();
         SelectedEnvironment = Environments.FirstOrDefault(item => item.Id == created.Value);
+        SelectedEnvironment?.BeginRename();
+        RaiseSelectionCommands();
         return true;
     }
 
-    public async Task<bool> RenameAsync()
+    // Enter and losing the focus both commit. The second call finds the rename already over and does nothing,
+    // which also keeps Escape (cancel, then focus lost) from committing.
+    public async Task<bool> CommitRenameAsync(EnvironmentItem item)
     {
-        if (_selected is not { } selected)
+        if (!item.IsEditing)
         {
             return false;
         }
 
-        var renamed = await _environments.RenameAsync(selected.Id, RenameTo, CancellationToken.None);
+        var name = item.EditName.Trim();
+        item.EndRename();
+        RaiseSelectionCommands();
+        if (name.Length == 0 || name == item.Name)
+        {
+            return false;
+        }
+
+        var renamed = await _environments.RenameAsync(item.Id, name, CancellationToken.None);
         if (!renamed.IsSuccess)
         {
             Message = ErrorMessageFormatter.Format(renamed.Error!);
@@ -161,6 +159,43 @@ public sealed class EnvironmentEditorViewModel : ViewModelBase
 
         await ReloadAsync();
         return true;
+    }
+
+    public async Task<bool> SetCurrentAsync()
+    {
+        if (_selected is not { } selected)
+        {
+            return false;
+        }
+
+        var saved = await _environments.SetActiveAsync(selected.Id, CancellationToken.None);
+        if (!saved.IsSuccess)
+        {
+            Message = ErrorMessageFormatter.Format(saved.Error!);
+            return false;
+        }
+
+        Message = string.Empty;
+        foreach (var item in Environments)
+        {
+            item.IsCurrent = item.Id == selected.Id;
+        }
+
+        RaiseSelectionCommands();
+        return true;
+    }
+
+    private void BeginRename()
+    {
+        _selected?.BeginRename();
+        RaiseSelectionCommands();
+    }
+
+    private void RaiseSelectionCommands()
+    {
+        _renameCommand.RaiseCanExecuteChanged();
+        _deleteCommand.RaiseCanExecuteChanged();
+        _setCurrentCommand.RaiseCanExecuteChanged();
     }
 
     private VariablesEditorViewModel CreateVariables(EnvironmentItem item)

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 
 namespace RestClient.UI.Behaviors;
@@ -45,8 +46,15 @@ public static class InitialFocus
         Dispatcher.UIThread.Post(() => FocusControl(control), DispatcherPriority.Background);
     }
 
+    // A list does not take the focus itself, only its items do. The selected item gets it, or the first one.
     private static void FocusControl(Control control)
     {
+        if (control is SelectingItemsControl list)
+        {
+            list.ContainerFromIndex(Math.Max(list.SelectedIndex, 0))?.Focus();
+            return;
+        }
+
         control.Focus();
         if (control is TextBox box)
         {

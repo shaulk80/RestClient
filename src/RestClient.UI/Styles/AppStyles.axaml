@@ -23,6 +23,11 @@
     </ResourceDictionary>
   </Styles.Resources>
 
+  <!-- Only the main window has a taskbar button. Every dialog (settings, environments, confirmations, ...) is a Window
+       too, so none of them needs a button of its own. The main window sets ShowInTaskbar again in its XAML. -->
+  <Style Selector=":is(Window)">
+    <Setter Property="ShowInTaskbar" Value="False" />
+  </Style>
   <Style Selector="TextBlock.error">
     <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
   </Style>
@@ -73,6 +78,21 @@
   <!-- The scroll bar of a code editor stays in view instead of fading out, so it is clear that the text scrolls. -->
   <Style Selector="ae|TextEditor /template/ ScrollViewer">
     <Setter Property="AllowAutoHide" Value="False" />
+  </Style>
+  <!-- Small buttons with a line icon (a Path) and a tooltip, such as the ones above the tree and under the environments. -->
+  <Style Selector="Button.tool">
+    <Setter Property="Padding" Value="6,3" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector="Button.tool Path">
+    <Setter Property="Stroke" Value="{Binding $parent[Button].Foreground}" />
+    <Setter Property="StrokeThickness" Value="1.2" />
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+  </Style>
+  <Style Selector="Button.tool TextBlock">
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
   <Style Selector="GridSplitter">
     <Setter Property="Background" Value="Transparent" />

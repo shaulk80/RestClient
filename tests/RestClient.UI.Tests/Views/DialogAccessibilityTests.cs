@@ -135,6 +135,23 @@ public class DialogAccessibilityTests
         Assert.That(first.IsFocused, Is.False);
     }
 
+    // Only the main window has a taskbar button.
+    [TestCase(typeof(AboutWindow))]
+    [TestCase(typeof(ConfirmationWindow))]
+    [TestCase(typeof(EnvironmentEditorWindow))]
+    [TestCase(typeof(MasterPasswordSetupWindow))]
+    [TestCase(typeof(SaveChangesWindow))]
+    [TestCase(typeof(SaveDestinationWindow))]
+    [TestCase(typeof(SettingsWindow))]
+    [TestCase(typeof(UnlockDialogWindow))]
+    [AvaloniaTest]
+    public void DialogsAreNotShownInTheTaskbar(Type windowType)
+    {
+        Show((Window)Activator.CreateInstance(windowType)!);
+
+        Assert.That(_window!.ShowInTaskbar, Is.False);
+    }
+
     [AvaloniaTest]
     public void SettingsDialogOpensWithTheTimeoutBoxFocused()
     {

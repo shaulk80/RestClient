@@ -37,6 +37,9 @@ public sealed class SecretStatusViewModel : ViewModelBase
 
     public string ButtonText => _secrets.IsUnlocked ? "Lock" : "Unlock";
 
+    // The same action as the button, named in full for the Tools menu.
+    public string MenuText => _secrets.IsUnlocked ? "Lock secrets" : "Unlock secrets";
+
     public string Message
     {
         get => _message;
@@ -86,5 +89,6 @@ public sealed class SecretStatusViewModel : ViewModelBase
     {
         RaisePropertyChanged(nameof(Text));
         RaisePropertyChanged(nameof(ButtonText));
+        RaisePropertyChanged(nameof(MenuText));
     }
 }

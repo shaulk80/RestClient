@@ -78,6 +78,7 @@ public partial class MainWindow : Window
 
         e.Cancel = true;
         await RememberPanelWidthsAsync();
+        await viewModel.RememberVisibilityAsync();
         await viewModel.TabStrip.FlushAsync();
         _tabsStored = true;
         Close();

@@ -27,5 +27,12 @@ public sealed record AppSettings
 
     public int ResponseWidth { get; init; } = 420;
 
+    // The View menu: which parts of the window are shown. Remembered when the window closes.
+    public bool SidebarVisible { get; init; } = true;
+
+    public bool ResponseVisible { get; init; } = true;
+
+    public bool TopBarVisible { get; init; } = true;
+
     public TimeSpan Timeout => TimeSpan.FromSeconds(TimeoutSeconds);
 }

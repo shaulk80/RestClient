@@ -284,6 +284,28 @@ public class CollectionsTreeViewInteractionTests
         Assert.That(folder.IsEditing, Is.False);
     }
 
+    // The rename box is inside the tree, so the tree's Delete shortcut must not take the key from it.
+    [AvaloniaTest]
+    public async Task DeleteKeyWhileRenamingErasesTheSelectedTextInsteadOfDeletingTheNode()
+    {
+        var sidebar = await OpenSidebarAsync();
+        ExpandBoth(sidebar);
+        var folder = sidebar.Roots[1].Children[0];
+        sidebar.SelectedNode = folder;
+        FindItem(folder).Focus();
+        _window.KeyPressQwerty(PhysicalKey.F2, RawInputModifiers.None);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+        var box = (TextBox)_window.FocusManager!.GetFocusedElement()!;
+
+        _window.KeyPressQwerty(PhysicalKey.Delete, RawInputModifiers.None);
+        await Task.Delay(50);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(box.Text, Is.Empty);
+        A.CallTo(() => _fixtures.Folders.DeleteAsync(A<Guid>._, A<CancellationToken>._)).MustNotHaveHappened();
+    }
+
     [AvaloniaTest]
     public async Task DeleteKeyDeletesTheSelectedNodeAfterConfirmation()
     {

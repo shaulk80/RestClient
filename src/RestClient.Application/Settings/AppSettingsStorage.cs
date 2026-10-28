@@ -17,6 +17,9 @@ public sealed class AppSettingsStorage
     private const string ThemeKey = "ui.theme";
     private const string SidebarWidthKey = "ui.sidebarWidth";
     private const string ResponseWidthKey = "ui.responseWidth";
+    private const string SidebarVisibleKey = "ui.sidebarVisible";
+    private const string ResponseVisibleKey = "ui.responseVisible";
+    private const string TopBarVisibleKey = "ui.topBarVisible";
 
     private readonly ISettingsStore _store;
 
@@ -37,8 +40,16 @@ public sealed class AppSettingsStorage
         var theme = await ReadAsync(ThemeKey, cancellationToken);
         var sidebarWidth = await ReadAsync(SidebarWidthKey, cancellationToken);
         var responseWidth = await ReadAsync(ResponseWidthKey, cancellationToken);
+        var sidebarVisible = await ReadAsync(SidebarVisibleKey, cancellationToken);
+        var responseVisible = await ReadAsync(ResponseVisibleKey, cancellationToken);
+        var topBarVisible = await ReadAsync(TopBarVisibleKey, cancellationToken);
 
-        var failed = new[] { timeout, follow, maxRedirects, verify, proxy, singleClick, theme, sidebarWidth, responseWidth }.FirstOrDefault(read => !read.IsSuccess);
+        var reads = new[]
+        {
+            timeout, follow, maxRedirects, verify, proxy, singleClick, theme, sidebarWidth, responseWidth,
+            sidebarVisible, responseVisible, topBarVisible,
+        };
+        var failed = reads.FirstOrDefault(read => !read.IsSuccess);
         if (failed is not null)
         {
             return Result<AppSettings>.Failure(failed.Error!);
@@ -55,6 +66,9 @@ public sealed class AppSettingsStorage
             Theme = ParseTheme(theme.Value, defaults.Theme),
             SidebarWidth = ParseInt(sidebarWidth.Value, defaults.SidebarWidth),
             ResponseWidth = ParseInt(responseWidth.Value, defaults.ResponseWidth),
+            SidebarVisible = ParseBool(sidebarVisible.Value, defaults.SidebarVisible),
+            ResponseVisible = ParseBool(responseVisible.Value, defaults.ResponseVisible),
+            TopBarVisible = ParseBool(topBarVisible.Value, defaults.TopBarVisible),
         });
     }
 
@@ -71,6 +85,9 @@ public sealed class AppSettingsStorage
             [ThemeKey] = settings.Theme.ToString(),
             [SidebarWidthKey] = settings.SidebarWidth.ToString(CultureInfo.InvariantCulture),
             [ResponseWidthKey] = settings.ResponseWidth.ToString(CultureInfo.InvariantCulture),
+            [SidebarVisibleKey] = settings.SidebarVisible.ToString(CultureInfo.InvariantCulture),
+            [ResponseVisibleKey] = settings.ResponseVisible.ToString(CultureInfo.InvariantCulture),
+            [TopBarVisibleKey] = settings.TopBarVisible.ToString(CultureInfo.InvariantCulture),
         };
 
         foreach (var (key, value) in values)

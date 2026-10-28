@@ -23,6 +23,7 @@ namespace RestClient.UI.Tests.Views;
 public partial class MainWindowSmokeTests
 {
     private static readonly string[] PageHeaders = ["Body", "Params (0)", "Headers (0)", "Authorization"];
+    private static readonly string[] MenuTitles = ["_File", "_Edit", "_View", "_Tools", "_Help"];
 
     [AvaloniaTest]
     public void RequestPagesStartWithTheBodyAndAFreshTabOpensOnIt()
@@ -155,7 +156,8 @@ public partial class MainWindowSmokeTests
 
     [TestCase("_File", new[] { "_New request", "_Save", "Save _all", "_Close tab", "Se_ttings...", "E_xit" })]
     [TestCase("_Edit", new[] { "Cu_t", "_Copy", "_Paste", "Select _all", "S_end", "Cancel s_end" })]
-    [TestCase("_View", new[] { "_Collections panel", "_Response panel", "_Next request tab", "_Previous request tab" })]
+    [TestCase("_View", new[] { "_Collections panel", "_Response panel", "Environment and _secrets bar", "_Next request tab", "_Previous request tab" })]
+    [TestCase("_Tools", new[] { "_Unlock secrets", "Manage _environments..." })]
     [TestCase("_Help", new[] { "_About" })]
     [AvaloniaTest]
     public void MainMenuHasTheExpectedItems(string menuName, string[] expectedItems)
@@ -182,6 +184,37 @@ public partial class MainWindowSmokeTests
             .First(candidate => candidate.Header as string == header);
 
         Assert.That(item.InputGesture?.ToString(), Is.EqualTo(gesture));
+    }
+
+    [AvaloniaTest]
+    public void ToolsMenuRunsTheSameCommandsAsTheTopBar()
+    {
+        OpenWindow();
+        var menu = _window.GetVisualDescendants().OfType<Menu>().Single();
+        var tools = menu.Items.OfType<MenuItem>().First(item => item.Header as string == "_Tools");
+
+        var commands = tools.Items.OfType<MenuItem>().Select(item => item.Command).ToList();
+
+        Assert.That(commands, Is.EqualTo(ExpectedToolsCommands()));
+    }
+
+    [AvaloniaTest]
+    public void MainWindowIsShownInTheTaskbar()
+    {
+        OpenWindow();
+
+        Assert.That(_window.ShowInTaskbar, Is.True);
+    }
+
+    [AvaloniaTest]
+    public void ToolsMenuComesAfterViewAndBeforeHelp()
+    {
+        OpenWindow();
+        var menu = _window.GetVisualDescendants().OfType<Menu>().Single();
+
+        var headers = menu.Items.OfType<MenuItem>().Select(item => item.Header as string).ToList();
+
+        Assert.That(headers, Is.EqualTo(MenuTitles));
     }
 
     [AvaloniaTest]
@@ -320,6 +353,83 @@ public partial class MainWindowSmokeTests
         Assert.That(PanelColumn("RequestPanels", 2).ActualWidth, Is.EqualTo(0));
     }
 
+    // Checking a menu item sets IsChecked on the item itself, so the binding must write it back to the view model.
+    [TestCase("_Collections panel")]
+    [TestCase("_Response panel")]
+    [TestCase("Environment and _secrets bar")]
+    [AvaloniaTest]
+    public void UncheckingAViewMenuItemHidesThePanel(string header)
+    {
+        OpenWindow();
+        var item = FindViewMenuItem(header);
+
+        item.IsChecked = false;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(IsShown(header), Is.False);
+    }
+
+    [TestCase("_Collections panel")]
+    [TestCase("_Response panel")]
+    [TestCase("Environment and _secrets bar")]
+    [AvaloniaTest]
+    public void CheckingAViewMenuItemAgainShowsThePanel(string header)
+    {
+        OpenWindow();
+        var item = FindViewMenuItem(header);
+        item.IsChecked = false;
+
+        item.IsChecked = true;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(IsShown(header), Is.True);
+    }
+
+    [AvaloniaTest]
+    public void HidingTheEnvironmentBarRemovesItFromTheWindow()
+    {
+        OpenWindow();
+        var bar = _window.GetVisualDescendants().OfType<ComboBox>()
+            .First(candidate => AutomationProperties.GetName(candidate) == "Active environment");
+
+        FindViewMenuItem("Environment and _secrets bar").IsChecked = false;
+        _window.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.That(bar.IsEffectivelyVisible, Is.False);
+    }
+
+    [AvaloniaTest]
+    public void StoredVisibilityIsAppliedToTheViewMenuAtStart()
+    {
+        _initialSettings = AppSettings.Default with { SidebarVisible = false, ResponseVisible = true, TopBarVisible = false };
+
+        OpenWindow();
+
+        Assert.That(FindViewMenuItem("_Collections panel").IsChecked, Is.False);
+        Assert.That(FindViewMenuItem("_Response panel").IsChecked, Is.True);
+        Assert.That(FindViewMenuItem("Environment and _secrets bar").IsChecked, Is.False);
+        Assert.That(PanelColumn("Panels", 0).ActualWidth, Is.EqualTo(0));
+    }
+
+    [AvaloniaTest]
+    public async Task ClosingTheWindowStoresTheViewMenuState()
+    {
+        OpenWindow();
+        FindViewMenuItem("_Response panel").IsChecked = false;
+        FindViewMenuItem("Environment and _secrets bar").IsChecked = false;
+        Dispatcher.UIThread.RunJobs();
+
+        _window.Close();
+        await Task.Delay(100);
+        Dispatcher.UIThread.RunJobs();
+
+        var stored = (await _settings.GetAsync(CancellationToken.None)).Value!;
+        Assert.That(stored.SidebarVisible, Is.True);
+        Assert.That(stored.ResponseVisible, Is.False);
+        Assert.That(stored.TopBarVisible, Is.False);
+    }
+
     [AvaloniaTest]
     public void AllSplittersAreNamedAndKeyboardReachable()
     {
@@ -330,6 +440,28 @@ public partial class MainWindowSmokeTests
         Assert.That(splitters, Has.Count.EqualTo(3));
         Assert.That(splitters.Select(AutomationProperties.GetName), Is.All.Not.Empty);
         Assert.That(splitters.Select(splitter => splitter.Focusable), Is.All.True);
+    }
+
+    private System.Windows.Input.ICommand[] ExpectedToolsCommands()
+    {
+        return [_viewModel.Secrets.ToggleCommand, _viewModel.Environments.ManageCommand];
+    }
+
+    private MenuItem FindViewMenuItem(string header)
+    {
+        var menu = _window.GetVisualDescendants().OfType<Menu>().Single();
+        var view = menu.Items.OfType<MenuItem>().First(item => item.Header as string == "_View");
+        return view.Items.OfType<MenuItem>().First(item => item.Header as string == header);
+    }
+
+    private bool IsShown(string header)
+    {
+        return header switch
+        {
+            "_Collections panel" => _viewModel.Layout.IsSidebarVisible,
+            "_Response panel" => _viewModel.Layout.IsResponseVisible,
+            _ => _viewModel.Layout.IsTopBarVisible,
+        };
     }
 
     private TabControl FindDetails()

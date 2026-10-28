@@ -5,6 +5,7 @@
         x:Class="RestClient.UI.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="REST Client"
+        ShowInTaskbar="True"
         Width="1200"
         Height="720"
         MinWidth="760"
@@ -55,11 +56,16 @@
         <MenuItem Header="Cancel s_end" Command="{Binding TabStrip.SelectedTab.CancelCommand}" />
       </MenuItem>
       <MenuItem Header="_View">
-        <MenuItem Header="_Collections panel" ToggleType="CheckBox" IsChecked="{Binding Layout.IsSidebarVisible}" />
-        <MenuItem Header="_Response panel" ToggleType="CheckBox" IsChecked="{Binding Layout.IsResponseVisible}" />
+        <MenuItem Header="_Collections panel" ToggleType="CheckBox" IsChecked="{Binding Layout.IsSidebarVisible, Mode=TwoWay}" />
+        <MenuItem Header="_Response panel" ToggleType="CheckBox" IsChecked="{Binding Layout.IsResponseVisible, Mode=TwoWay}" />
+        <MenuItem Header="Environment and _secrets bar" ToggleType="CheckBox" IsChecked="{Binding Layout.IsTopBarVisible, Mode=TwoWay}" />
         <Separator />
         <MenuItem Header="_Next request tab" Command="{Binding TabStrip.NextRecentTabCommand}" InputGesture="Ctrl+Tab" />
         <MenuItem Header="_Previous request tab" Command="{Binding TabStrip.PreviousRecentTabCommand}" InputGesture="Ctrl+Shift+Tab" />
+      </MenuItem>
+      <MenuItem Header="_Tools">
+        <MenuItem Header="{Binding Secrets.MenuText, StringFormat='_{0}'}" Command="{Binding Secrets.ToggleCommand}" />
+        <MenuItem Header="Manage _environments..." Command="{Binding Environments.ManageCommand}" />
       </MenuItem>
       <MenuItem Header="_Help">
         <MenuItem Header="_About" Click="OnAboutClick" />
@@ -68,7 +74,8 @@
     <Border DockPanel.Dock="Top"
             Classes="panel thin"
             BorderThickness="0,1,0,1"
-            Padding="8,2">
+            Padding="8,2"
+            IsVisible="{Binding Layout.IsTopBarVisible}">
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
         <TextBlock VerticalAlignment="Center" Text="{Binding Secrets.Text}" />
         <Button Content="{Binding Secrets.ButtonText}"

@@ -551,9 +551,9 @@ MILESTONES
     [x] Checked in the running app (screenshots of the real window, light theme): the layout matches improve_ux.png,
         with the menu, thin top bar, bordered panels, Body first, response on the right, and a scroll bar on the response.
         Not checked by eye: the dark theme, and the menu items opened with the mouse.
-    [ ] Manual: dark theme; both splitters drag; every menu item works with the mouse and shows its shortcut;
-        single-click open, Save All and Ctrl+Tab work in the running app
-    [ ] Manual: accessibility checklist section 2 (keyboard, light and dark, Narrator), run after the UX changes
+    [x] Manual: dark theme; both splitters drag; every menu item works with the mouse and shows its shortcut;
+        single-click open, Save All and Ctrl+Tab work in the running app (confirmed by user, 2026-10-28)
+    [x] Manual: accessibility checklist section 2 (keyboard, light and dark, Narrator), run after the UX changes (confirmed by user, 2026-10-28)
 
     Deviations from the plan, and notes on the UX tasks:
     - The page of the request editor (Body, Params, Headers, Authorization) is not stored with the open tabs. Each tab
@@ -586,7 +586,52 @@ MILESTONES
     - The response panel hides its empty lines, and the request bar hides an empty save error, so empty text no longer
       leaves a gap. The scroll bar of the code editors does not fade out any more.
     - Not done: a live switch between light and dark was not tried by eye. The borders use theme resources with a
-      light and a dark value.
+      light and a dark value. (Checked by the user on 2026-10-28.)
+    - Bug fixed 2026-10-28: the Delete key did nothing in the tree's rename box, because the Delete KeyBinding on the
+      tree took the key before the box. Delete is now handled in CollectionsTreeView.OnKeyDown and skipped when the key
+      comes from a TextBox. Test: DeleteKeyWhileRenamingErasesTheSelectedTextInsteadOfDeletingTheNode.
+    - Bug fixed 2026-10-28: the View menu check boxes did nothing. MenuItem.IsChecked binds one way by default, so the
+      tick never reached WorkspaceLayoutViewModel; the bindings are now Mode=TwoWay. A third item, "Environment and
+      secrets bar", shows or hides the thin top bar (secrets lock state, Unlock/Lock, environment, Manage).
+      AppSettings has SidebarVisible, ResponseVisible and TopBarVisible (keys ui.sidebarVisible, ui.responseVisible,
+      ui.topBarVisible, default shown). They are stored when the window closes (MainWindowViewModel.
+      RememberVisibilityAsync) and restored at the start. WorkspaceLayoutViewModel.Apply takes the visibility only the
+      first time, so the Settings dialog (which applies the settings again) does not undo a toggle made since the start.
+      Tests: MainWindowSmokeTests (UncheckingAViewMenuItem..., ClosingTheWindowStoresTheViewMenuState and others),
+      WorkspaceLayoutViewModelTests, AppSettingsStorageTests. All suites pass (Domain 95, Application 234,
+      Infrastructure 84, UI 362, Integration 16 = 791). Not yet checked by the user in the running app.
+    [ ] Manual: View menu: each of the three items hides and shows its part, the state survives a restart.
+    - Environments (2026-10-28), UX follow-up:
+      - New top-level menu Tools (after View): "Unlock secrets" / "Lock secrets" (SecretStatusViewModel.MenuText, the
+        same ToggleCommand as the top bar button) and "Manage environments..." (the same ManageCommand as the
+        Manage button). They work while the top bar is hidden.
+      - Environments window: the current environment (the one requests use) has a check mark and a bold name in the
+        list, and "current environment" in its accessible name. "Set as current" is a button above the variables and an
+        item of the list's context menu (EnvironmentEditorViewModel.SetCurrentAsync, IEnvironmentService.SetActiveAsync).
+        The main window's environment box is reloaded when the window closes, as before.
+      - The "New environment name" box and the rename box are gone. Names are edited in the list, like the tree:
+        Create adds "New environment" (or "New environment 2", ...) and starts the rename; Rename (F2) edits the
+        selected name; Enter or leaving the box keeps it, Esc cancels. Delete asks first, as before. Delete and F2 are
+        ignored while the name box has the focus (Delete is an editing key there).
+      - Three small icon buttons under the list (Create, Rename, Delete) with tooltips and accessible names, and the
+        same four actions (plus Set as current) in the list's context menu. The icon button style moved from
+        CollectionsTreeView to Styles\AppStyles.axaml (Button.tool) and is shared.
+      - Behaviors\InPlaceEdit (attached property CommitOnLostFocus) replaces the static handlers that
+        CollectionsTreeView had for its rename box; the tree and the environments window both use it.
+      - InitialFocus now focuses the selected item of a list. A ListBox itself is not focusable, so the Environments
+        window used to open with nothing focused.
+      - EnvironmentItem is now a view model (IsCurrent, IsEditing, EditName); EnvironmentEditorViewModel no longer has
+        NewName and RenameTo. NewEnvironmentName picks the default name.
+      Tests: EnvironmentEditorViewModelTests (rewritten), EnvironmentEditorWindowTests (new), MainWindowSmokeTests
+      (Tools menu). All suites pass (Domain 95, Application 234, Infrastructure 84, UI 395, Integration 16 = 824).
+    - Taskbar (2026-10-28): every dialog window used to get its own taskbar button. Styles\AppStyles.axaml now sets
+      ShowInTaskbar=False for all windows (:is(Window)), and MainWindow.axaml sets it back to True. A new dialog gets the
+      right behavior without any code. Tests: DialogsAreNotShownInTheTaskbar (all 8 dialogs), MainWindowIsShownInTheTaskbar.
+      UI tests now 404 (total 833).
+    [ ] Manual: only the main window has a taskbar button while a dialog is open (Settings, Environments, a confirmation).
+    [ ] Manual: Tools menu items work (lock/unlock, manage); in the Environments window: the current environment is
+        marked, Set as current works, Create/Rename/Delete work by button, context menu and keys (F2, Delete), and
+        the Collections tree rename still works as before.
 
     Decided 2026-10-27 and done:
     [x] Headers and query params editor (open since M1 and M4). RequestTabViewModel has Headers and QueryParams

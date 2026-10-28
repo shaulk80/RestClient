@@ -11,34 +11,89 @@
         MinWidth="520"
         MinHeight="380"
         WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="TextBlock.current">
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </Window.Styles>
   <Grid Margin="12" ColumnDefinitions="200,*" ColumnSpacing="12" RowDefinitions="*,Auto">
-    <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="6">
+    <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" RowSpacing="6">
       <TextBlock Grid.Row="0" Text="Environments" />
-      <ListBox Grid.Row="1"
+      <!-- Names are edited in the list. The current environment has a check mark and a bold name. -->
+      <ListBox x:Name="List"
+               Grid.Row="1"
                ItemsSource="{Binding Environments}"
                SelectedItem="{Binding SelectedEnvironment}"
                AutomationProperties.Name="Environments"
                behaviors:InitialFocus.IsTarget="True">
+        <ListBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Set as _current" Command="{Binding SetCurrentCommand}" />
+            <Separator />
+            <MenuItem Header="C_reate" Command="{Binding CreateCommand}" />
+            <MenuItem Header="_Rename" Command="{Binding RenameCommand}" InputGesture="F2" />
+            <MenuItem Header="_Delete" Command="{Binding DeleteCommand}" InputGesture="Delete" />
+          </ContextMenu>
+        </ListBox.ContextMenu>
         <ListBox.ItemTemplate>
           <DataTemplate x:DataType="vm:EnvironmentItem">
-            <TextBlock Text="{Binding Name}" />
+            <Grid ColumnDefinitions="18,*" AutomationProperties.Name="{Binding AutomationName}">
+              <Path Grid.Column="0"
+                    Data="M1.5,6.5 L5,10 L11.5,2.5"
+                    Stroke="{Binding $parent[ListBoxItem].Foreground}"
+                    StrokeThickness="1.5"
+                    Width="13"
+                    Height="12"
+                    HorizontalAlignment="Left"
+                    IsVisible="{Binding IsCurrent}" />
+              <TextBlock Grid.Column="1"
+                         Classes.current="{Binding IsCurrent}"
+                         Text="{Binding Name}"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding !IsEditing}" />
+              <TextBox Grid.Column="1"
+                       behaviors:InPlaceEdit.CommitOnLostFocus="{Binding CommitRenameCommand}"
+                       Text="{Binding EditName}"
+                       AutomationProperties.Name="Environment name"
+                       IsVisible="{Binding IsEditing}">
+                <TextBox.KeyBindings>
+                  <KeyBinding Gesture="Enter" Command="{Binding CommitRenameCommand}" />
+                  <KeyBinding Gesture="Escape" Command="{Binding CancelRenameCommand}" />
+                </TextBox.KeyBindings>
+              </TextBox>
+            </Grid>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-      <TextBox Grid.Row="2"
-               PlaceholderText="New environment name"
-               Text="{Binding NewName}"
-               AutomationProperties.Name="New environment name" />
-      <Button Grid.Row="3" Content="Create" Command="{Binding CreateCommand}" />
-      <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-        <TextBox Grid.Column="0" Text="{Binding RenameTo}" AutomationProperties.Name="Rename selected environment to" />
-        <Button Grid.Column="1" Content="Rename" Command="{Binding RenameCommand}" />
-      </Grid>
+      <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
+        <Button Classes="tool"
+                Command="{Binding CreateCommand}"
+                ToolTip.Tip="Create an environment"
+                AutomationProperties.Name="Create environment">
+          <Path Data="M8,2.5 V13.5 M2.5,8 H13.5" />
+        </Button>
+        <Button Classes="tool"
+                Command="{Binding RenameCommand}"
+                ToolTip.Tip="Rename the selected environment (F2)"
+                AutomationProperties.Name="Rename environment">
+          <Path Data="M2.5,13.5 L3.2,10.2 L10.8,2.6 L13.4,5.2 L5.8,12.8 Z M9.2,4.2 L11.8,6.8" />
+        </Button>
+        <Button Classes="tool"
+                Command="{Binding DeleteCommand}"
+                ToolTip.Tip="Delete the selected environment (Delete)"
+                AutomationProperties.Name="Delete environment">
+          <Path Data="M2.5,4.5 H13.5 M6,4.5 V2.5 H10 V4.5 M4,4.5 L4.7,13.5 H11.3 L12,4.5 M6.8,7 V11.2 M9.2,7 V11.2" />
+        </Button>
+      </StackPanel>
     </Grid>
     <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="6">
       <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
         <TextBlock Grid.Column="0" Text="Variables" VerticalAlignment="Center" />
-        <Button Grid.Column="1" Content="Delete environment" Command="{Binding DeleteCommand}" />
+        <Button Grid.Column="1"
+                Content="Set as current"
+                Command="{Binding SetCurrentCommand}"
+                ToolTip.Tip="Use the selected environment for requests"
+                AutomationProperties.Name="Set the selected environment as current" />
       </Grid>
       <views:VariablesEditorView Grid.Row="1" DataContext="{Binding Variables}" />
       <TextBlock Grid.Row="2"

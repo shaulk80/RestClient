@@ -19,13 +19,6 @@ public partial class CollectionsTreeView : UserControl
     private Point _pressPoint;
     private TopLevel? _topLevel;
 
-    static CollectionsTreeView()
-    {
-        Visual.IsVisibleProperty.Changed.AddClassHandler<TextBox>((box, e) => FocusRenameBox(box, e.NewValue is true));
-        Control.LoadedEvent.AddClassHandler<TextBox>((box, _) => FocusRenameBox(box, box.IsVisible));
-        InputElement.LostFocusEvent.AddClassHandler<TextBox>((box, _) => CommitRename(box));
-    }
-
     public CollectionsTreeView()
     {
         InitializeComponent();
@@ -75,34 +68,18 @@ public partial class CollectionsTreeView : UserControl
         Tree.Focus();
     }
 
-    // A new or renamed node shows a rename box. Typing starts at once, with the name selected.
-    private static void FocusRenameBox(TextBox box, bool isVisible)
+    // Escape closes the context menu and returns to the tree. Shift+F10 and the Menu key open it for the
+    // selected node, as on any Windows list. Delete deletes the selected node, except in the rename box,
+    // where it is an editing key (a KeyBinding on the tree would take it from the box).
+    private void OnKeyDown(object? sender, KeyEventArgs e)
     {
-        if (!box.Classes.Contains("rename") || !isVisible)
+        if (e.Key == Key.Delete && e.Source is not TextBox && ViewModel?.DeleteSelectedCommand is { } delete)
         {
+            e.Handled = true;
+            delete.Execute(null);
             return;
         }
 
-        Dispatcher.UIThread.Post(() =>
-        {
-            box.Focus();
-            box.SelectAll();
-        }, DispatcherPriority.Background);
-    }
-
-    // Leaving the rename box with the mouse or Tab keeps the edit, the same as Enter.
-    private static void CommitRename(TextBox box)
-    {
-        if (box.Classes.Contains("rename") && box.DataContext is TreeNodeViewModel node)
-        {
-            node.CommitRenameCommand.Execute(null);
-        }
-    }
-
-    // Escape closes the context menu and returns to the tree. Shift+F10 and the Menu key open it for the
-    // selected node, as on any Windows list.
-    private void OnKeyDown(object? sender, KeyEventArgs e)
-    {
         if (e.Key == Key.Escape && MenuPopup.IsOpen)
         {
             e.Handled = true;

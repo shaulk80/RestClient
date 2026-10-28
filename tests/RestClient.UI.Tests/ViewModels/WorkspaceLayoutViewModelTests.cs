@@ -78,6 +78,54 @@ public class WorkspaceLayoutViewModelTests
     }
 
     [Test]
+    public void StartsWithTheTopBarShown()
+    {
+        Assert.That(_layout.IsTopBarVisible, Is.True);
+    }
+
+    [Test]
+    public void ApplyTakesWhatWasShown()
+    {
+        _layout.Apply(AppSettings.Default with { SidebarVisible = false, ResponseVisible = true, TopBarVisible = false });
+
+        Assert.That(_layout.IsSidebarVisible, Is.False);
+        Assert.That(_layout.IsResponseVisible, Is.True);
+        Assert.That(_layout.IsTopBarVisible, Is.False);
+    }
+
+    // The Settings dialog applies the stored settings again. The View menu state, stored only at exit, must stay.
+    [Test]
+    public void ApplyingAgainKeepsWhatTheUserHasToggledSinceTheStart()
+    {
+        _layout.Apply(AppSettings.Default);
+        _layout.IsTopBarVisible = false;
+        _layout.IsSidebarVisible = false;
+
+        _layout.Apply(AppSettings.Default with { SidebarWidth = 280 });
+
+        Assert.That(_layout.IsTopBarVisible, Is.False);
+        Assert.That(_layout.IsSidebarVisible, Is.False);
+        Assert.That(_layout.SidebarWidth, Is.EqualTo(280));
+    }
+
+    [Test]
+    public async Task RememberingVisibilityStoresItAndKeepsTheOtherSettings()
+    {
+        _layout.IsSidebarVisible = false;
+        _layout.IsResponseVisible = false;
+        _layout.IsTopBarVisible = false;
+
+        var result = await _layout.RememberVisibilityAsync();
+
+        var stored = (await _settings.GetAsync(CancellationToken.None)).Value!;
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(stored.SidebarVisible, Is.False);
+        Assert.That(stored.ResponseVisible, Is.False);
+        Assert.That(stored.TopBarVisible, Is.False);
+        Assert.That(stored.TimeoutSeconds, Is.EqualTo(12));
+    }
+
+    [Test]
     public async Task HidingAPanelKeepsItsWidth()
     {
         await _layout.RememberSidebarWidthAsync(300);

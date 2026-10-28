@@ -39,6 +39,9 @@ public class AppSettingsStorageTests
             Theme = ThemePreference.Dark,
             SidebarWidth = 300,
             ResponseWidth = 500,
+            SidebarVisible = false,
+            ResponseVisible = false,
+            TopBarVisible = false,
         };
 
         await _storage.SaveAsync(settings, CancellationToken.None);
@@ -58,6 +61,9 @@ public class AppSettingsStorageTests
     [TestCase("ui.theme", "")]
     [TestCase("ui.sidebarWidth", "wide")]
     [TestCase("ui.responseWidth", "-1")]
+    [TestCase("ui.sidebarVisible", "0")]
+    [TestCase("ui.responseVisible", "")]
+    [TestCase("ui.topBarVisible", "hidden")]
     public async Task UnreadableValueFallsBackToDefault(string key, string value)
     {
         _store.Values[key] = value;
