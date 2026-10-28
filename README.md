@@ -9,12 +9,12 @@ A desktop REST client for Windows. Build requests, send them, and keep them in c
 - Responses show status, timing, size, headers, and a body that can be viewed pretty-printed or raw. Large bodies are kept on disk, and the first 1 MB is shown.
 - Collections with folders and subfolders. Drag and drop to move items.
 - History of every request that was sent, with search and restore. History keeps the URL as you typed it, with `{{placeholders}}`, so secret values never reach it.
-- Environments with `{{variables}}`. Variables can be marked secret. Secrets are encrypted with a master password.
+- Environments with `{{variables}}`. Variables can be marked secret. Secrets are encrypted with a master password. In the Environments window the names are edited in the list, and one environment is marked as the current one.
 - Several request tabs. Open tabs and unsaved edits come back after a restart.
 - Settings for the request timeout, redirects, SSL certificate checks, and a proxy.
 - Light and dark themes. The Theme setting is System (follows the operating system, the default), Light or Dark.
-- A main menu (File, Edit, View, Help) with the shortcuts shown next to each item. Settings are in the File menu.
-- Three panels: Collections and History, the request, and the response on the right. Drag the splitters to change the widths. The widths are remembered. The View menu hides the Collections and Response panels.
+- A main menu (File, Edit, View, Tools, Help) with the shortcuts shown next to each item. Settings are in the File menu. Lock or unlock secrets and manage environments are in the Tools menu.
+- Three panels: Collections and History, the request, and the response on the right. Drag the splitters to change the widths. The widths are remembered. The View menu hides the Collections panel, the Response panel and the bar with the secrets and the environment. What is shown is remembered.
 - A setting to open a request with a single click in the Collections tree. It is off by default, which keeps the double-click.
 
 ## Install and run
@@ -60,7 +60,7 @@ To move the app to another computer or back it up, copy the whole folder, includ
 
 Secret variables are encrypted with AES-256-GCM, with a key derived from your master password (PBKDF2, 600,000 iterations). The password itself is never stored. **There is no way to recover a forgotten master password.** The secrets then have to be entered again.
 
-Secrets are unlocked for the running session only. Use *Lock* in the bar under the menu to lock them sooner.
+Secrets are unlocked for the running session only. Use *Lock* in the bar under the menu, or *Lock secrets* in the Tools menu, to lock them sooner.
 
 ## Keyboard
 

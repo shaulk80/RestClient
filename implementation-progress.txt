@@ -2,17 +2,15 @@ REST CLIENT - IMPLEMENTATION PROGRESS
 =====================================
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-27
+Updated:   2026-10-28
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M7 Polish (UX only) is in progress on branch m7 (from m6; M6 is committed as 9798311). The work done before
-               the plan change (accessibility pass, headers and params editor, release tooling) is committed as 6002322.
-               The UX tasks 4 to 13 are implemented and tested (725 tests, build.ps1 passes). Follow-ups 14 to 21
-               (from update.txt) are implemented (749 tests). Not committed yet; build.ps1 not rerun since the follow-ups.
-NEXT STAGE:    The manual checks of M7 (dark theme, mouse use of the menu, splitters, the accessibility checklist), then
-               commit M7 (on instruction). Then M8 Release (portability, SignPath, Smart App Control). M9 is Linux
-               verification.
+CURRENT STAGE: M7 Polish (UX only) is done on branch m7 (from m6; M6 is committed as 9798311). All its manual checks
+               passed on 2026-10-28, build.ps1 ran clean and all 833 tests pass (see "M7 closing checkpoint").
+               The last commit before the closing documents is 7f34677. The branch is not merged into main yet.
+NEXT STAGE:    M8 Release (portability run on the extracted zip, SignPath, Smart App Control; the README and release
+               notes are updated for M7). M9 is Linux verification.
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
     From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
@@ -426,10 +424,11 @@ MILESTONES
       one from the reload at start. Harmless; moved to M7.
     - A failure to store the tabs is shown in the status bar (red, left) and is cleared by the next
       successful store. Moved to M7 to decide whether it needs a more visible form.
-[~] M7 Polish (UX)
+[x] M7 Polish (UX)
     Depends on: all others
     Goal: a window that is easier to read and use. UX only. Release tasks are in M8.
     Started 2026-10-27 on branch m7 (from m6). Scope changed 2026-10-27 (see PLAN CHANGE).
+    Closed 2026-10-28 (see "M7 closing checkpoint" below). Plan tasks 24 to 28 were added on 2026-10-28.
 
     Tasks done before the plan change (committed as 6002322):
     [x] 1.  Accessibility pass (details below). To be rerun after the UX tasks, because the layout changes
@@ -600,7 +599,7 @@ MILESTONES
       Tests: MainWindowSmokeTests (UncheckingAViewMenuItem..., ClosingTheWindowStoresTheViewMenuState and others),
       WorkspaceLayoutViewModelTests, AppSettingsStorageTests. All suites pass (Domain 95, Application 234,
       Infrastructure 84, UI 362, Integration 16 = 791). Not yet checked by the user in the running app.
-    [ ] Manual: View menu: each of the three items hides and shows its part, the state survives a restart.
+    [x] Manual: View menu: each of the three items hides and shows its part, the state survives a restart. (confirmed by user, 2026-10-28)
     - Environments (2026-10-28), UX follow-up:
       - New top-level menu Tools (after View): "Unlock secrets" / "Lock secrets" (SecretStatusViewModel.MenuText, the
         same ToggleCommand as the top bar button) and "Manage environments..." (the same ManageCommand as the
@@ -628,10 +627,25 @@ MILESTONES
       ShowInTaskbar=False for all windows (:is(Window)), and MainWindow.axaml sets it back to True. A new dialog gets the
       right behavior without any code. Tests: DialogsAreNotShownInTheTaskbar (all 8 dialogs), MainWindowIsShownInTheTaskbar.
       UI tests now 404 (total 833).
-    [ ] Manual: only the main window has a taskbar button while a dialog is open (Settings, Environments, a confirmation).
-    [ ] Manual: Tools menu items work (lock/unlock, manage); in the Environments window: the current environment is
+    [x] Manual: only the main window has a taskbar button while a dialog is open (Settings, Environments, a confirmation).
+        (confirmed by user, 2026-10-28)
+    [x] Manual: Tools menu items work (lock/unlock, manage); in the Environments window: the current environment is
         marked, Set as current works, Create/Rename/Delete work by button, context menu and keys (F2, Delete), and
-        the Collections tree rename still works as before.
+        the Collections tree rename still works as before. (confirmed by user, 2026-10-28)
+
+    M7 closing checkpoint (2026-10-28):
+    [x] All tests pass (Domain 95, Application 234, Infrastructure 84, UI 404, Integration 16 = 833)
+    [x] Coverage gate holds (Domain 91.30%, Application 95.37%; the gate is 80%)
+    [x] Solution builds with warnings as errors on
+    [x] scripts\build.ps1 ran on 2026-10-28 after the last code change: restore, license check (89 packages, no new
+        ones), build, tests, win-x64 publish, zip, checksum file and smoke test of the extracted zip all passed (exit 0)
+    [x] Manual checks of the UX tasks, the accessibility checklist (section 2) and the 2026-10-28 follow-ups (tasks 24
+        to 28): all confirmed by the user
+    [x] Docs brought up to date: plan (menu, tasks 24 to 28), README, RELEASE_NOTES (Tools menu, View menu, Environments
+        window, taskbar), docs\portability-checklist.md (menu names, new taskbar step 10)
+    Not part of M7 (carried to M8): the portability run on the extracted zip, Smart App Control, SignPath.
+    Still open and not blocking: the page of the request editor is not stored with open tabs (see deviations above);
+    BodyTypeChoice and EnvironmentChoice have no ToString for screen readers (ThemeChoice has); test.txt at the root.
 
     Decided 2026-10-27 and done:
     [x] Headers and query params editor (open since M1 and M4). RequestTabViewModel has Headers and QueryParams
@@ -663,8 +677,8 @@ MILESTONES
     [x] 2.  scripts\build.ps1 writes dist\SHA256SUMS.txt (scripts\Checksums.ps1) and verifies it. The zip has no
             .pdb files any more (DebugType=none, and the native .pdb files are removed before zipping): 44 MB
             instead of about 70 MB
-    [~] 3.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props) are written. They need an
-            update for the M7 UX changes (menu, layout, shortcuts, the new setting) before the release
+    [x] 3.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props) are written and were brought
+            up to date for the M7 UX changes on 2026-10-28. Reread them once more before tagging the release
     [ ] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code
     [ ] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
 

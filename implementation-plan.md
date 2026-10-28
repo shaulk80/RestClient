@@ -165,7 +165,7 @@ Grouped by folder. Every type is a separate file.
 
 ## 7. UI Layer (Avalonia)
 
-- **Shell:** `App`, `MainWindow` with `MainWindowViewModel`, main menu (File, Edit, View, Help), a thin top bar (environment, secrets), a thin bottom line for messages, and three resizable panels: Collections and History, request editor, Response (M7).
+- **Shell:** `App`, `MainWindow` with `MainWindowViewModel`, main menu (File, Edit, View, Tools, Help), a thin top bar (environment, secrets), a thin bottom line for messages, and three resizable panels: Collections and History, request editor, Response (M7).
 - **Sidebar:** `CollectionsTreeViewModel` with `CollectionNodeViewModel`, `FolderNodeViewModel`, `RequestNodeViewModel`. Drag-and-drop, context menu. `HistoryListViewModel` with `HistoryItemViewModel`.
 - **Request editing:** `RequestTabViewModel`, `RequestBuilderViewModel`, `KeyValueEditorViewModel` with `KeyValueRowViewModel`, `AuthEditorViewModel`, `BodyEditorViewModel`.
 - **Response:** `ResponseViewModel`, which shows status, timing, size, headers, and a body that can be pretty or raw.
@@ -334,7 +334,8 @@ Tasks, UX changes (details decided 2026-10-27):
 4. **Main menu.** A menu bar with File, Edit, View, and Help. Every item that has a shortcut shows it, and calls the same command as the key binding, so the logic is not duplicated. Contents:
     - File: New request (Ctrl+T), Save (Ctrl+S), Save All (Ctrl+Shift+S), Close tab (Ctrl+F4), Settings, Exit.
     - Edit: Cut, Copy, Paste, Select all (on the focused text control), Send (Ctrl+Enter), Cancel send.
-    - View: show or hide the Collections panel and the Response panel, next and previous request tab (Ctrl+Tab, Ctrl+Shift+Tab).
+    - View: show or hide the Collections panel and the Response panel (task 25 adds the top bar), next and previous request tab (Ctrl+Tab, Ctrl+Shift+Tab).
+    - Tools (task 26): lock or unlock secrets, manage environments.
     - Help: About (name, version, license), README link.
 5. **Borders.** Controls, panels, and tab headers get a border, so they are visually distinct. Border colors are theme resources and work in light and dark.
 6. **Layout.** Three panels from left to right: Collections and History, the request editor, and the Response. The Response moves to the right side (it is below the request now). The response body has a vertical scroll bar.
@@ -358,11 +359,19 @@ Tasks, UX follow-ups (from `C:\zzz_temp\update.txt`, 2026-10-27):
 22. **Compact body tab.** The controls that belong to the body type are to its right: Content-Type and Format for Raw, Add field or Add part for the form and multipart types.
 23. **Theme setting.** A new setting, "Theme" (`AppSettings.Theme`: System, Light or Dark, default System), is shown in the Settings window, stored with the other settings and applied to the whole application without a restart. System follows the operating system.
 
+Tasks, UX follow-ups (asked for on 2026-10-28, after the first manual checks):
+24. **Tree rename box.** The Delete key edits the text in the rename box and no longer reaches the tree's delete shortcut. The tree handles Delete in its key handler and skips keys that come from a text box.
+25. **View menu.** The two check boxes did not work (`MenuItem.IsChecked` binds one way by default) and are fixed. A third item, "Environment and secrets bar", shows or hides the thin top bar. What is shown is stored in the settings (`SidebarVisible`, `ResponseVisible`, `TopBarVisible`) when the window closes and restored at the start.
+26. **Tools menu.** After View: "Unlock secrets" or "Lock secrets" and "Manage environments...", which call the same commands as the top bar, so they work while the bar is hidden.
+27. **Environments window.** The current environment is marked in the list (check mark, bold name, accessible name) and "Set as current" is a button and a context menu item. The name boxes are gone: names are edited in place in the list (Create adds a default name and starts the rename, Rename and F2 edit, Enter or leaving the box keeps the name, Esc cancels). Create, Rename and Delete are three small icon buttons with tooltips, and the same actions are in the context menu. The icon button style and the in-place edit behavior are shared with the Collections tree. A dialog opens with the selected list item focused.
+28. **Taskbar.** Only the main window has a taskbar button. A shared style sets `ShowInTaskbar` to false for every window, and the main window sets it back to true.
+
 Tests:
 - UI: `TabStripViewModelTests` for the recently used order (parameterized: switch, close, reopen, wrap around, one tab only) and for Save All (changed linked tabs, unlinked tab asks for a name, cancel stops).
 - Application and UI: `SettingsServiceTests` and `SettingsViewModelTests` for `OpenOnSingleClick` (default, store, read back). Panel widths too, if they are stored.
 - UI: headless tests for single-click and double-click open in the Collections tree, for the default sub-tab and focus of a new request, and for Ctrl+Tab affecting only the request tabs.
 - UI: the existing smoke tests (`EveryInteractiveControlHasAnAccessibleName`, dialogs) cover the menu items and the splitters.
+- Tasks 24 to 28: `CollectionsTreeViewInteractionTests` (Delete in the rename box), `MainWindowSmokeTests` (View and Tools menus, taskbar), `WorkspaceLayoutViewModelTests` and `AppSettingsStorageTests` (visibility), `EnvironmentEditorViewModelTests` and `EnvironmentEditorWindowTests` (current environment, in-place editing, keys, context menu), `DialogAccessibilityTests` (taskbar of every dialog).
 
 Manual checks: compare the window with `improve_ux.png` in light and dark. Drag both splitters. Use every menu item and confirm its shortcut. Run the accessibility checklist again (`docs/portability-checklist.md`, section 2).
 

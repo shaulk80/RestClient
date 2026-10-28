@@ -37,9 +37,10 @@ Do it once per release, in light and in dark mode (Windows *Settings > Personali
 | 4 | Open each dialog (Save, Settings, Unlock, Set master password, Environments, Delete, Unsaved changes) | Focus starts in the first input. Enter confirms where it is safe, Esc cancels | |
 | 5 | Switch Windows between light and dark while the app runs | Text stays readable. Error and warning text is readable. JSON and XML colors follow the theme | |
 | 6 | Run Narrator (Win+Ctrl+Enter) and visit the controls | Each control is announced with a name, not just its type | |
-| 7 | Press Alt, then use the arrow keys and Enter in the main menu | File, Edit, View and Help open, every item shows its shortcut, and each item works | |
+| 7 | Press Alt, then use the arrow keys and Enter in the main menu | File, Edit, View, Tools and Help open, every item shows its shortcut, and each item works | |
 | 8 | Tab to a splitter (named "Resize the Collections panel" / "Resize the Response panel") and press the left and right arrow keys | The panel changes width. After a restart the width is the same | |
 | 9 | Open three request tabs, then press Ctrl+Tab with focus in the tree, in the Params tab, and in the body editor | Only the request tab changes, to the one used before. The other tabs stay where they are | |
+| 10 | Open a dialog (Settings, Environments, a confirmation) | Only the main window has a taskbar button | |
 
 ## 3. Smart App Control (plan M8 task 5)
 
