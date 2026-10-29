@@ -1,6 +1,6 @@
-# REST Client
+# RestDraft
 
-A desktop REST client for Windows. Build requests, send them, and keep them in collections. Everything is stored on your machine, in a folder next to the program.
+RestDraft - a REST API client. A desktop application for Windows. Build requests, send them, and keep them in collections. Everything is stored on your machine, in a folder next to the program.
 
 ## Features
 
@@ -19,16 +19,16 @@ A desktop REST client for Windows. Build requests, send them, and keep them in c
 
 ## Install and run
 
-1. Download `RestClient-win-x64.zip` and `SHA256SUMS.txt` from the release page.
+1. Download `RestDraft-win-x64.zip` and `SHA256SUMS.txt` from the release page.
 2. Check the download. In PowerShell, in the folder with both files:
 
    ```powershell
-   (Get-FileHash .\RestClient-win-x64.zip -Algorithm SHA256).Hash.ToLower()
+   (Get-FileHash .\RestDraft-win-x64.zip -Algorithm SHA256).Hash.ToLower()
    Get-Content .\SHA256SUMS.txt
    ```
 
    The two hashes must be the same.
-3. Unzip the folder anywhere you can write to, and run `RestClient.exe`. There is no installer. It needs no .NET installation.
+3. Unzip the folder anywhere you can write to, and run `RestDraft.exe`. There is no installer. It needs no .NET installation.
 
 ### Windows warnings
 
@@ -47,11 +47,11 @@ All data is kept in a `data` folder:
 | `data/logs/` | Log files |
 | `data/temp/` | Large response bodies saved by the app. Files are removed when their history entry expires |
 
-By default `data` is created next to `RestClient.exe`. To use another folder, use either of these. The command-line argument wins when both are set.
+By default `data` is created next to `RestDraft.exe`. To use another folder, use either of these. The command-line argument wins when both are set.
 
 ```powershell
-.\RestClient.exe --data-dir D:\RestClientData
-$env:RESTCLIENT_DATA_DIR = 'D:\RestClientData'; .\RestClient.exe
+.\RestDraft.exe --data-dir D:\RestDraftData
+$env:RESTDRAFT_DATA_DIR = 'D:\RestDraftData'; .\RestDraft.exe
 ```
 
 To move the app to another computer or back it up, copy the whole folder, including `data`.
@@ -89,7 +89,7 @@ You need the .NET 10 SDK.
 .\scripts\build.ps1
 ```
 
-The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests with a coverage gate, publishes `win-x64` as a single self-contained file, zips it to `dist/RestClient-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
+The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests with a coverage gate, publishes `win-x64` as a single self-contained file, zips it to `dist/RestDraft-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
 
 Project layout and design are described in [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md) and [implementation-plan.md](implementation-plan.md).
 

@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestDraft.UI.ViewModels"
+             xmlns:behaviors="using:RestDraft.UI.Behaviors"
+             x:Class="RestDraft.UI.Views.CollectionsTreeView"
+             x:DataType="vm:CollectionsTreeViewModel">
+  <Grid>
+    <DockPanel Margin="8" LastChildFill="True">
+      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,0,0,8">
+        <Button Classes="tool"
+                Command="{Binding NewCollectionCommand}"
+                ToolTip.Tip="New collection"
+                AutomationProperties.Name="New collection">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Path Data="M8,1.5 L14.5,4.5 L8,7.5 L1.5,4.5 Z M1.5,8 L8,11 L14.5,8 M1.5,11 L8,14 L14.5,11" />
+            <TextBlock Text="+" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool"
+                Command="{Binding NewFolderCommand}"
+                ToolTip.Tip="New folder in the selected collection or folder"
+                AutomationProperties.Name="New folder">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Path Data="M1.5,3.5 H6 L7.5,5 H14.5 V12.5 H1.5 Z" />
+            <TextBlock Text="+" />
+          </StackPanel>
+        </Button>
+        <Button Classes="tool"
+                Command="{Binding NewRequestCommand}"
+                ToolTip.Tip="New request in the selected collection or folder"
+                AutomationProperties.Name="New request">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Path Data="M3.5,1.5 H10 L13,4.5 V14.5 H3.5 Z M10,1.5 V4.5 H13" />
+            <TextBlock Text="+" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+      <TreeView x:Name="Tree"
+                ItemsSource="{Binding Roots}"
+                SelectedItem="{Binding SelectedNode}"
+                AutomationProperties.Name="Collections">
+        <TreeView.KeyBindings>
+          <KeyBinding Gesture="F2" Command="{Binding RenameSelectedCommand}" />
+          <KeyBinding Gesture="Enter" Command="{Binding OpenSelectedCommand}" />
+        </TreeView.KeyBindings>
+        <TreeView.Styles>
+          <Style Selector="TreeViewItem">
+            <Setter Property="IsExpanded" Value="{ReflectionBinding IsExpanded, Mode=TwoWay}" />
+          </Style>
+          <!-- The expand and collapse button is the whole cell left of the row text, as high as the row, not only the
+               small chevron. Fluent puts the button in a panel with a 12 px margin on each side, set in the template, so
+               a style cannot remove it. The negative margin lets the button reach over it: it spans from the left edge of
+               the row to the text, and the panel keeps its old size, so the text stays where it was. Fluent's template
+               also sizes the border of the button to the glyph, so the button gets a template of its own. -->
+          <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron">
+            <Setter Property="Margin" Value="-12,0" />
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="NaN" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+              <ControlTemplate>
+                <Border Background="Transparent">
+                  <Path Name="ChevronPath"
+                        Width="12"
+                        Height="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Stretch="Uniform"
+                        Data="{DynamicResource TreeViewItemCollapsedChevronPathData}"
+                        Stroke="{TemplateBinding Foreground}"
+                        StrokeThickness="1" />
+                </Border>
+              </ControlTemplate>
+            </Setter>
+          </Style>
+          <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron:checked /template/ Path#ChevronPath">
+            <Setter Property="Data" Value="{DynamicResource TreeViewItemExpandedChevronPathData}" />
+          </Style>
+        </TreeView.Styles>
+        <TreeView.DataTemplates>
+          <TreeDataTemplate DataType="vm:TreeNodeViewModel" ItemsSource="{Binding Children}">
+            <!-- Background makes the whole row hit-testable, so right-click works on blank row space too.
+                 A TextBlock only hit-tests on its glyphs. -->
+            <Grid Background="Transparent" AutomationProperties.Name="{Binding Name}">
+              <TextBlock Text="{Binding Name}"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding !IsEditing}" />
+              <TextBox behaviors:InPlaceEdit.CommitOnLostFocus="{Binding CommitRenameCommand}"
+                       Text="{Binding EditName}"
+                       AutomationProperties.Name="New name"
+                       IsVisible="{Binding IsEditing}">
+                <TextBox.KeyBindings>
+                  <KeyBinding Gesture="Enter" Command="{Binding CommitRenameCommand}" />
+                  <KeyBinding Gesture="Escape" Command="{Binding CancelRenameCommand}" />
+                </TextBox.KeyBindings>
+              </TextBox>
+            </Grid>
+          </TreeDataTemplate>
+        </TreeView.DataTemplates>
+      </TreeView>
+    </DockPanel>
+    <!-- Not light-dismissable on purpose. Light dismiss swallows the first press outside the menu, so
+         a right-click on another row would never reach the tree. The tree closes this menu itself. -->
+    <Popup x:Name="MenuPopup"
+           Placement="Pointer"
+           IsLightDismissEnabled="False">
+      <MenuFlyoutPresenter x:Name="MenuItems" x:DataType="vm:TreeNodeViewModel">
+        <MenuItem Header="Open" Command="{Binding OpenCommand}" IsVisible="{Binding IsRequest}" />
+        <MenuItem Header="New collection" Command="{Binding NewCollectionCommand}" IsVisible="{Binding IsCollection}" />
+        <MenuItem Header="New folder" Command="{Binding NewFolderCommand}" IsVisible="{Binding CanContainChildren}" />
+        <MenuItem Header="New request" Command="{Binding NewRequestCommand}" IsVisible="{Binding CanContainChildren}" />
+        <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" IsVisible="{Binding IsRequest}" />
+        <MenuItem Header="Rename" Command="{Binding RenameCommand}" />
+        <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
+      </MenuFlyoutPresenter>
+    </Popup>
+  </Grid>
+</UserControl>

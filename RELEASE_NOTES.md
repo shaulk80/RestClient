@@ -2,7 +2,7 @@
 
 ## 0.1.0 (first Windows release)
 
-First packaged release. Windows x64 only: `RestClient-win-x64.zip`, a single self-contained executable plus its `MigrationScripts` folder. Linux follows in a later version.
+First packaged release. Windows x64 only: `RestDraft-win-x64.zip`, a single self-contained executable plus its `MigrationScripts` folder. Linux follows in a later version.
 
 ### What is in it
 

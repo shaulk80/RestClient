@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RestDraft.UI.ViewModels"
+        xmlns:behaviors="using:RestDraft.UI.Behaviors"
+        x:Class="RestDraft.UI.Views.SaveDestinationWindow"
+        x:DataType="vm:SaveDestinationViewModel"
+        Title="Save request"
+        Width="420"
+        Height="420"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+  <Grid Margin="12" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="8">
+    <TextBlock Grid.Row="0" Text="Name" />
+    <TextBox Grid.Row="1"
+             Text="{Binding Name}"
+             AutomationProperties.Name="Request name"
+             behaviors:InitialFocus.IsTarget="True" />
+    <TextBlock Grid.Row="2" Text="Save into" />
+    <ListBox Grid.Row="3"
+             ItemsSource="{Binding Folders}"
+             SelectedItem="{Binding SelectedFolder}"
+             AutomationProperties.Name="Save into folder">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:FolderChoice">
+          <TextBlock Text="{Binding Path}" />
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Grid.Row="4" Text="{Binding NameWarning}" Classes="warning" TextWrapping="Wrap" />
+    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Save" IsDefault="True" IsEnabled="{Binding CanSave}" Click="OnSaveClick" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
+    </StackPanel>
+  </Grid>
+</Window>

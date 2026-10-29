@@ -1,4 +1,4 @@
-# REST Client: Architectural Plan (High-Level)
+# RestDraft: Architectural Plan (High-Level)
 
 Status: **Stack, storage, license, and signing approach decided; detailed implementation plan pending.** Section 6 records all decisions.
 

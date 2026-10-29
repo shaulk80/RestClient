@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestDraft.UI.ViewModels"
+             xmlns:views="using:RestDraft.UI.Views"
+             x:Class="RestDraft.UI.Views.MultipartEditorView"
+             x:DataType="vm:MultipartEditorViewModel">
+  <StackPanel Spacing="6">
+    <ItemsControl ItemsSource="{Binding Rows}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:MultipartRowViewModel">
+          <StackPanel Spacing="4" Margin="0,2">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+              <TextBox Grid.Column="0" Text="{Binding Name}" PlaceholderText="Name" AutomationProperties.Name="Part name" />
+              <CheckBox Grid.Column="1"
+                        Content="File"
+                        IsChecked="{Binding IsFile}"
+                        AutomationProperties.Name="Part is a file" />
+              <Button Grid.Column="2"
+                      Content="Remove"
+                      Command="{Binding RemoveCommand}"
+                      AutomationProperties.Name="Remove part" />
+            </Grid>
+            <TextBox IsVisible="{Binding !IsFile}"
+                     Text="{Binding Value}"
+                     PlaceholderText="Value"
+                     AutomationProperties.Name="Part value" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" IsVisible="{Binding IsFile}">
+              <TextBox Grid.Column="0"
+                       Text="{Binding FilePath}"
+                       PlaceholderText="File path"
+                       AutomationProperties.Name="Part file path" />
+              <Button Grid.Column="1"
+                      Content="Browse..."
+                      Command="{Binding BrowseCommand}"
+                      AutomationProperties.Name="Browse for part file" />
+            </Grid>
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Classes="error"
+                       TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite" />
+          </StackPanel>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <Button HorizontalAlignment="Left"
+            Content="Add part"
+            Command="{Binding AddRowCommand}"
+            IsVisible="{Binding ShowAddButton, RelativeSource={RelativeSource AncestorType=views:MultipartEditorView}}" />
+  </StackPanel>
+</UserControl>

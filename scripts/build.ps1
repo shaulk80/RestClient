@@ -9,8 +9,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$solution = Join-Path $root 'RestClient.slnx'
-$uiProject = Join-Path $root 'src/RestClient.UI/RestClient.UI.csproj'
+$solution = Join-Path $root 'RestDraft.slnx'
+$uiProject = Join-Path $root 'src/RestDraft.UI/RestDraft.UI.csproj'
 $distRoot = Join-Path $root 'dist'
 
 # Licenses accepted without review, as SPDX identifiers. "Public domain" from plan section 8 maps to Unlicense and CC0-1.0.
@@ -76,7 +76,7 @@ function New-ReleaseZip {
 function Test-PublishedApp {
     param([string] $PublishDir)
 
-    $exe = Join-Path $PublishDir 'RestClient.exe'
+    $exe = Join-Path $PublishDir 'RestDraft.exe'
     $databaseFile = Join-Path $PublishDir 'data/app.db'
     $logDir = Join-Path $PublishDir 'data/logs'
 
@@ -107,7 +107,7 @@ $zipPaths = @()
 foreach ($runtime in $Runtimes) {
     # Clean only this runtime, so a release zip for another runtime survives.
     $publishDir = Join-Path $distRoot $runtime
-    $zipPath = Join-Path $distRoot "RestClient-$runtime.zip"
+    $zipPath = Join-Path $distRoot "RestDraft-$runtime.zip"
     foreach ($stale in @($publishDir, $zipPath)) {
         if (Test-Path $stale) {
             Remove-Item $stale -Recurse -Force

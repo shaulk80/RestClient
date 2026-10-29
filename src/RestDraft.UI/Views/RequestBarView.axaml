@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestDraft.UI.ViewModels"
+             x:Class="RestDraft.UI.Views.RequestBarView"
+             x:DataType="vm:RequestTabViewModel">
+  <StackPanel Spacing="4">
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="8">
+      <ComboBox Grid.Column="0"
+                MinWidth="110"
+                ItemsSource="{Binding Methods}"
+                SelectedItem="{Binding Method}"
+                AutomationProperties.Name="HTTP method" />
+      <TextBox Grid.Column="1"
+               Text="{Binding Url}"
+               PlaceholderText="https://example.com/resource"
+               AutomationProperties.Name="Request URL" />
+      <Button Grid.Column="2"
+              Content="Send"
+              Command="{Binding SendCommand}"
+              ToolTip.Tip="Send (Ctrl+Enter)"
+              AutomationProperties.AcceleratorKey="Ctrl+Enter" />
+      <Button Grid.Column="3"
+              Content="Cancel"
+              Command="{Binding CancelCommand}" />
+      <Button Grid.Column="4"
+              Content="Save"
+              Command="{Binding SaveCommand}"
+              ToolTip.Tip="Save (Ctrl+S)"
+              AutomationProperties.AcceleratorKey="Ctrl+S" />
+    </Grid>
+    <TextBlock Text="{Binding SaveError}"
+               IsVisible="{Binding SaveError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+               Classes="error"
+               TextWrapping="Wrap"
+               AutomationProperties.LiveSetting="Polite" />
+  </StackPanel>
+</UserControl>

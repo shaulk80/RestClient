@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestDraft.UI.ViewModels"
+             xmlns:domain="using:RestDraft.Domain.Collections"
+             xmlns:controls="using:RestDraft.UI.Controls"
+             x:Class="RestDraft.UI.Views.ResponseView"
+             x:DataType="vm:RequestTabViewModel">
+  <!-- From the top: the Pretty and Raw switch (a thin bar), the body, and the rest of the response below a splitter. -->
+  <Grid RowDefinitions="Auto,*,Auto,160">
+    <Border Grid.Row="0"
+            Classes="panel"
+            BorderThickness="0,0,0,1"
+            Padding="8,2">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <RadioButton Content="Pretty"
+                     MinHeight="22"
+                     GroupName="ResponseBodyView"
+                     IsChecked="{Binding Response.IsPrettyView}"
+                     IsEnabled="{Binding Response.CanPrettyPrint}" />
+        <RadioButton Content="Raw"
+                     MinHeight="22"
+                     GroupName="ResponseBodyView"
+                     IsChecked="{Binding Response.IsRawView}" />
+      </StackPanel>
+    </Border>
+    <Border Grid.Row="1" Classes="panel" BorderThickness="0,0,0,1" MinHeight="80">
+      <controls:CodeEditor EditorText="{Binding Response.BodyText}"
+                           Language="{Binding Response.Language}"
+                           IsReadOnly="True"
+                           WordWrap="True"
+                           VerticalScrollBarVisibility="Visible"
+                           AutomationProperties.Name="Response body" />
+    </Border>
+    <GridSplitter Grid.Row="2"
+                  Height="6"
+                  ResizeDirection="Rows"
+                  HorizontalAlignment="Stretch"
+                  AutomationProperties.Name="Resize the response details" />
+    <!-- Status, timing, size and headers. A line with no text is hidden, so an empty response leaves no gap. -->
+    <ScrollViewer Grid.Row="3" MinHeight="40">
+      <StackPanel Margin="8" Spacing="4">
+        <TextBlock Text="{Binding Response.ErrorMessage}"
+                   IsVisible="{Binding Response.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   Classes="error"
+                   TextWrapping="Wrap"
+                   AutomationProperties.LiveSetting="Polite" />
+        <TextBlock Text="{Binding Response.StatusText}"
+                   IsVisible="{Binding Response.StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontWeight="SemiBold"
+                   AutomationProperties.LiveSetting="Polite" />
+        <TextBlock Text="{Binding Response.TimingText}"
+                   IsVisible="{Binding Response.TimingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Text="{Binding Response.SizeText}"
+                   IsVisible="{Binding Response.SizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Text="{Binding Response.BodyNote}"
+                   IsVisible="{Binding Response.BodyNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   FontStyle="Italic"
+                   TextWrapping="Wrap" />
+        <ItemsControl ItemsSource="{Binding Response.Headers}"
+                      AutomationProperties.Name="Response headers">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="domain:KeyValueEntry">
+              <TextBlock TextWrapping="Wrap">
+                <Run FontWeight="SemiBold" Text="{Binding Key}" />
+                <Run Text=": " />
+                <Run Text="{Binding Value}" />
+              </TextBlock>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -1,5 +1,6 @@
-REST CLIENT - IMPLEMENTATION PROGRESS
-=====================================
+RESTDRAFT - IMPLEMENTATION PROGRESS
+===================================
+Before 2026-10-28 the project was called RestClient.
 
 Plan:      implementation-plan.md (section 8 milestones)
 Updated:   2026-10-28
@@ -46,6 +47,14 @@ PLAN CHANGE (2026-10-27)
     Ctrl+Tab in recently used order for request tabs only.
     Docs updated: plan sections 7, 8, 8.1, 10, 11, 12; ARCHITECTURE_PLAN.md milestone table and Q7;
     docs\portability-checklist.md plan references.
+
+
+PLAN CHANGE (2026-10-28)
+    (Done 2026-10-29: see "Rename checkpoint" at the end of M8.)
+    The product name is RestDraft (the project was called RestClient until now). SignPath Foundation requires the
+    product name in the signed binaries to be the project's name, so the rename is part of M8 as tasks 6 (name
+    clearance) and 7 (rename). Candidates Restbench (taken), JustRest (a medicine name), names with "post" (Postman) and Plainwire (an
+    active software project of that name) were rejected. Detailed steps: rename-plan.txt. Plan M8 updated.
 
 
 MILESTONES
@@ -681,8 +690,35 @@ MILESTONES
             up to date for the M7 UX changes on 2026-10-28. Reread them once more before tagging the release
     [ ] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code
     [ ] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
+    [ ] 6.  Name clearance for "RestDraft" (added 2026-10-28): nothing searched yet. To do by hand: GitHub and web search,
+            USPTO, TMview and WIPO searches, NuGet/npm/PyPI/winget, domain names. Record the outcome here
+    [x] 7.  Rename RestClient to RestDraft (added 2026-10-28, done 2026-10-29 on branch m8-rename, not committed yet),
+            following rename-plan.txt. SecretService.VerifierText keeps its old value. Done and checked: see "Rename
+            checkpoint" below. Do 6 before 1, 4 and 5, so the SignPath application carries a cleared name
+
+    Rename checkpoint (2026-10-29, branch m8-rename from m8, nothing committed):
+    [x] Step 0: bin, obj, artifacts and dist deleted. Step 1: solution, 10 project folders and their .csproj moved with
+        git mv (history kept); git ls-files shows no path with the old name. tests\RestDraft.SampleApi\RestDraft.SampleApi.slnx
+        was renamed too.
+    [x] Step 2: ordered replace over tracked .cs .axaml .csproj .slnx .props .yml .ps1 .json .sql files (RESTCLIENT_DATA_DIR,
+        restclient-, RestClient, "REST Client"). Documents were edited separately (README, RELEASE_NOTES, NOTICE,
+        ARCHITECTURE_PLAN, implementation-plan, docs\portability-checklist.md, this file). The only remaining "restclient"
+        in code is SecretService.VerifierText = "restclient-verifier", kept on purpose and now commented as a stored value.
+    [x] Step 3: Directory.Build.props has Product, Authors, Company, Copyright and Description. AssemblyName is RestDraft.
+    [x] Step 4: build.ps1 and ci.yml use RestDraft.slnx, RestDraft.exe and RestDraft-win-x64.zip (checked after the replace).
+    [x] Step 5: Release build 0 warnings; Domain 95, Application 234, Infrastructure 84, UI 404, Integration 16 = 833, all
+        passing (same as the baseline). scriptsuild.ps1 exit 0: restore, license check, build, tests, win-x64 publish, zip,
+        SHA256SUMS.txt and smoke test of the extracted zip. RestDraft.exe has ProductName RestDraft, version 0.1.0
+        (FileVersion 0.1.0.0, company and copyright RestDraft contributors).
+    [ ] Step 7 (manual, not done): window title, About and startup error box say RestDraft; an app.db from the old build opens
+        and the master password still unlocks; RESTDRAFT_DATA_DIR and --data-dir redirect the data folder.
+    [ ] GitHub repository rename and git remote set-url (rename-plan.txt, decisions c and step 7). The local folder
+        C:\Vibe\RestClient was not renamed (decision d).
+    Notes: ProductVersion of the exe is 0.1.0+<git hash> (the SDK adds the commit); FileVersion is 0.1.0.0. Check with SignPath
+    whether the suffix matters. The old RESTCLIENT_DATA_DIR variable is no longer read (decision b).
 
     Definition of Done:
+    [ ] Name cleared (task 6) and the product renamed to RestDraft (task 7, done); the old database still opens and unlocks (manual, step 7 of rename-plan.txt)
     [ ] All tests pass and the coverage gate holds
     [ ] scripts\build.ps1 runs end to end on the release commit; CI is green on main for it
     [ ] Manual: portability checklist section 1 on the extracted zip
@@ -692,9 +728,9 @@ MILESTONES
 
 LINUX VERIFICATION, M9 (deferred to a later version, plan section 8.1)
 ----------------------------------------------------------------------
-[ ] Unzip dist\RestClient-linux-x64.zip to a new folder; run; data/app.db and log created beside it
+[ ] Unzip dist\RestDraft-linux-x64.zip to a new folder; run; data/app.db and log created beside it
 [ ] SQLite native library loads from the single-file publish
-[ ] --data-dir and RESTCLIENT_DATA_DIR redirect the data folder
+[ ] --data-dir and RESTDRAFT_DATA_DIR redirect the data folder
 [ ] From M1: send request, create collection, restart, state kept
 [ ] Fixes for issues found, Windows checks rerun
 [ ] Linux zip produced for release
@@ -705,7 +741,7 @@ CI (GitHub Actions, .github/workflows/ci.yml)
 Triggers:  push to main; pull requests into main; manual run.
 Job:       windows-latest, runs scripts/build.ps1 (restore, license check, build,
            test, win-x64 publish, smoke test). Linux job deferred (plan section 8.1).
-Artifact:  RestClient-win-x64, uploaded from main runs only.
+Artifact:  RestDraft-win-x64 (RestClient-win-x64 until 2026-10-29), uploaded from main runs only.
 Permissions: read-only token (contents: read).
 
 Results:
@@ -728,7 +764,7 @@ Open:
 KNOWN ISSUES AND NOTES
 ----------------------
 - The release zips no longer include .pdb files (M7). dist\ may still hold older output (RestClient-linux-x64.zip,
-  dist\linux-x64) from before Linux was deferred. dist\ is not tracked.
+  dist\linux-x64; dist\ was deleted in the rename, 2026-10-29) from before Linux was deferred. dist\ is not tracked.
 - Startup errors show a message box on Windows (M7). Other platforms print to stderr only.
 - Spilled bodies in data/temp/ are deleted when their history entry is removed by retention (M3).
   Bodies of responses whose history entry is still kept stay on disk until then.

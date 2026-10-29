@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestDraft.UI.ViewModels"
+             x:Class="RestDraft.UI.Views.HistoryListView"
+             x:DataType="vm:HistoryListViewModel">
+  <DockPanel Margin="8" LastChildFill="True">
+    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8" Spacing="6">
+      <TextBox Text="{Binding UrlFilter}"
+               PlaceholderText="Search by URL"
+               AutomationProperties.Name="Search history by URL">
+        <TextBox.KeyBindings>
+          <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+        </TextBox.KeyBindings>
+      </TextBox>
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+        <ComboBox Grid.Column="0"
+                  ItemsSource="{Binding MethodChoices}"
+                  SelectedItem="{Binding SelectedMethod}"
+                  AutomationProperties.Name="Filter history by method" />
+        <Button Grid.Column="1" Content="Search" Command="{Binding SearchCommand}" />
+        <Button Grid.Column="2"
+                Content="Restore"
+                Command="{Binding RestoreCommand}"
+                AutomationProperties.Name="Restore selected request" />
+      </Grid>
+      <TextBlock Text="{Binding StatusMessage}"
+                 Classes="error"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+    <ListBox ItemsSource="{Binding Items}"
+             SelectedItem="{Binding SelectedItem}"
+             AutomationProperties.Name="History">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:HistoryItemViewModel">
+          <StackPanel Spacing="2">
+            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Url}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Details}" Opacity="0.7" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </DockPanel>
+</UserControl>

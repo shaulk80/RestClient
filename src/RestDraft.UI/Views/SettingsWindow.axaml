@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RestDraft.UI.ViewModels"
+        xmlns:behaviors="using:RestDraft.UI.Behaviors"
+        x:Class="RestDraft.UI.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings"
+        Width="460"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="12" Spacing="8">
+    <TextBlock Text="Request timeout (seconds)" />
+    <TextBox Text="{Binding TimeoutText}"
+             AutomationProperties.Name="Request timeout in seconds"
+             behaviors:InitialFocus.IsTarget="True" />
+    <CheckBox Content="Follow redirects"
+              IsChecked="{Binding FollowRedirects}"
+              AutomationProperties.Name="Follow redirects" />
+    <TextBlock Text="Maximum redirects" />
+    <TextBox Text="{Binding MaxRedirectsText}"
+             IsEnabled="{Binding FollowRedirects}"
+             AutomationProperties.Name="Maximum redirects" />
+    <CheckBox Content="Verify SSL certificates"
+              IsChecked="{Binding VerifySsl}"
+              AutomationProperties.Name="Verify SSL certificates" />
+    <TextBlock Text="Proxy URL (empty uses the system proxy)" />
+    <TextBox Text="{Binding ProxyUrl}"
+             PlaceholderText="http://proxy:8080"
+             AutomationProperties.Name="Proxy URL" />
+    <TextBlock Text="Theme" />
+    <ComboBox HorizontalAlignment="Stretch"
+              ItemsSource="{Binding Themes}"
+              SelectedItem="{Binding SelectedTheme}"
+              AutomationProperties.Name="Theme">
+      <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:ThemeChoice">
+          <TextBlock Text="{Binding Label}" />
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+    <CheckBox Content="Open a request with a single click"
+              IsChecked="{Binding OpenOnSingleClick}"
+              AutomationProperties.Name="Open a request with a single click" />
+    <TextBlock Text="{Binding Error}"
+               Classes="error"
+               TextWrapping="Wrap"
+               AutomationProperties.LiveSetting="Polite" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Save" IsDefault="True" Command="{Binding SaveCommand}" />
+      <Button Content="Cancel" IsCancel="True" Click="OnCancelClick" />
+    </StackPanel>
+  </StackPanel>
+</Window>

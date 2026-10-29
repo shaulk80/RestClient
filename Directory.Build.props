@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Version>0.1.0</Version>
+    <Product>RestDraft</Product>
+    <Authors>RestDraft contributors</Authors>
+    <Company>RestDraft contributors</Company>
+    <Copyright>Copyright 2026 RestDraft contributors</Copyright>
+    <Description>RestDraft - a REST API client</Description>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>

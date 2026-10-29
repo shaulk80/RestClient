@@ -1,0 +1,21 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/RestDraft.Application/RestDraft.Application.csproj" />
+    <Project Path="src/RestDraft.Domain/RestDraft.Domain.csproj" />
+    <Project Path="src/RestDraft.Infrastructure/RestDraft.Infrastructure.csproj" />
+    <Project Path="src/RestDraft.UI/RestDraft.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RestDraft.Application.Tests/RestDraft.Application.Tests.csproj" />
+    <Project Path="tests/RestDraft.Domain.Tests/RestDraft.Domain.Tests.csproj" />
+    <Project Path="tests/RestDraft.Infrastructure.Tests/RestDraft.Infrastructure.Tests.csproj" />
+    <Project Path="tests/RestDraft.Integration.Tests/RestDraft.Integration.Tests.csproj" />
+    <Project Path="tests/RestDraft.SampleApi/RestDraft.SampleApi.csproj" />
+    <Project Path="tests/RestDraft.UI.Tests/RestDraft.UI.Tests.csproj" />
+  </Folder>
+</Solution>

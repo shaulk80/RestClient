@@ -1,4 +1,4 @@
-# REST Client: Detailed Implementation Plan
+# RestDraft: Detailed Implementation Plan
 
 Status: **Draft for review.** Based on [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md). No code has been written yet. Decisions in the architecture plan are treated as fixed; this document covers how they are built.
 
@@ -18,20 +18,20 @@ These apply to every milestone. They come from the rules in `~/.claude/` and are
 ## 2. Solution Structure
 
 ```
-RestClient.slnx
+RestDraft.slnx
 Directory.Build.props          (shared settings: nullable, analyzers, warnings)
 Directory.Packages.props       (central package versions)
 src/
-  RestClient.Domain/           (no project references)
-  RestClient.Application/      (-> Domain)
-  RestClient.Infrastructure/   (-> Application, Domain)
-  RestClient.UI/               (-> Application, Infrastructure; Avalonia executable)
+  RestDraft.Domain/           (no project references)
+  RestDraft.Application/      (-> Domain)
+  RestDraft.Infrastructure/   (-> Application, Domain)
+  RestDraft.UI/               (-> Application, Infrastructure; Avalonia executable)
 tests/
-  RestClient.Domain.Tests/
-  RestClient.Application.Tests/
-  RestClient.Infrastructure.Tests/
-  RestClient.Integration.Tests/  (in-process Kestrel server, real HttpClient)
-  RestClient.UI.Tests/           (view models, Avalonia.Headless smoke tests)
+  RestDraft.Domain.Tests/
+  RestDraft.Application.Tests/
+  RestDraft.Infrastructure.Tests/
+  RestDraft.Integration.Tests/  (in-process Kestrel server, real HttpClient)
+  RestDraft.UI.Tests/           (view models, Avalonia.Headless smoke tests)
 scripts/
   build.ps1                    (restore, build, test with coverage, publish win-x64; linux-x64 deferred)
 ```
@@ -46,7 +46,7 @@ Dependency rules:
 - UI is the composition root. It registers services from Application and Infrastructure and holds the Avalonia code.
 - Nothing except UI references Avalonia.
 
-Namespaces follow folders: `RestClient.Domain.Collections`, `RestClient.Application.Requests`, and so on.
+Namespaces follow folders: `RestDraft.Domain.Collections`, `RestDraft.Application.Requests`, and so on.
 
 ## 3. Cross-Cutting Foundations
 
@@ -64,7 +64,7 @@ Namespaces follow folders: `RestClient.Domain.Collections`, `RestClient.Applicat
 
 ### 3.3 Data Folder and Logging (Infrastructure)
 
-- `DataFolderLocator`: resolves the data folder. Priority: `--data-dir` argument, then the `RESTCLIENT_DATA_DIR` environment variable, then `./data` beside the executable. Creates the folder on first run.
+- `DataFolderLocator`: resolves the data folder. Priority: `--data-dir` argument, then the `RESTDRAFT_DATA_DIR` environment variable, then `./data` beside the executable. Creates the folder on first run.
 - `LoggingSetup`: Serilog with a rolling file sink in `data/logs/`. Exposed to the rest of the app through `Microsoft.Extensions.Logging`.
 
 ### 3.4 Composition Root (UI)
@@ -387,6 +387,8 @@ Tasks:
 3. Release notes and a short README covering the data folder, the `--data-dir` option, the SmartScreen warning for unsigned builds, and the Apache-2.0 license. Updated at the end of M7 for the UX changes (menu, layout, shortcuts, the new setting).
 4. Signing is out of the code. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
 5. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
+6. Name clearance (added 2026-10-28). The product name is **RestDraft** (it replaced Restbench, which is taken). No clearance search has been done for it yet. Search by hand for "restdraft", "rest draft" and "restdrafts" in USPTO, TMview and WIPO (software, classes 9 and 42), and check NuGet, npm, PyPI, winget and the domain names. Record the outcome in `implementation-progress.txt`. If a real conflict appears, stop before task 7.
+7. Rename the product from RestClient to RestDraft (added 2026-10-28, done on branch m8-rename 2026-10-29). Follow `rename-plan.txt`: solution, projects, namespaces, `AssemblyName`, resource URIs, scripts, CI, user-visible strings, `RESTDRAFT_DATA_DIR`, the log file name, and the documents. Add `Product`, `Authors`, `Copyright` and `Description` to `Directory.Build.props`, because SignPath requires the product name in the signed binaries to be the project's name. `SecretService.VerifierText` keeps its old value: it is a stored value, and changing it would lock users out of their secrets. Do tasks 6 and 7 before the portability run (task 1), the Smart App Control check (task 5) and the SignPath application (task 4), so that the zip under test and the application carry the final name.
 
 Tests: the full suite runs green on Windows. Coverage gate holds. `scripts/build.ps1` runs end to end on the release commit, and CI is green on `main` for it.
 
@@ -394,11 +396,11 @@ Tests: the full suite runs green on Windows. Coverage gate holds. `scripts/build
 
 No Linux machine is available during the Windows phase, so the Linux work is separated from the other milestones and runs after the Windows release (M8). It is M9. The milestone checklists above cover Windows only. Linux is deferred to a later version: there is no `linux-x64` publish and no Linux CI job until that stage starts. `scripts/build.ps1 -Runtimes win-x64,linux-x64` re-enables the Linux publish.
 
-1. **Windows release (M8).** `scripts/build.ps1` produces `dist/RestClient-win-x64.zip`. Its smoke test runs against the extracted zip, the artifact a user receives. The Windows release is verified before any Linux work starts.
-2. **Linux verification.** When a Linux machine is available, run the `linux-x64` build from `dist/RestClient-linux-x64.zip` and check the following:
+1. **Windows release (M8).** `scripts/build.ps1` produces `dist/RestDraft-win-x64.zip`. Its smoke test runs against the extracted zip, the artifact a user receives. The Windows release is verified before any Linux work starts.
+2. **Linux verification.** When a Linux machine is available, run the `linux-x64` build from `dist/RestDraft-linux-x64.zip` and check the following:
    - Unzip to a new folder, run, and confirm `data/app.db` and a log file are created beside the executable.
    - The SQLite native library loads from the single-file publish (the risk in section 11).
-   - The `--data-dir` argument and the `RESTCLIENT_DATA_DIR` variable redirect the data folder.
+   - The `--data-dir` argument and the `RESTDRAFT_DATA_DIR` variable redirect the data folder.
    - From M1 onward: send a request, create a collection, restart, and confirm the state is kept.
 3. **Fixes.** Linux issues found in step 2 are fixed in the codebase, then the milestone's Windows checks are rerun so the fix does not break Windows. Linux fixes are tracked in `implementation-progress.txt`.
 4. **Linux release.** When the Linux checks pass, the same build script produces the Linux zip for release.
@@ -427,7 +429,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 - **Infrastructure tests:** SQLite in-memory databases for repositories. Cipher tests use fixed test vectors and random keys.
 - **Integration tests:** in-process Kestrel server. These cover real HTTP behavior: redirects, timeouts, cancellation, and large bodies.
 - **UI tests:** view models in plain NUnit. Avalonia.Headless (`Avalonia.Headless.NUnit`, verify the package at M0) for a small number of smoke tests.
-- **Coverage gate:** coverlet with the threshold properties of `coverlet.msbuild`, set to 80% line coverage. The gate covers `RestClient.Domain` and `RestClient.Application` only. Infrastructure and UI are reported, not gated.
+- **Coverage gate:** coverlet with the threshold properties of `coverlet.msbuild`, set to 80% line coverage. The gate covers `RestDraft.Domain` and `RestDraft.Application` only. Infrastructure and UI are reported, not gated.
 - **Portability checks:** `build.ps1` publishes win-x64 on every run. Manual smoke tests on Windows as in M0 and M8. Linux smoke tests follow section 8.1 in a later version.
 
 ## 11. Risks
@@ -451,5 +453,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 4. **Commit message convention.** Decided 2026-10-23. Until M7, use plain imperative subjects of 72 characters or fewer, starting with a capital letter and with no period. When a commit completes or changes a milestone task, name the milestone in the subject, for example "M1: add RequestBuilder". Wrap the body at 72 characters and explain why. Leave out `Co-Authored-By` lines, per `CLAUDE.md`. Keep one logical change per commit. From M7, switch to Conventional Commits (`type(scope): summary`), as M7 task 3 sets out.
 5. **Warnings as errors.** Proposed on in `Directory.Build.props`. Confirm.
 6. **SignPath eligibility.** SignPath requires a project that is already released in signable form. Confirm with SignPath whether an earlier pre-release is enough to qualify, or whether the first public release ships unsigned (Q7).
+
+7. **Product name.** Decided 2026-10-28: RestDraft (the project was called RestClient until then; Restbench was dropped because it is taken). The rename was done on 2026-10-29 (M8 task 7). `SecretService.VerifierText` keeps its old value, "restclient-verifier", because it is a stored value that existing databases are checked against. The old `RESTCLIENT_DATA_DIR` variable was dropped (no public release depended on it). The name clearance (M8 task 6) is still to do by hand.
 
 Once these are settled, M0 is the first implementation step. No code is written until this plan is approved.
