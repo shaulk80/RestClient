@@ -681,8 +681,9 @@ MILESTONES
     Created 2026-10-27 (PLAN CHANGE). Tasks 2 and 3 were done in the old M7 and moved here as they were.
 
     Tasks:
-    [~] 1.  Portability smoke test: checklist written (docs\portability-checklist.md, section 1). The run on the
-            extracted zip is still to do (manual). Was task 2 of the old M7
+    [x] 1.  Portability smoke test: checklist written (docs\portability-checklist.md, section 1). The run on the
+            extracted zip passed on 2026-10-30 (manual, by the owner), on dist\RestDraft-win-x64.zip built from main at
+            2d7fb38, SHA-256 43b242afcf3697c4fc2941a6679d3f726addff9757d362960600f28406e11255. Was task 2 of the old M7
     [x] 2.  scripts\build.ps1 writes dist\SHA256SUMS.txt (scripts\Checksums.ps1) and verifies it. The zip has no
             .pdb files any more (DebugType=none, and the native .pdb files are removed before zipping): 44 MB
             instead of about 70 MB
@@ -690,7 +691,9 @@ MILESTONES
             up to date for the M7 UX changes on 2026-10-28. Reread them once more before tagging the release
     [~] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code. Preparation done on
             2026-10-30, form not sent yet: see "SignPath preparation" below
-    [ ] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
+    [x] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3). Passed on 2026-10-30
+            (manual, by the owner) with the same zip (SHA-256 above), so the unsigned first release can ship without
+            revisiting Q7
     [x] 6.  Name clearance for "RestDraft" (added 2026-10-28), done by hand 2026-10-30: searched everywhere (web, GitHub,
             USPTO, TMview, WIPO, NuGet, npm, PyPI, winget, domain names). Outcome: the name does not exist anywhere, no conflict
     [x] 7.  Rename RestClient to RestDraft (added 2026-10-28, done 2026-10-29 on branch m8-rename, committed as dc946a0 on main),
@@ -734,10 +737,11 @@ MILESTONES
 
     Definition of Done:
     [~] Name cleared (task 6, done) and the product renamed to RestDraft (task 7, done); still open: the old database opens and unlocks (manual, step 7 of rename-plan.txt)
-    [ ] All tests pass and the coverage gate holds
-    [ ] scripts\build.ps1 runs end to end on the release commit; CI is green on main for it
-    [ ] Manual: portability checklist section 1 on the extracted zip
-    [ ] Manual: Smart App Control (section 3)
+    [x] All tests pass and the coverage gate holds (scripts\build.ps1 exit 0 on 2026-10-30)
+    [x] scripts\build.ps1 runs end to end on the release commit (2d7fb38: license check 89 packages, tests, win-x64 publish,
+        zip, SHA256SUMS.txt, smoke test of the extracted zip); CI is green on main for it
+    [x] Manual: portability checklist section 1 on the extracted zip (2026-10-30)
+    [x] Manual: Smart App Control (section 3) (2026-10-30)
     [ ] SignPath application sent, and the outcome recorded (section 4)
 
 

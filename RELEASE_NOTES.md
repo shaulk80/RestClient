@@ -22,7 +22,7 @@ First packaged release. Windows x64 only: `RestDraft-win-x64.zip`, a single self
 
 ### Not signed
 
-The executable is not code-signed in this release. See the README for the SmartScreen and Smart App Control notes, and verify the download against `SHA256SUMS.txt`.
+The executable is not code-signed in this release. See the README for the SmartScreen and Smart App Control notes, and verify the download against `SHA256SUMS.txt`. The project's [Code signing policy](README.md#code-signing-policy) describes the signing it is applying for.
 
 ### Known limitations
 

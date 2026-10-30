@@ -30,6 +30,10 @@ RestDraft - a REST API client. A desktop application for Windows. Build requests
    The two hashes must be the same.
 3. Unzip the folder anywhere you can write to, and run `RestDraft.exe`. There is no installer. It needs no .NET installation.
 
+### Uninstall
+
+There is no installer and nothing is written outside the program folder, so to uninstall, delete that folder. It includes the `data` folder, so copy `data` somewhere first if you want to keep your collections, history and environments.
+
 ### Windows warnings
 
 The release is **not code-signed yet**. Windows may react in one of these ways:
