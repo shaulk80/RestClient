@@ -62,6 +62,12 @@ Secret variables are encrypted with AES-256-GCM, with a key derived from your ma
 
 Secrets are unlocked for the running session only. Use *Lock* in the bar under the menu, or *Lock secrets* in the Tools menu, to lock them sooner.
 
+## Privacy
+
+RestDraft does not collect, store remotely or send any information about you or your use of the program. It has no telemetry, no analytics, no crash reporting and no update check.
+
+This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. The only network traffic is the requests you choose to send, and they go only to the addresses you enter (through the proxy you configure, if any). Collections, history, environments, settings and secrets stay in the local `data` folder described above. None of the third-party components used by the program sends data on its own.
+
 ## Keyboard
 
 | Keys | Action |
@@ -92,6 +98,22 @@ You need the .NET 10 SDK.
 The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests with a coverage gate, publishes `win-x64` as a single self-contained file, zips it to `dist/RestDraft-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
 
 Project layout and design are described in [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md) and [implementation-plan.md](implementation-plan.md).
+
+## Code signing policy
+
+Releases are not code-signed yet. This project is applying for free code signing from [SignPath.io](https://signpath.io), with a certificate from [SignPath Foundation](https://signpath.org). If the application is approved, this is the policy that will apply.
+
+Only binaries built from the source in this repository, by a GitHub Actions workflow, will be submitted for signing. Every signing request will be approved manually.
+
+| Role | Member |
+|---|---|
+| Authors (commit access) | Shaul Kipod ([@shaulk80](https://github.com/shaulk80)) |
+| Reviewers | Shaul Kipod ([@shaulk80](https://github.com/shaulk80)) |
+| Approvers (approve each signing request) | Shaul Kipod ([@shaulk80](https://github.com/shaulk80)) |
+
+Privacy: see the [Privacy](#privacy) section above.
+
+> Status: the application to SignPath Foundation has not been decided yet, so the releases are still unsigned (see [Windows warnings](#windows-warnings)). When the first signed release is published, rewrite the first paragraph to "Free code signing provided by SignPath.io, certificate by SignPath Foundation" and delete this note.
 
 ## License
 
