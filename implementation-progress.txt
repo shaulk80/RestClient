@@ -3,7 +3,7 @@ RESTDRAFT - IMPLEMENTATION PROGRESS
 Before 2026-10-28 the project was called RestClient.
 
 Plan:      implementation-plan.md (section 8 milestones)
-Updated:   2026-10-28
+Updated:   2026-10-30
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
@@ -688,11 +688,12 @@ MILESTONES
             instead of about 70 MB
     [x] 3.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props) are written and were brought
             up to date for the M7 UX changes on 2026-10-28. Reread them once more before tagging the release
-    [ ] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code
+    [~] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code. Preparation done on
+            2026-10-30, form not sent yet: see "SignPath preparation" below
     [ ] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3)
-    [ ] 6.  Name clearance for "RestDraft" (added 2026-10-28): nothing searched yet. To do by hand: GitHub and web search,
-            USPTO, TMview and WIPO searches, NuGet/npm/PyPI/winget, domain names. Record the outcome here
-    [x] 7.  Rename RestClient to RestDraft (added 2026-10-28, done 2026-10-29 on branch m8-rename, not committed yet),
+    [x] 6.  Name clearance for "RestDraft" (added 2026-10-28), done by hand 2026-10-30: searched everywhere (web, GitHub,
+            USPTO, TMview, WIPO, NuGet, npm, PyPI, winget, domain names). Outcome: the name does not exist anywhere, no conflict
+    [x] 7.  Rename RestClient to RestDraft (added 2026-10-28, done 2026-10-29 on branch m8-rename, committed as dc946a0 on main),
             following rename-plan.txt. SecretService.VerifierText keeps its old value. Done and checked: see "Rename
             checkpoint" below. Do 6 before 1, 4 and 5, so the SignPath application carries a cleared name
 
@@ -712,13 +713,27 @@ MILESTONES
         (FileVersion 0.1.0.0, company and copyright RestDraft contributors).
     [ ] Step 7 (manual, not done): window title, About and startup error box say RestDraft; an app.db from the old build opens
         and the master password still unlocks; RESTDRAFT_DATA_DIR and --data-dir redirect the data folder.
-    [ ] GitHub repository rename and git remote set-url (rename-plan.txt, decisions c and step 7). The local folder
-        C:\Vibe\RestClient was not renamed (decision d).
+    [x] GitHub repository renamed to shaulk80/RestDraft and re-cloned to C:\Vibe\RestDraft (2026-10-30). The old local folder
+        C:\Vibe\RestClient is no longer used (rename-plan.txt decision d is superseded by the re-clone).
     Notes: ProductVersion of the exe is 0.1.0+<git hash> (the SDK adds the commit); FileVersion is 0.1.0.0. Check with SignPath
     whether the suffix matters. The old RESTCLIENT_DATA_DIR variable is no longer read (decision b).
 
+    SignPath preparation (2026-10-30; the form at https://signpath.org/apply is NOT sent yet):
+    [x] Repository renamed to shaulk80/RestDraft, About description set (tagline), GitHub profile name set to Shaul Kipod.
+    [x] README has a Privacy section (no telemetry, no update check, standard SignPath no-transfer sentence) and a Code
+        signing policy section (roles: Shaul Kipod as Author, Reviewer and Approver). It says the releases are unsigned
+        and the application is pending. Committed as 0f08480 and merged to main.
+    [x] git author for future commits: Shaul <shaulk80@gmail.com> (global config). The 40 earlier commits stay "Pavel".
+    [ ] Cut the v0.1.0 GitHub release (SignPath wants a project already released), then use the releases page as Download URL.
+    [ ] Send the form. Values: name RestDraft; repository and homepage https://github.com/shaulk80/RestDraft; privacy URL
+        https://github.com/shaulk80/RestDraft#privacy; build system GitHub Actions; maintainer type individual; applicant
+        Shaul Kipod, shaulk80@gmail.com. Reputation text must be honest (new project, no usage yet).
+    [ ] After approval: rewrite the first paragraph of the README signing policy and delete its status note; add the
+        SignPath GitHub Action to ci.yml; turn on MFA on GitHub and SignPath; ask SignPath about the ProductVersion
+        "+<git hash>" suffix (version must be identical across builds).
+
     Definition of Done:
-    [ ] Name cleared (task 6) and the product renamed to RestDraft (task 7, done); the old database still opens and unlocks (manual, step 7 of rename-plan.txt)
+    [~] Name cleared (task 6, done) and the product renamed to RestDraft (task 7, done); still open: the old database opens and unlocks (manual, step 7 of rename-plan.txt)
     [ ] All tests pass and the coverage gate holds
     [ ] scripts\build.ps1 runs end to end on the release commit; CI is green on main for it
     [ ] Manual: portability checklist section 1 on the extracted zip
