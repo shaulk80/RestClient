@@ -214,6 +214,7 @@ Dropping collection sharing removes the main reason for JSON files. The single S
 | M7 | Polish (UX only): accessibility pass, main menu, borders, three-panel layout with splitters, shortcuts. |
 | M8 | Release: portability smoke tests, SignPath application, Smart App Control check, first packaged Windows release. |
 | M9 | Linux verification and the Linux release (when a Linux machine is available). |
+| M10 | Handling the SignPath outcome: sign the releases if approved, or record the decision to stay unsigned. Needs M8 only. |
 
 Each milestone includes its unit tests. The 80% coverage gate applies from M0 onward.
 

@@ -7,11 +7,11 @@ Updated:   2026-10-30
 
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
-CURRENT STAGE: M7 Polish (UX only) is done on branch m7 (from m6; M6 is committed as 9798311). All its manual checks
-               passed on 2026-10-28, build.ps1 ran clean and all 833 tests pass (see "M7 closing checkpoint").
-               The last commit before the closing documents is 7f34677. The branch is not merged into main yet.
-NEXT STAGE:    M8 Release (portability run on the extracted zip, SignPath, Smart App Control; the README and release
-               notes are updated for M7). M9 is Linux verification.
+CURRENT STAGE: M8 Release is done (2026-10-30): v0.1.0 is published on GitHub (tag v0.1.0 on 2d7fb38), the portability,
+               Smart App Control and rename checks passed, and the SignPath application is sent. SignPath's answer is
+               pending ("within the next few business days"). M7 Polish is closed (see "M7 closing checkpoint").
+NEXT STAGE:    M9 Linux verification (needs a Linux machine) and M10 Handling the SignPath outcome. M10 waits for the
+               SignPath answer and does not depend on M9, so either can start first.
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
     From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
@@ -675,7 +675,13 @@ MILESTONES
           request.
     - test.txt at the repository root is tracked and contains "1". It looks like a stray file. Not touched.
 
-[ ] M8 Release
+PLAN CHANGE (2026-10-30)
+    M8 ends when the SignPath application is sent. Handling the answer (approval or decline) is a new milestone, M10,
+    after M9 Linux verification in the list. M10 depends on M8 only, because the answer arrives on SignPath's schedule
+    and affects only the Windows build, so it can start before, during or after M9. Plan section 8 and task 4 of M8
+    are updated to match.
+
+[x] M8 Release
     Depends on: M7
     Goal: a first packaged release for Windows. Linux follows in M9.
     Created 2026-10-27 (PLAN CHANGE). Tasks 2 and 3 were done in the old M7 and moved here as they were.
@@ -689,8 +695,8 @@ MILESTONES
             instead of about 70 MB
     [x] 3.  README.md and RELEASE_NOTES.md (version 0.1.0, set in Directory.Build.props) are written and were brought
             up to date for the M7 UX changes on 2026-10-28. Reread them once more before tagging the release
-    [~] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code. Preparation done on
-            2026-10-30, form not sent yet: see "SignPath preparation" below
+    [x] 4.  SignPath application (not code; checklist section 4). Signing stays out of the code. Form sent on
+            2026-10-30, see "SignPath preparation" below. The answer is handled in M10
     [x] 5.  Smart App Control check on a clean Windows 11 install (manual; checklist section 3). Passed on 2026-10-30
             (manual, by the owner) with the same zip (SHA-256 above), so the unsigned first release can ship without
             revisiting Q7
@@ -714,35 +720,38 @@ MILESTONES
         passing (same as the baseline). scriptsuild.ps1 exit 0: restore, license check, build, tests, win-x64 publish, zip,
         SHA256SUMS.txt and smoke test of the extracted zip. RestDraft.exe has ProductName RestDraft, version 0.1.0
         (FileVersion 0.1.0.0, company and copyright RestDraft contributors).
-    [ ] Step 7 (manual, not done): window title, About and startup error box say RestDraft; an app.db from the old build opens
-        and the master password still unlocks; RESTDRAFT_DATA_DIR and --data-dir redirect the data folder.
+    [x] Step 7 (manual, passed 2026-10-30, all checks, by the owner): window title, About and startup error box say RestDraft;
+        an app.db from the old build opens and the master password still unlocks; RESTDRAFT_DATA_DIR and --data-dir
+        redirect the data folder.
     [x] GitHub repository renamed to shaulk80/RestDraft and re-cloned to C:\Vibe\RestDraft (2026-10-30). The old local folder
         C:\Vibe\RestClient is no longer used (rename-plan.txt decision d is superseded by the re-clone).
     Notes: ProductVersion of the exe is 0.1.0+<git hash> (the SDK adds the commit); FileVersion is 0.1.0.0. Check with SignPath
     whether the suffix matters. The old RESTCLIENT_DATA_DIR variable is no longer read (decision b).
 
-    SignPath preparation (2026-10-30; the form at https://signpath.org/apply is NOT sent yet):
+    SignPath preparation (2026-10-30; the form at https://signpath.org/apply is sent):
     [x] Repository renamed to shaulk80/RestDraft, About description set (tagline), GitHub profile name set to Shaul Kipod.
     [x] README has a Privacy section (no telemetry, no update check, standard SignPath no-transfer sentence) and a Code
         signing policy section (roles: Shaul Kipod as Author, Reviewer and Approver). It says the releases are unsigned
         and the application is pending. Committed as 0f08480 and merged to main.
     [x] git author for future commits: Shaul <shaulk80@gmail.com> (global config). The 40 earlier commits stay "Pavel".
-    [ ] Cut the v0.1.0 GitHub release (SignPath wants a project already released), then use the releases page as Download URL.
-    [ ] Send the form. Values: name RestDraft; repository and homepage https://github.com/shaulk80/RestDraft; privacy URL
-        https://github.com/shaulk80/RestDraft#privacy; build system GitHub Actions; maintainer type individual; applicant
-        Shaul Kipod, shaulk80@gmail.com. Reputation text must be honest (new project, no usage yet).
-    [ ] After approval: rewrite the first paragraph of the README signing policy and delete its status note; add the
-        SignPath GitHub Action to ci.yml; turn on MFA on GitHub and SignPath; ask SignPath about the ProductVersion
-        "+<git hash>" suffix (version must be identical across builds).
+    [x] Cut the v0.1.0 GitHub release (tag v0.1.0 on 2d7fb38, RestDraft-win-x64.zip and SHA256SUMS.txt attached, built
+        locally and tested; 2026-10-30). The releases page is the Download URL and the repo website.
+    [x] Terms check against https://signpath.org/terms (a draft page): README Uninstall section added, and a Code signing
+        policy link added to the release page and RELEASE_NOTES.md (c3e2f00).
+    [x] Form sent 2026-10-30. Values: name RestDraft; repository and homepage https://github.com/shaulk80/RestDraft; privacy
+        URL https://github.com/shaulk80/RestDraft#privacy; download URL the releases page; build system GitHub Actions;
+        maintainer type individual; applicant Shaul Kipod, shaulk80@gmail.com. Reputation text was honest: new project, no
+        usage yet. Confirmation email received; SignPath answers "within the next few business days". Outcome: pending.
+    What happens after SignPath answers (approval or decline) is tracked in M10 below.
 
     Definition of Done:
-    [~] Name cleared (task 6, done) and the product renamed to RestDraft (task 7, done); still open: the old database opens and unlocks (manual, step 7 of rename-plan.txt)
+    [x] Name cleared (task 6) and the product renamed to RestDraft (task 7); the old database opens and unlocks (manual, step 7 of rename-plan.txt, passed 2026-10-30)
     [x] All tests pass and the coverage gate holds (scripts\build.ps1 exit 0 on 2026-10-30)
     [x] scripts\build.ps1 runs end to end on the release commit (2d7fb38: license check 89 packages, tests, win-x64 publish,
         zip, SHA256SUMS.txt, smoke test of the extracted zip); CI is green on main for it
     [x] Manual: portability checklist section 1 on the extracted zip (2026-10-30)
     [x] Manual: Smart App Control (section 3) (2026-10-30)
-    [ ] SignPath application sent, and the outcome recorded (section 4)
+    [x] SignPath application sent 2026-10-30 (the outcome is recorded in M10, and in section 4 of the portability checklist)
 
 
 LINUX VERIFICATION, M9 (deferred to a later version, plan section 8.1)
@@ -753,6 +762,35 @@ LINUX VERIFICATION, M9 (deferred to a later version, plan section 8.1)
 [ ] From M1: send request, create collection, restart, state kept
 [ ] Fixes for issues found, Windows checks rerun
 [ ] Linux zip produced for release
+
+
+[ ] M10 Handling the SignPath outcome
+    Depends on: M8 (application sent). Does not depend on M9. Added 2026-10-30.
+    Goal: act on SignPath Foundation's answer to the application sent on 2026-10-30, and record it.
+
+    Tasks:
+    [ ] 1.  Record the answer and the date here and in docs\portability-checklist.md, section 4 ("Outcome").
+
+    If approved:
+    [ ] 2.  Turn on multi-factor authentication for the GitHub account and the SignPath account (a SignPath condition).
+    [ ] 3.  Set the product version without the "+<git hash>" suffix, so that it is identical across builds (SignPath
+            enforces it; ask SignPath if the suffix matters). Directory.Build.props and the publish settings.
+    [ ] 4.  Add the SignPath GitHub Action to .github\workflows\ci.yml (organization and project IDs from SignPath,
+            the artifact configuration, a manual approval for each signing request). The signed zip must come from the
+            CI build: the v0.1.0 zip was built locally, so the first signed release is a new version.
+    [ ] 5.  README: change the first paragraph of the Code signing policy to "Free code signing provided by SignPath.io,
+            certificate by SignPath Foundation" and delete its status note. Update the release page text and
+            RELEASE_NOTES.md (no longer "Not signed"; the SmartScreen and Smart App Control notes change).
+    [ ] 6.  Publish the first signed release, check it on a clean Windows 11 install with Smart App Control on
+            (portability checklist section 3), and update the checklist.
+
+    If declined or delayed:
+    [ ] 7.  Record the reason. Keep releasing unsigned with checksums and the README notes (plan M8 task 4). Decide
+            whether to build reputation (users, posts, stars) and apply again later.
+
+    Definition of Done:
+    [ ] The answer is recorded
+    [ ] Approved: the signed release is published and checked. Declined: the decision to stay unsigned or reapply is recorded
 
 
 CI (GitHub Actions, .github/workflows/ci.yml)

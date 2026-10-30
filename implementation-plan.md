@@ -179,7 +179,7 @@ ViewModels contain no Avalonia types where possible, so they can be tested with 
 
 ## 8. Milestones
 
-Dependencies: M0 → M1 → M2 → M3. M4 needs M1. M5 needs M1 and M2. M6 needs M1 and M2. M7 needs all others. M8 needs M7. M9 needs M8 and a Linux machine (section 8.1).
+Dependencies: M0 → M1 → M2 → M3. M4 needs M1. M5 needs M1 and M2. M6 needs M1 and M2. M7 needs all others. M8 needs M7. M9 needs M8 and a Linux machine (section 8.1). M10 needs M8 (the SignPath application sent) and the SignPath answer; it does not depend on M9, so it can run before, during or after M9 (section 8.2).
 
 Each milestone ends with the **Definition of Done**: all tests pass, the coverage gate holds (section 10), the solution builds with no warnings on Windows, and the milestone's manual checks are done.
 
@@ -385,7 +385,7 @@ Tasks:
 1. Portability smoke test, recorded as a checklist in `docs/`: on Windows, unzip, run, send a request, create a collection, restart, and confirm `data/` is beside the executable. The Linux run is part of M9 (section 8.1).
 2. `scripts/build.ps1` publishes the release zips with SHA-256 checksums.
 3. Release notes and a short README covering the data folder, the `--data-dir` option, the SmartScreen warning for unsigned builds, and the Apache-2.0 license. Updated at the end of M7 for the UX changes (menu, layout, shortcuts, the new setting).
-4. Signing is out of the code. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). If the project is not yet eligible, the first release ships unsigned and signing starts with the next release. If SignPath declines, the release stays unsigned.
+4. Signing is out of the code. Before the first public release, apply to SignPath Foundation (Q7 in the architecture plan). M8 ends when the application is sent (done 2026-10-30). The first release ships unsigned, with checksums and the README notes. What happens after SignPath answers, approval or decline, is M10 (section 8.2).
 5. Smart App Control check: on a clean Windows 11 install with Smart App Control on, unzip the release, run it, and record the result in the portability checklist. If the unsigned build is blocked, stop and revisit Q7 before release.
 6. Name clearance (added 2026-10-28). The product name is **RestDraft** (it replaced Restbench, which is taken). No clearance search has been done for it yet. Search by hand for "restdraft", "rest draft" and "restdrafts" in USPTO, TMview and WIPO (software, classes 9 and 42), and check NuGet, npm, PyPI, winget and the domain names. Record the outcome in `implementation-progress.txt`. If a real conflict appears, stop before task 7.
 7. Rename the product from RestClient to RestDraft (added 2026-10-28, done on branch m8-rename 2026-10-29). Follow `rename-plan.txt`: solution, projects, namespaces, `AssemblyName`, resource URIs, scripts, CI, user-visible strings, `RESTDRAFT_DATA_DIR`, the log file name, and the documents. Add `Product`, `Authors`, `Copyright` and `Description` to `Directory.Build.props`, because SignPath requires the product name in the signed binaries to be the project's name. `SecretService.VerifierText` keeps its old value: it is a stored value, and changing it would lock users out of their secrets. Do tasks 6 and 7 before the portability run (task 1), the Smart App Control check (task 5) and the SignPath application (task 4), so that the zip under test and the application carry the final name.
@@ -406,6 +406,19 @@ No Linux machine is available during the Windows phase, so the Linux work is sep
 4. **Linux release.** When the Linux checks pass, the same build script produces the Linux zip for release.
 
 Linux verification adds no features. Its output is fixes and a verified Linux zip.
+
+### 8.2 M10 Handling the SignPath Outcome (added 2026-10-30)
+
+**Goal:** act on SignPath Foundation's answer to the application sent at the end of M8. Depends on M8 only. The answer arrives on SignPath's schedule and affects only the Windows build, so M10 does not wait for M9.
+
+Tasks:
+1. Record the answer and the date in `implementation-progress.txt` and in `docs/portability-checklist.md`, section 4.
+2. If approved: turn on multi-factor authentication for the GitHub and SignPath accounts, and set the product version without the `+<git hash>` suffix, so that it is identical across builds (SignPath enforces it).
+3. If approved: add the SignPath GitHub Action to `.github/workflows/ci.yml`, with a manual approval for each signing request. The signed zip must come from the CI build, so the first signed release is a new version, not v0.1.0 (its zip was built locally).
+4. If approved: change the README Code signing policy to the SignPath wording and remove its status note, update the release page text and `RELEASE_NOTES.md`, publish the signed release, and repeat the Smart App Control check (checklist section 3) on it.
+5. If declined or delayed: record the reason, keep releasing unsigned with checksums and the README notes, and decide whether to build reputation and apply again later.
+
+Definition of Done: the answer is recorded. If approved, the signed release is published and checked. If declined, the decision to stay unsigned or to reapply is recorded.
 
 ## 9. Parameter Defaults (Proposed)
 
@@ -443,7 +456,7 @@ These values are proposed here and are easy to change in settings or code. Confi
 | Master password forgotten | Secrets unrecoverable | State this clearly in the setup dialog. There is no recovery in v1. |
 | Linux desktop differences (fonts, drag-and-drop, file pickers) | Visual or behavior bugs | Linux verification after the Windows release (section 8.1), then fixes. |
 | Smart App Control blocks unsigned builds on Windows 11 | Windows 11 users cannot run the release | Test on a clean Windows 11 install in M8. If blocked, revisit Q7 before release. |
-| SignPath application declined or delayed | First releases stay unsigned | Unsigned fallback with checksums and SmartScreen notes (M8). Reapply at later releases. |
+| SignPath application declined or delayed | First releases stay unsigned | Unsigned fallback with checksums and SmartScreen notes (M8). Handled in M10: reapply at later releases. |
 
 ## 12. Open Items Before Starting M0
 
