@@ -32,7 +32,9 @@ RestDraft - a REST API client. A desktop application for Windows. Build requests
 
 ### Uninstall
 
-There is no installer and nothing is written outside the program folder, so to uninstall, delete that folder. It includes the `data` folder, so copy `data` somewhere first if you want to keep your collections, history and environments.
+There is no installer, so to uninstall, delete the program folder. It includes the `data` folder, so copy `data` somewhere first if you want to keep your collections, history and environments.
+
+All your data stays in the `data` folder. The one thing the program puts elsewhere is its native libraries (graphics, fonts, SQLite). On the first run it unpacks them into a temporary folder, `%TEMP%\.net\RestDraft`, and a new version unpacks into a new subfolder there. They contain no data of yours. You can delete `%TEMP%\.net\RestDraft` at any time, and the program recreates it when it needs it.
 
 ### Windows warnings
 

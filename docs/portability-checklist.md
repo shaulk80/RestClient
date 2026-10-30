@@ -14,7 +14,7 @@ Machine: ______________________  Windows version: ______________  Date: ________
 | 1 | Compare the zip hash with `SHA256SUMS.txt` | Hashes are equal | |
 | 2 | Unzip into a new folder that is not the repository, for example `C:\Temp\RestDraftCheck` | `RestDraft.exe` and `MigrationScripts\` exist; no `.pdb` files | |
 | 3 | Run `RestDraft.exe` | The window opens. `data\app.db` and `data\logs\<file>` exist beside the executable | |
-| 4 | Look for `data` anywhere else (`%APPDATA%`, `%LOCALAPPDATA%`, the current directory) | Nothing there | |
+| 4 | Look for `data` anywhere else (`%APPDATA%`, `%LOCALAPPDATA%`, the current directory) | Nothing there. The only thing the program puts outside its folder is the unpacked native libraries in `%TEMP%\.net\RestDraft\<hash>` (a known side effect of the single-file publish; no user data) | |
 | 5 | Create a collection, a folder, and a request. Enter `https://example.com`, send | Status 200 shows, the response body is displayed | |
 | 5a | Open the Params tab and add `q` = `1`, open the Headers tab and add `X-Test` = `abc`, then send to an echo endpoint such as `https://httpbin.org/anything` | The echo shows `q=1` in the query and `X-Test: abc` as a header. The tab titles show `Params (1)` and `Headers (1)` | |
 | 6 | Save the request (Ctrl+S) | The tab loses its `*` | |
