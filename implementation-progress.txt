@@ -772,7 +772,8 @@ LINUX VERIFICATION, M9 (deferred to a later version, plan section 8.1)
     [ ] 1.  Record the answer and the date here and in docs\portability-checklist.md, section 4 ("Outcome").
 
     If approved:
-    [ ] 2.  Turn on multi-factor authentication for the GitHub account and the SignPath account (a SignPath condition).
+    [~] 2.  Turn on multi-factor authentication for the GitHub account and the SignPath account (a SignPath condition).
+            GitHub: enabled by the owner on 2026-10-30 (done early, before the answer). SignPath: after approval.
     [ ] 3.  Set the product version without the "+<git hash>" suffix, so that it is identical across builds (SignPath
             enforces it; ask SignPath if the suffix matters). Directory.Build.props and the publish settings.
     [ ] 4.  Add the SignPath GitHub Action to .github\workflows\ci.yml (organization and project IDs from SignPath,
