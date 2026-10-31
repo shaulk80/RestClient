@@ -56,8 +56,8 @@ Machine / VM: ______________________  Build: ______________  Date: ____________
 
 ## 4. Before the first public release (plan M8 task 4)
 
-- [ ] Apply to SignPath Foundation (Q7). Outcome: ______________________
-- [ ] If not eligible yet, the first release ships unsigned, with checksums and the README notes. Signing starts with the next release.
+- [x] Apply to SignPath Foundation (Q7). Outcome: **declined** (answer received by 2026-10-31): the project does not yet show enough public visibility (stars, forks, contributors, articles, discussions). Reapply when it does. The owner declined the paid subscription.
+- [x] Not eligible, so the releases ship unsigned, with checksums and the README notes. Signing is not planned until a new application is approved.
 - [ ] `README.md`, `RELEASE_NOTES.md` and the version in `Directory.Build.props` agree.
 - [ ] CI is green on `main` for the commit being released, and its uploaded zip has the same hash as the one checked above.
 

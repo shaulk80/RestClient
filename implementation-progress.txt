@@ -8,12 +8,12 @@ Updated:   2026-10-30
 Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 
 CURRENT STAGE: M8 Release is done (2026-10-30): v0.1.0 is published on GitHub (tag v0.1.0 on 2d7fb38), the portability,
-               Smart App Control and rename checks passed, and the SignPath application is sent. SignPath's answer is
-               pending ("within the next few business days"). M7 Polish is closed (see "M7 closing checkpoint").
+               Smart App Control and rename checks passed. SignPath Foundation declined the application (answer received
+               by 2026-10-31): not enough public visibility yet. The app stays unsigned and M10 is closed. M7 Polish is
+               closed (see "M7 closing checkpoint").
                M9 Linux verification is done (2026-10-31): all 13 checks passed on Ubuntu 24.04 under WSL2, and CI now has
                a Linux job that builds, tests and packages a .tar.gz (merged in PR #1, main b5fea82).
-NEXT STAGE:    M10 Handling the SignPath outcome (waits for the SignPath answer). Linux release: README section (done),
-               then the decision how the tarball joins a release (see "LINUX VERIFICATION, M9").
+NEXT STAGE:    M11 Release 0.1.1: Windows and Linux, unsigned, built by CI from one tag (see M11).
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
     From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
@@ -778,9 +778,9 @@ Libraries installed: unzip libicu74 libfontconfig1 fonts-dejavu-core libx11-6 li
     The zip that was verified by hand (dist\RestDraft-linux-x64.zip, 43,919,239 bytes, SHA-256 3bb1c907...0b4182b) is
     superseded by it. Not attached to any release yet.
 [x] Linux CI job: build, all tests, tar.gz with the executable bit, smoke test of the extracted tarball under Xvfb
-[ ] Decide how Linux joins a release: add the tarball to v0.1.0 (this replaces that release's SHA256SUMS.txt) or wait for
-    the next version. The two checksum files (SHA256SUMS.txt from Windows, SHA256SUMS-linux-x64.txt from Linux) must be
-    merged into one when the release is assembled.
+[x] Decided 2026-10-31: Linux ships with the next version, 0.1.1 (M11), not on v0.1.0, whose tag does not contain the
+    Linux packaging. The two checksum files (SHA256SUMS.txt from Windows, SHA256SUMS-linux-x64.txt from Linux) are merged
+    into one by release.yml.
 Findings:
     - The Windows-made zip does not keep the executable bit: chmod +x RestDraft is needed after unzip. Not an app bug.
       Fixed by the tar.gz built on Linux (above); no chmod is needed with it.
@@ -793,34 +793,67 @@ Findings:
       the uninstall steps).
 
 
-[ ] M10 Handling the SignPath outcome
+[x] M10 Handling the SignPath outcome
     Depends on: M8 (application sent). Does not depend on M9. Added 2026-10-30.
     Goal: act on SignPath Foundation's answer to the application sent on 2026-10-30, and record it.
+    Outcome: DECLINED (answer received by 2026-10-31, from the SignPath Foundation reviewer). Reason: the program is for
+    projects with established public trust and visibility (GitHub stars, forks, contributors, external articles and
+    discussions, institutional backing, sustained activity); RestDraft does not show enough of these yet. Not a judgment on
+    the quality of the work. They invite a new application once the project has broader recognition. A paid SignPath
+    subscription was offered; the owner decided against it for now (2026-10-31).
+    Decision: the app stays unsigned (checksums and the README notes for SmartScreen and Smart App Control stay). Reapply
+    when the project has gained visibility.
+    [-] = not applicable, because the application was declined.
 
     Tasks:
-    [ ] 1.  Record the answer and the date here and in docs\portability-checklist.md, section 4 ("Outcome").
+    [x] 1.  Record the answer and the date here and in docs\portability-checklist.md, section 4 ("Outcome").
 
     If approved:
-    [~] 2.  Turn on multi-factor authentication for the GitHub account and the SignPath account (a SignPath condition).
+    [-] 2.  Turn on multi-factor authentication for the GitHub account and the SignPath account (a SignPath condition).
             GitHub: enabled by the owner on 2026-10-30 (done early, before the answer). SignPath: after approval.
-    [ ] 3.  Set the product version without the "+<git hash>" suffix, so that it is identical across builds (SignPath
+    [-] 3.  Set the product version without the "+<git hash>" suffix, so that it is identical across builds (SignPath
             enforces it; ask SignPath if the suffix matters). Directory.Build.props and the publish settings.
-    [ ] 4.  Add the SignPath GitHub Action to .github\workflows\ci.yml (organization and project IDs from SignPath,
+    [-] 4.  Add the SignPath GitHub Action to .github\workflows\ci.yml (organization and project IDs from SignPath,
             the artifact configuration, a manual approval for each signing request). The signed zip must come from the
             CI build: the v0.1.0 zip was built locally, so the first signed release is a new version.
-    [ ] 5.  README: change the first paragraph of the Code signing policy to "Free code signing provided by SignPath.io,
+    [-] 5.  README: change the first paragraph of the Code signing policy to "Free code signing provided by SignPath.io,
             certificate by SignPath Foundation" and delete its status note. Update the release page text and
             RELEASE_NOTES.md (no longer "Not signed"; the SmartScreen and Smart App Control notes change).
-    [ ] 6.  Publish the first signed release, check it on a clean Windows 11 install with Smart App Control on
+    [-] 6.  Publish the first signed release, check it on a clean Windows 11 install with Smart App Control on
             (portability checklist section 3), and update the checklist.
 
     If declined or delayed:
-    [ ] 7.  Record the reason. Keep releasing unsigned with checksums and the README notes (plan M8 task 4). Decide
+    [x] 7.  Record the reason. Keep releasing unsigned with checksums and the README notes (plan M8 task 4). Decide
             whether to build reputation (users, posts, stars) and apply again later.
 
     Definition of Done:
-    [ ] The answer is recorded
-    [ ] Approved: the signed release is published and checked. Declined: the decision to stay unsigned or reapply is recorded
+    [x] The answer is recorded
+    [-] Approved: the signed release is published and checked.
+    [x] Declined: the decision to stay unsigned or reapply is recorded (stay unsigned, reapply when the project is visible)
+
+
+[~] M11 Release 0.1.1 (Windows and Linux, unsigned)
+    Depends on: M9 (Linux verified, Linux CI job), M10 (signing declined). Added 2026-10-31.
+    Goal: a release whose two packages are built by CI from one tag, with one SHA256SUMS.txt. v0.1.0 stays as it is
+    (Windows only, built locally); nobody but the owner downloaded it, but its tag does not contain the Linux packaging.
+
+    Tasks:
+    [x] 1.  Version 0.1.1 in Directory.Build.props (the About window already strips the "+<git hash>" suffix).
+    [x] 2.  RELEASE_NOTES.md: section 0.1.1 (Linux package, CI-built, not signed, Linux limitations).
+    [x] 3.  README: Linux section without "not in a release yet", Windows and Linux in the intro, code signing status.
+    [x] 4.  .github\workflows\release.yml: on a v* tag, calls ci.yml (both jobs upload their package), merges the two
+            checksum files, verifies them with sha256sum -c, takes the notes from RELEASE_NOTES.md, and creates a DRAFT
+            release. A manual run from a branch does everything but the release and uploads "release-preview".
+    [ ] 5.  Dry run of release.yml from a branch (workflow_dispatch); inspect the release-preview artifact.
+    [ ] 6.  Merge to main (pull request), CI green.
+    [ ] 7.  Tag v0.1.1 on main and push it (owner). Check the draft release: three assets, notes, checksums.
+    [ ] 8.  Publish the draft (owner). Download both packages from the release page and verify them with SHA256SUMS.txt;
+            run the Windows zip (portability checklist section 1) and the Linux tarball (section 5, checks 1 and 7).
+    [ ] 9.  Record the release here, in the checklist, and update the M9 line "Decide how Linux joins a release".
+
+    Definition of Done:
+    [ ] v0.1.1 is published with RestDraft-win-x64.zip, RestDraft-linux-x64.tar.gz and one SHA256SUMS.txt
+    [ ] Both downloads were verified against the checksums and started
 
 
 CI (GitHub Actions, .github/workflows/ci.yml)
@@ -851,7 +884,7 @@ Open:
 [ ] actions/checkout, setup-dotnet and upload-artifact (all @v4) run on Node 24
     with a Node 20 deprecation warning. Upgrade when newer majors are released.
 [ ] Linux release: add the tarball to a release (see M9)
-[ ] SignPath signing (separate setup; needs a released project first)
+[-] SignPath signing: declined 2026-10 (see M10). The CI has no signing step.
 
 
 KNOWN ISSUES AND NOTES
