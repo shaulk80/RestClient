@@ -127,7 +127,7 @@ You need the .NET 10 SDK.
 
 The Linux package is built on a Linux host (the CI Linux job does it): `pwsh ./scripts/build.ps1 -Runtimes linux-x64`, which needs `xvfb` for its smoke test. On Windows that runtime is skipped.
 
-The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests with a coverage gate, publishes `win-x64` as a single self-contained file, zips it to `dist/RestDraft-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
+The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests and reports coverage (a warning below 80% for the domain and application layers), publishes `win-x64` as a single self-contained file, zips it to `dist/RestDraft-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
 
 Project layout and design are described in [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md) and [implementation-plan.md](implementation-plan.md).
 

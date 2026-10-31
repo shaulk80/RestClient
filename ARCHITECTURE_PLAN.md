@@ -163,7 +163,7 @@ Rules:
 - A separate unit test project (`*.Tests`) is part of the solution from M0.
 - Covers the domain and application layers: variable resolution, collection tree operations, history retention, secret encryption round-trips, serializers, and the result wrapper.
 - Group similar cases as parameterized test cases (CLAUDE.md, Testing rule 1). Test frameworks come from the C# rules: NUnit and FakeItEasy, with `Assert.That()` (`rules/csharp-tests.md`).
-- Coverage: **proposed target of 80% line coverage** on the domain and application layers, enforced in CI. Infrastructure and UI code are measured and reported, not gated. Adjust the target if you prefer a different number.
+- Coverage: **proposed target of 80% line coverage** on the domain and application layers, reported in CI as a warning when missed (it does not fail the build; changed 2026-10-31). Infrastructure and UI code are measured and reported, without a target. Adjust the target if you prefer a different number.
 - Every milestone adds its own unit tests. No milestone is complete without them.
 
 ### 5.2 Other Test Levels
@@ -216,7 +216,7 @@ Dropping collection sharing removes the main reason for JSON files. The single S
 | M9 | Linux verification and the Linux release (when a Linux machine is available). |
 | M10 | Handling the SignPath outcome: sign the releases if approved, or record the decision to stay unsigned. Needs M8 only. |
 
-Each milestone includes its unit tests. The 80% coverage gate applies from M0 onward.
+Each milestone includes its unit tests. The 80% coverage target (a warning, not a gate) applies from M0 onward.
 
 ## 8. Next Steps
 
