@@ -1,5 +1,8 @@
-RESTDRAFT - IMPLEMENTATION PROGRESS
-===================================
+RESTDRAFT - IMPLEMENTATION PROGRESS (ARCHIVE)
+=============================================
+Frozen on 2026-10-31 at release 0.1.1 (milestones M0 to M11). This file used to be implementation-progress.txt in the
+project root. It is large: search it, do not read it whole. The current state is in docs/STATUS.md. Paths in the text
+are as they were then (the plan files are now in docs/).
 Before 2026-10-28 the project was called RestClient.
 
 Plan:      implementation-plan.md (section 8 milestones)

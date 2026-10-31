@@ -1,6 +1,6 @@
 # RestDraft: Detailed Implementation Plan
 
-Status: **Draft for review.** Based on [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md). No code has been written yet. Decisions in the architecture plan are treated as fixed; this document covers how they are built.
+Status (2026-10-31): **built and released (0.1.1).** Based on [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md). Decisions in the architecture plan are treated as fixed; this document covers how they are built. Sections 1 to 7, 9 and 10 still describe how the code is built. Section 8 (milestones M0 to M11) and section 12 are history: all done, and the log of what happened is in [history/implementation-progress-M0-M11.txt](history/implementation-progress-M0-M11.txt). The current state is in [STATUS.md](STATUS.md). References below to `implementation-progress.txt` mean that archived file.
 
 ## 1. Conventions
 
