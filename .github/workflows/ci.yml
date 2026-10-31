@@ -14,7 +14,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # The workflow name is part of the group: when release.yml calls this file it is "Release" there, so a release (or its
+  # dry run) never cancels the push run of the same ref.
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
