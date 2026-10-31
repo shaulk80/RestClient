@@ -60,3 +60,31 @@ Machine / VM: ______________________  Build: ______________  Date: ____________
 - [ ] If not eligible yet, the first release ships unsigned, with checksums and the README notes. Signing starts with the next release.
 - [ ] `README.md`, `RELEASE_NOTES.md` and the version in `Directory.Build.props` agree.
 - [ ] CI is green on `main` for the commit being released, and its uploaded zip has the same hash as the one checked above.
+
+## 5. Linux (plan M9, section 8.1)
+
+Machine: Windows 10 Pro 22H2 (build 19045), WSL2 with WSLg  Ubuntu: 24.04.5 LTS (noble)  Date: 2026-10-31
+WSL 3.0.3.0, kernel 6.18.54.1-1, WSLg 1.0.79. Build: `dist/RestDraft-linux-x64.zip` from `scripts/build.ps1 -Runtimes linux-x64`, copied to the Linux home folder and extracted there.
+
+System packages installed before the first start: `unzip libicu74 libfontconfig1 fonts-dejavu-core libx11-6 libice6 libsm6 libxext6 libxrandr2 libxi6 libxcursor1 libgl1`. Not tested which of them are strictly required.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Data folder (`app.db`, log) beside the executable | Pass |
+| 2 | SQLite native library loads (unpacked to `~/.net/RestDraft`) | Pass |
+| 3 | Nothing else written outside the app folder and `~/.net` | Pass |
+| 4 | `--data-dir` redirects | Pass |
+| 5 | `RESTDRAFT_DATA_DIR` redirects | Pass |
+| 6 | Startup error is readable on stderr | Pass |
+| 7 | Send a request (`https://example.com`) | Pass |
+| 8 | Collections, tab and History survive a restart | Pass |
+| 9 | Params and headers reach the server | Pass |
+| 10 | Secrets with a master password | Pass |
+| 11 | Multipart file from the file picker | Pass |
+| 12 | UI behavior (menus, shortcuts, drag and drop, splitters, themes, fonts) | Pass, with the lag below |
+| 13 | Large response (over 1 MB) | Pass |
+
+Findings:
+- **Executable permission:** the zip is made on Windows, so after `unzip` the file `RestDraft` is not executable. `chmod +x RestDraft` is needed. Not an app bug. Fix: a `.tar.gz` built on an Ubuntu CI runner that keeps the permissions.
+- **About 1 s lag when a window or popup closes** (for example the request method combo box). Environment, not the app: gedit started with `GDK_BACKEND=x11` (XWayland) shows the same lag, gedit over Wayland does not, and `LIBGL_ALWAYS_SOFTWARE=1` does not change RestDraft. Not checked on a real Linux desktop.
+- **Extraction folder:** the single-file publish unpacks the native libraries to `~/.net/RestDraft/<hash>`.

@@ -756,12 +756,28 @@ PLAN CHANGE (2026-10-30)
 
 LINUX VERIFICATION, M9 (deferred to a later version, plan section 8.1)
 ----------------------------------------------------------------------
-[ ] Unzip dist\RestDraft-linux-x64.zip to a new folder; run; data/app.db and log created beside it
-[ ] SQLite native library loads from the single-file publish
-[ ] --data-dir and RESTDRAFT_DATA_DIR redirect the data folder
-[ ] From M1: send request, create collection, restart, state kept
-[ ] Fixes for issues found, Windows checks rerun
-[ ] Linux zip produced for release
+Verified 2026-10-31 on Ubuntu 24.04.5 LTS under WSL2 (WSL 3.0.3.0, WSLg 1.0.79, Windows 10 build 19045). All 13 checks passed;
+details in docs\portability-checklist.md, section 5.
+Libraries installed: unzip libicu74 libfontconfig1 fonts-dejavu-core libx11-6 libice6 libsm6 libxext6 libxrandr2 libxi6 libxcursor1 libgl1
+(not tested which are strictly required).
+[x] Unzip dist\RestDraft-linux-x64.zip to a new folder; run; data/app.db and log created beside it
+[x] SQLite native library loads from the single-file publish
+[x] --data-dir and RESTDRAFT_DATA_DIR redirect the data folder
+[x] From M1: send request, create collection, restart, state kept
+[x] Fixes for issues found, Windows checks rerun (no code fixes needed; nothing to rerun)
+[x] Linux zip produced for release: dist\RestDraft-linux-x64.zip (43,919,239 bytes), the exact file verified above.
+    SHA-256 3bb1c907c68f88ca159b3459de87fc8453b14aa6f8b42a983f24895da0b4182b. dist\SHA256SUMS.txt regenerated on 2026-10-31
+    to list both zips; the win-x64 hash (43b242af...e11255) equals the published v0.1.0 asset. Not uploaded anywhere: whether
+    it goes onto v0.1.0 or waits for the next version, and the chmod +x README note or the .tar.gz, are decided at release time.
+Findings:
+    - The Windows-made zip does not keep the executable bit: chmod +x RestDraft is needed after unzip. Not an app bug.
+      Fix: build the Linux package on an Ubuntu CI runner as .tar.gz (chmod 755), with a Linux CI job and a headless smoke
+      test (xvfb-run).
+    - About 1 s lag when a window or popup closes. Environment (WSLg/XWayland): gedit with GDK_BACKEND=x11 shows the same;
+      LIBGL_ALWAYS_SOFTWARE=1 does not change it. Unconfirmed on a real Linux desktop.
+    - Native libraries unpack to ~/.net/RestDraft/<hash>. Mention in a Linux README section (with the libraries, chmod +x
+      and uninstall steps).
+    - A Linux-only build leaves SHA256SUMS.txt listing only the Linux zip; for a release build both runtimes in one run.
 
 
 [ ] M10 Handling the SignPath outcome
