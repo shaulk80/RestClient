@@ -844,8 +844,9 @@ Findings:
     [x] 4.  .github\workflows\release.yml: on a v* tag, calls ci.yml (both jobs upload their package), merges the two
             checksum files, verifies them with sha256sum -c, takes the notes from RELEASE_NOTES.md, and creates a DRAFT
             release. A manual run from a branch does everything but the release and uploads "release-preview".
-    [ ] 5.  Dry run of release.yml from a branch (workflow_dispatch); inspect the release-preview artifact.
-    [ ] 6.  Merge to main (pull request), CI green.
+    [ ] 5.  Merge to main (pull request, branch release-0.1.1), CI green.
+    [ ] 6.  Dry run of release.yml from main (workflow_dispatch; GitHub cannot dispatch a new workflow from a branch);
+            no tag, so no release is created. Inspect the release-preview artifact.
     [ ] 7.  Tag v0.1.1 on main and push it (owner). Check the draft release: three assets, notes, checksums.
     [ ] 8.  Publish the draft (owner). Download both packages from the release page and verify them with SHA256SUMS.txt;
             run the Windows zip (portability checklist section 1) and the Linux tarball (section 5, checks 1 and 7).
