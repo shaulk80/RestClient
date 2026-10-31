@@ -43,7 +43,8 @@ public sealed class SqlScriptMigrationSource : IMigrationSource
         }
 
         var migrations = new List<IMigration>();
-        foreach (var folderPath in Directory.EnumerateDirectories(_scriptsRoot))
+        // Folder names are 4-digit versions, so the ordinal order is the version order. The OS does not guarantee any order.
+        foreach (var folderPath in Directory.EnumerateDirectories(_scriptsRoot).Order(StringComparer.Ordinal))
         {
             var migration = CreateMigration(folderPath);
             if (migration is not null)

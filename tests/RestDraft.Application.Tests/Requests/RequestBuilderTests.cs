@@ -14,7 +14,7 @@ namespace RestDraft.Application.Tests.Requests;
 [TestFixture]
 public class RequestBuilderTests
 {
-    private const string FilePath = "C:\\data\\input.txt";
+    private static readonly string FilePath = Path.Combine("data", "input.txt");
     private const string Boundary = "RestDraftBoundary0123456789abcdef0123456789abcdef";
 
     private static readonly IReadOnlyDictionary<string, string> Variables = new Dictionary<string, string>
