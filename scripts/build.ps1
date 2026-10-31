@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string] $Configuration = 'Release',
-    # linux-x64 is deferred to a later version (plan section 8.1). Pass -Runtimes win-x64,linux-x64 once that stage starts.
+    # win-x64 builds on any host. linux-x64 builds only on a Linux host (the CI Linux job), where it produces a .tar.gz that
+    # keeps the executable permission; a zip made on Windows cannot. On Windows, linux-x64 is skipped with a warning.
     [string[]] $Runtimes = @('win-x64'),
     [switch] $SkipSmokeTest
 )
@@ -31,6 +32,15 @@ function Invoke-DotNet {
     & dotnet @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet $($Arguments -join ' ') failed with exit code $LASTEXITCODE"
+    }
+}
+
+function Invoke-Native {
+    param([string] $FilePath, [string[]] $Arguments)
+
+    & $FilePath @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "$FilePath $($Arguments -join ' ') failed with exit code $LASTEXITCODE"
     }
 }
 
@@ -73,10 +83,26 @@ function New-ReleaseZip {
     }
 }
 
-function Test-PublishedApp {
-    param([string] $PublishDir)
+function New-ReleaseTarGz {
+    param(
+        [string] $SourceDir,
+        [string] $TarGzPath
+    )
 
-    $exe = Join-Path $PublishDir 'RestDraft.exe'
+    # Directories 755, files 644, the program 755: the package carries the executable bit that a Windows-made zip lacks.
+    # GNU tar: sorted entries and numeric owner 0 keep the content independent of the build user.
+    Invoke-Native -FilePath 'chmod' -Arguments @('-R', 'u=rwX,go=rX', $SourceDir)
+    Invoke-Native -FilePath 'chmod' -Arguments @('755', (Join-Path $SourceDir 'RestDraft'))
+    Invoke-Native -FilePath 'tar' -Arguments @('--sort=name', '--owner=0', '--group=0', '--numeric-owner', '-czf', $TarGzPath, '-C', $SourceDir, '.')
+}
+
+function Test-PublishedApp {
+    param(
+        [string] $PublishDir,
+        [string] $ExeName = 'RestDraft.exe'
+    )
+
+    $exe = Join-Path $PublishDir $ExeName
     $databaseFile = Join-Path $PublishDir 'data/app.db'
     $logDir = Join-Path $PublishDir 'data/logs'
 
@@ -98,17 +124,70 @@ function Test-PublishedApp {
     }
 }
 
+function Test-PublishedAppOnLinux {
+    param([string] $PublishDir)
+
+    # The app needs an X display. Xvfb provides a virtual one, so the smoke test also runs on a machine without a screen.
+    if (-not (Get-Command Xvfb -ErrorAction SilentlyContinue)) {
+        throw 'The Linux smoke test needs Xvfb (sudo apt-get install xvfb). Pass -SkipSmokeTest to build without it.'
+    }
+
+    $display = ':99'
+    $xvfb = Start-Process -FilePath 'Xvfb' -ArgumentList @($display, '-screen', '0', '1280x720x24', '-nolisten', 'tcp') -PassThru
+    $previousDisplay = $env:DISPLAY
+    $env:DISPLAY = $display
+    try {
+        Start-Sleep -Seconds 1
+        return (Test-PublishedApp -PublishDir $PublishDir -ExeName 'RestDraft')
+    }
+    finally {
+        $env:DISPLAY = $previousDisplay
+        if (-not $xvfb.HasExited) {
+            Stop-Process -Id $xvfb.Id -Force
+        }
+    }
+}
+
+# Extracts the package like a user would, starts the program from it, and returns true when data/app.db and a log appear.
+function Test-ReleasePackage {
+    param(
+        [string] $Runtime,
+        [string] $PackagePath,
+        [string] $SmokeDir
+    )
+
+    if ($Runtime -like 'linux-*') {
+        New-Item -ItemType Directory -Path $SmokeDir -Force | Out-Null
+        Invoke-Native -FilePath 'tar' -Arguments @('-xzf', $PackagePath, '-C', $SmokeDir)
+        return (Test-PublishedAppOnLinux -PublishDir $SmokeDir)
+    }
+
+    Expand-Archive -Path $PackagePath -DestinationPath $SmokeDir -Force
+    return (Test-PublishedApp -PublishDir $SmokeDir)
+}
+
 Invoke-DotNet @('restore', $solution)
 Test-DependencyLicenses -Root $root -AllowedLicenses $allowedLicenses -ReviewedLicenses $reviewedLicenses
 Invoke-DotNet @('build', $solution, '-c', $Configuration, '--no-restore')
 Invoke-DotNet @('test', $solution, '-c', $Configuration, '--no-build')
 
-$zipPaths = @()
+$isHostWindows = $env:OS -eq 'Windows_NT'
+$packagePaths = @()
 foreach ($runtime in $Runtimes) {
-    # Clean only this runtime, so a release zip for another runtime survives.
+    $isLinuxRuntime = $runtime -like 'linux-*'
+    if ($isLinuxRuntime -and $isHostWindows) {
+        Write-Warning "Skipping ${runtime}: the Linux package is built on a Linux host, because a package made on Windows cannot keep the executable permission."
+        continue
+    }
+
+    # Clean only this runtime, so a package for another runtime survives.
     $publishDir = Join-Path $distRoot $runtime
-    $zipPath = Join-Path $distRoot "RestDraft-$runtime.zip"
-    foreach ($stale in @($publishDir, $zipPath)) {
+    $packageExtension = '.zip'
+    if ($isLinuxRuntime) {
+        $packageExtension = '.tar.gz'
+    }
+    $packagePath = Join-Path $distRoot "RestDraft-$runtime$packageExtension"
+    foreach ($stale in @($publishDir, $packagePath)) {
         if (Test-Path $stale) {
             Remove-Item $stale -Recurse -Force
         }
@@ -130,16 +209,20 @@ foreach ($runtime in $Runtimes) {
     # Native packages (SkiaSharp, HarfBuzz) bring their own .pdb files, which DebugType=none does not remove.
     Get-ChildItem -LiteralPath $publishDir -Recurse -Filter '*.pdb' | Remove-Item -Force
 
-    New-ReleaseZip -SourceDir $publishDir -ZipPath $zipPath
-    $zipPaths += $zipPath
+    if ($isLinuxRuntime) {
+        New-ReleaseTarGz -SourceDir $publishDir -TarGzPath $packagePath
+    }
+    else {
+        New-ReleaseZip -SourceDir $publishDir -ZipPath $packagePath
+    }
+    $packagePaths += $packagePath
 
-    $isHostWindows = $env:OS -eq 'Windows_NT'
-    if (-not $SkipSmokeTest -and $isHostWindows -and $runtime -eq 'win-x64') {
-        # Smoke-test the extracted zip, the same artifact a user receives.
+    $canSmokeTest = $isLinuxRuntime -or $isHostWindows
+    if (-not $SkipSmokeTest -and $canSmokeTest) {
+        # Smoke-test the extracted package, the same artifact a user receives.
         $smokeDir = Join-Path $distRoot "smoke-$runtime"
-        Expand-Archive -Path $zipPath -DestinationPath $smokeDir -Force
         try {
-            if (-not (Test-PublishedApp -PublishDir $smokeDir)) {
+            if (-not (Test-ReleasePackage -Runtime $runtime -PackagePath $packagePath -SmokeDir $smokeDir)) {
                 throw "Smoke test failed for ${runtime}: the app did not create data/app.db and a log file beside the executable."
             }
         }
@@ -150,9 +233,14 @@ foreach ($runtime in $Runtimes) {
     }
 }
 
-# One checksum file covers every zip built in this run, and is checked right after it is written.
+if ($packagePaths.Count -eq 0) {
+    Write-Warning 'No package was built, so SHA256SUMS.txt was not written.'
+    return
+}
+
+# One checksum file covers every package built in this run, and is checked right after it is written.
 $checksumPath = Join-Path $distRoot 'SHA256SUMS.txt'
-Write-Checksums -ZipPaths $zipPaths -ChecksumPath $checksumPath
+Write-Checksums -PackagePaths $packagePaths -ChecksumPath $checksumPath
 $mismatches = @(Get-ChecksumMismatches -ChecksumPath $checksumPath)
 if ($mismatches.Count -gt 0) {
     throw "Checksum verification failed for: $($mismatches -join ', ')"
