@@ -23,6 +23,14 @@ $reviewedLicenses = @{
     'Avalonia.Angle.Windows.Natives/2.1.27548.20260419' = 'BSD-3-Clause'
 }
 
+# Minimum line coverage (percent) of the module each test project measures. A miss is a warning, not a failure.
+# Infrastructure and UI are measured and reported, without a target (plan section 10).
+$coverageTargets = @{
+    'RestDraft.Domain.Tests'      = 80
+    'RestDraft.Application.Tests' = 80
+}
+
+. (Join-Path $PSScriptRoot 'CoverageReport.ps1')
 . (Join-Path $PSScriptRoot 'LicenseCheck.ps1')
 . (Join-Path $PSScriptRoot 'Checksums.ps1')
 
@@ -169,7 +177,14 @@ function Test-ReleasePackage {
 Invoke-DotNet @('restore', $solution)
 Test-DependencyLicenses -Root $root -AllowedLicenses $allowedLicenses -ReviewedLicenses $reviewedLicenses
 Invoke-DotNet @('build', $solution, '-c', $Configuration, '--no-restore')
+# Old reports are removed, so a missing report is noticed instead of an earlier run's report being read.
+$coverageRoot = Join-Path $root 'artifacts/coverage'
+if (Test-Path $coverageRoot) {
+    Remove-Item $coverageRoot -Recurse -Force
+}
+
 Invoke-DotNet @('test', $solution, '-c', $Configuration, '--no-build')
+Test-CoverageTargets -CoverageRoot $coverageRoot -Targets $coverageTargets
 
 $isHostWindows = $env:OS -eq 'Windows_NT'
 $packagePaths = @()

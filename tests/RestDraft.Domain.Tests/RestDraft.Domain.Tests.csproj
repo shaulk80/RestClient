@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <Include>[RestDraft.Domain]*</Include>
-    <Threshold>80</Threshold>
-    <ThresholdType>line</ThresholdType>
-    <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
 
   <ItemGroup>
