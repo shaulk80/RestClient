@@ -14,7 +14,7 @@ CURRENT STAGE: M8 Release is done (2026-10-30): v0.1.0 is published on GitHub (t
                M9 Linux verification is done (2026-10-31): all 13 checks passed on Ubuntu 24.04 under WSL2, and CI now has
                a Linux job that builds, tests and packages a .tar.gz (merged in PR #1, main b5fea82).
 NEXT STAGE:    None planned. M11 Release 0.1.1 is published (2026-10-31; Windows and Linux, unsigned, built by CI from the
-               tag). Open: branch protection (see "CI"); reapply to SignPath when the project
+               tag). Open: only the GitHub Actions version upgrade (see "CI"); reapply to SignPath when the project
                has gained visibility.
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
@@ -912,10 +912,15 @@ Results:
 Open:
 [x] Flaky coverage gate (coverlet.msbuild collected no hits once, tag run 41194370206): coverage is a warning now, see
     PLAN CHANGE (2026-10-31, coverage). Watch for the warning in CI; if it is frequent, run the test projects with -m:1.
-[ ] Branch protection on main (requires the CI check to pass before merge)
+[x] Branch protection on main (set up by the owner on 2026-10-31, as GitHub rulesets; verified through the API):
+    - protect-main (branch, default branch, active): no deletion, no force push, pull request required (0 approvals),
+      status checks "Windows build, test and release zip" and "Linux build, test and release tarball" required, branch
+      must be up to date. Bypass: repository admin, always (small docs commits may still go straight to main).
+    - protect-release-tags (tags v*, active): no deletion, no force push, no bypass. To fix a tag, set the ruleset to
+      Disabled for a moment, then Active again.
 [ ] actions/checkout, setup-dotnet and upload-artifact (all @v4) run on Node 24
     with a Node 20 deprecation warning. Upgrade when newer majors are released.
-[ ] Linux release: add the tarball to a release (see M9)
+[x] Linux release: the tarball is attached to release v0.1.1 (see M11)
 [-] SignPath signing: declined 2026-10 (see M10). The CI has no signing step.
 
 
