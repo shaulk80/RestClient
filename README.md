@@ -1,6 +1,6 @@
 # RestDraft
 
-RestDraft - a REST API client. A desktop application for Windows. Build requests, send them, and keep them in collections. Everything is stored on your machine, in a folder next to the program.
+RestDraft - a REST API client. A desktop application for Windows and Linux (x64). Build requests, send them, and keep them in collections. Everything is stored on your machine, in a folder next to the program.
 
 ## Features
 
@@ -43,11 +43,11 @@ The release is **not code-signed yet**. Windows may react in one of these ways:
 - **SmartScreen** shows "Windows protected your PC". Choose *More info*, then *Run anyway*, after you have checked the hash above.
 - **Smart App Control** (Windows 11, when turned on) can block unsigned programs without an option to run them. If that happens, the program cannot be started on that machine until Smart App Control is turned off or the program is signed. Smart App Control cannot be turned on again once it is off.
 
-### Linux (not in a release yet)
+### Linux
 
-A Linux x64 build exists. It passed the checks on Ubuntu 24.04 (under WSL2) and is built by the CI as `RestDraft-linux-x64.tar.gz`, but it is not attached to a release yet. When it is, use it like this:
+Since 0.1.1 the release has a Linux x64 package, `RestDraft-linux-x64.tar.gz`, next to the Windows zip. It passed the checks on Ubuntu 24.04 (under WSL2); other distributions and a full Linux desktop are untested. To use it:
 
-1. Check the download, in the folder with both files: `sha256sum -c SHA256SUMS.txt --ignore-missing`.
+1. Check the download, in the folder with both files (`--ignore-missing` skips the Windows zip): `sha256sum -c SHA256SUMS.txt --ignore-missing`.
 2. Install the system libraries the program needs (names from Ubuntu 24.04; other distributions use similar names):
 
    ```bash
@@ -133,7 +133,7 @@ Project layout and design are described in [ARCHITECTURE_PLAN.md](ARCHITECTURE_P
 
 ## Code signing policy
 
-Releases are not code-signed yet. This project is applying for free code signing from [SignPath.io](https://signpath.io), with a certificate from [SignPath Foundation](https://signpath.org). If the application is approved, this is the policy that will apply.
+Releases are not code-signed. The application to [SignPath Foundation](https://signpath.org) for free code signing through [SignPath.io](https://signpath.io) was declined for now, because the project does not yet have enough public visibility. The project will apply again when it has. If a certificate is issued, this is the policy that will apply.
 
 Only binaries built from the source in this repository, by a GitHub Actions workflow, will be submitted for signing. Every signing request will be approved manually.
 
@@ -145,7 +145,7 @@ Only binaries built from the source in this repository, by a GitHub Actions work
 
 Privacy: see the [Privacy](#privacy) section above.
 
-> Status: the application to SignPath Foundation has not been decided yet, so the releases are still unsigned (see [Windows warnings](#windows-warnings)). When the first signed release is published, rewrite the first paragraph to "Free code signing provided by SignPath.io, certificate by SignPath Foundation" and delete this note.
+> Status: unsigned. See [Windows warnings](#windows-warnings) for what Windows may show, and verify each download against `SHA256SUMS.txt`. When a certificate is issued and a signed release is published, rewrite the first paragraph to "Free code signing provided by SignPath.io, certificate by SignPath Foundation" and delete this note.
 
 ## License
 

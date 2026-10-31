@@ -420,6 +420,8 @@ Tasks:
 
 Definition of Done: the answer is recorded. If approved, the signed release is published and checked. If declined, the decision to stay unsigned or to reapply is recorded.
 
+**Outcome (recorded 2026-10-31): declined.** SignPath Foundation looks for public visibility (stars, forks, contributors, external articles and discussions) and RestDraft does not show enough of it yet. The owner did not take the paid subscription. The app stays unsigned and the project reapplies once it has gained visibility. Tasks 2 to 4 do not apply.
+
 ## 9. Parameter Defaults (Proposed)
 
 These values are proposed here and are easy to change in settings or code. Confirm or adjust them during review.

@@ -1,4 +1,4 @@
-# Windows and Linux jobs. Each runs scripts/build.ps1 on its own host and uploads its package from main.
+# Windows and Linux jobs. Each runs scripts/build.ps1 on its own host and uploads its package from main and from release tags.
 name: CI
 
 on:
@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # Called by release.yml, which passes the tag ref along, so the packages are uploaded for a tag too.
+  workflow_call:
 
 permissions:
   contents: read
@@ -35,7 +37,7 @@ jobs:
         run: ./scripts/build.ps1
 
       - name: Upload win-x64 release zip and checksums
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: RestDraft-win-x64
@@ -74,11 +76,11 @@ jobs:
 
       # Two checksum files exist for one release (one per host). Keep them apart; merge them when the release is assembled.
       - name: Name the checksum file
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         run: mv dist/SHA256SUMS.txt dist/SHA256SUMS-linux-x64.txt
 
       - name: Upload linux-x64 release tarball and checksums
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: RestDraft-linux-x64
