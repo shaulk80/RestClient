@@ -129,7 +129,7 @@ The Linux package is built on a Linux host (the CI Linux job does it): `pwsh ./s
 
 The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests and reports coverage (a warning below 80% for the domain and application layers), publishes `win-x64` as a single self-contained file, zips it to `dist/RestDraft-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
 
-Project layout and design are described in [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md) and [implementation-plan.md](implementation-plan.md).
+Project layout and design are described in [ARCHITECTURE_PLAN.md](docs/ARCHITECTURE_PLAN.md) and [implementation-plan.md](docs/implementation-plan.md). The current state is in [STATUS.md](docs/STATUS.md).
 
 ## Code signing policy
 

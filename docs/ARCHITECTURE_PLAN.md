@@ -1,6 +1,6 @@
 # RestDraft: Architectural Plan (High-Level)
 
-Status: **Stack, storage, license, and signing approach decided; detailed implementation plan pending.** Section 6 records all decisions.
+Status (2026-10-31): **living design document.** The product is built and released (0.1.1). Section 6 records the decisions. Sections 7 and 8 and the wording "proposed" are history from before the build: milestones M0 to M11 are done, and the current state is in [STATUS.md](STATUS.md).
 
 ## 1. Goal
 
