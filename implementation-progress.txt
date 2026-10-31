@@ -13,7 +13,9 @@ CURRENT STAGE: M8 Release is done (2026-10-30): v0.1.0 is published on GitHub (t
                closed (see "M7 closing checkpoint").
                M9 Linux verification is done (2026-10-31): all 13 checks passed on Ubuntu 24.04 under WSL2, and CI now has
                a Linux job that builds, tests and packages a .tar.gz (merged in PR #1, main b5fea82).
-NEXT STAGE:    M11 Release 0.1.1: Windows and Linux, unsigned, built by CI from one tag (see M11).
+NEXT STAGE:    None planned. M11 Release 0.1.1 is published (2026-10-31; Windows and Linux, unsigned, built by CI from the
+               tag). Open: the flaky coverage gate and branch protection (see "CI"); reapply to SignPath when the project
+               has gained visibility.
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
     From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
@@ -832,7 +834,7 @@ Findings:
     [x] Declined: the decision to stay unsigned or reapply is recorded (stay unsigned, reapply when the project is visible)
 
 
-[~] M11 Release 0.1.1 (Windows and Linux, unsigned)
+[x] M11 Release 0.1.1 (Windows and Linux, unsigned)
     Depends on: M9 (Linux verified, Linux CI job), M10 (signing declined). Added 2026-10-31.
     Goal: a release whose two packages are built by CI from one tag, with one SHA256SUMS.txt. v0.1.0 stays as it is
     (Windows only, built locally); nobody but the owner downloaded it, but its tag does not contain the Linux packaging.
@@ -844,17 +846,29 @@ Findings:
     [x] 4.  .github\workflows\release.yml: on a v* tag, calls ci.yml (both jobs upload their package), merges the two
             checksum files, verifies them with sha256sum -c, takes the notes from RELEASE_NOTES.md, and creates a DRAFT
             release. A manual run from a branch does everything but the release and uploads "release-preview".
-    [ ] 5.  Merge to main (pull request, branch release-0.1.1), CI green.
-    [ ] 6.  Dry run of release.yml from main (workflow_dispatch; GitHub cannot dispatch a new workflow from a branch);
-            no tag, so no release is created. Inspect the release-preview artifact.
-    [ ] 7.  Tag v0.1.1 on main and push it (owner). Check the draft release: three assets, notes, checksums.
-    [ ] 8.  Publish the draft (owner). Download both packages from the release page and verify them with SHA256SUMS.txt;
-            run the Windows zip (portability checklist section 1) and the Linux tarball (section 5, checks 1 and 7).
-    [ ] 9.  Record the release here, in the checklist, and update the M9 line "Decide how Linux joins a release".
+    [x] 5.  Merged to main (PR #2, d3d7ab7), CI green.
+    [x] 6.  Dry run of release.yml from main (run 41194031105, workflow_dispatch; GitHub cannot dispatch a new workflow
+            from a branch): success, no release created, release-preview inspected (merged checksums verified).
+            The dry run cancelled the push run of the PR #2 merge commit: both used the concurrency group ci-<ref>.
+            Fixed in PR #3 (296e095): the group is now <workflow name>-<ref>.
+    [x] 7.  Tag v0.1.1 pushed by the owner on d3d7ab7 (PR #2 merge). The first release run (41194370206) failed in the
+            Windows test step: coverlet reported "No coverage hits were collected" for RestDraft.Application.Tests and the
+            80% line gate failed. A flake: the same commit passed in the dry run, the PR checks and the main run. Re-running
+            the failed job passed and created the draft: three assets, the 0.1.1 notes.
+    [x] 8.  Draft published by the owner on 2026-10-31 (11:13 UTC), marked Latest. Downloaded from the public release page:
+            SHA256SUMS.txt lists both packages and sha256sum -c is OK for both; the tarball keeps -rwxr-xr-x on RestDraft;
+            the zip has RestDraft.exe, MigrationScripts and no .pdb. Both started and created data\app.db and a log
+            (Windows 10 host; Ubuntu 24.04 under WSL2). Only this start-up check was repeated, not the full
+            portability checklist (section 1) or the Linux checks 1 to 13: the build is the one CI produced from the tag.
+    [x] 9.  Recorded here; the M9 line "Decide how Linux joins a release" is closed.
+
+    Release assets (v0.1.1):
+        RestDraft-win-x64.zip        47,942,831 bytes  sha256 df389225b6bc39757e006cae2ca0f6761f9ce0019e96f7ae1f7f8a3f7d98b88b
+        RestDraft-linux-x64.tar.gz   44,010,292 bytes  sha256 9d2c2b819fcbe7b0f406cc882c0ff3c961c7ba46ec936bfa7952882064df0cfd
 
     Definition of Done:
-    [ ] v0.1.1 is published with RestDraft-win-x64.zip, RestDraft-linux-x64.tar.gz and one SHA256SUMS.txt
-    [ ] Both downloads were verified against the checksums and started
+    [x] v0.1.1 is published with RestDraft-win-x64.zip, RestDraft-linux-x64.tar.gz and one SHA256SUMS.txt
+    [x] Both downloads were verified against the checksums and started
 
 
 CI (GitHub Actions, .github/workflows/ci.yml)
@@ -880,7 +894,14 @@ Results:
 [x] Pull request run: PR #1 (linux-ci into main), all checks passed. Merged as b5fea82; the main run succeeded and
     uploaded RestDraft-linux-x64 (43.8 MB) for the first time.
 
+[x] Run 41194370206, tag v0.1.1 (2026-10-31): Linux job success; Windows job failed on the coverage gate (flake, see M11
+    task 7), passed on re-run; the draft release was created. Run 41194031105 (dry run) and PR #3 changed the concurrency
+    group.
+
 Open:
+[ ] Flaky coverage gate: coverlet.msbuild sometimes collects no hits for one test project when the test projects run in
+    parallel (seen once on Windows, tag run 41194370206). Make it reliable, for example by running the test projects one
+    at a time, and check that the gate still fails when coverage really drops.
 [ ] Branch protection on main (requires the CI check to pass before merge)
 [ ] actions/checkout, setup-dotnet and upload-artifact (all @v4) run on Node 24
     with a Node 20 deprecation warning. Upgrade when newer majors are released.
