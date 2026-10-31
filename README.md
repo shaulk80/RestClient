@@ -43,6 +43,30 @@ The release is **not code-signed yet**. Windows may react in one of these ways:
 - **SmartScreen** shows "Windows protected your PC". Choose *More info*, then *Run anyway*, after you have checked the hash above.
 - **Smart App Control** (Windows 11, when turned on) can block unsigned programs without an option to run them. If that happens, the program cannot be started on that machine until Smart App Control is turned off or the program is signed. Smart App Control cannot be turned on again once it is off.
 
+### Linux (not in a release yet)
+
+A Linux x64 build exists. It passed the checks on Ubuntu 24.04 (under WSL2) and is built by the CI as `RestDraft-linux-x64.tar.gz`, but it is not attached to a release yet. When it is, use it like this:
+
+1. Check the download, in the folder with both files: `sha256sum -c SHA256SUMS.txt --ignore-missing`.
+2. Install the system libraries the program needs (names from Ubuntu 24.04; other distributions use similar names):
+
+   ```bash
+   sudo apt install -y libicu74 libfontconfig1 fonts-dejavu-core libx11-6 libice6 libsm6 libxext6 libxrandr2 libxi6 libxcursor1 libgl1
+   ```
+
+3. Extract and run. The archive keeps the executable permission, so no `chmod` is needed:
+
+   ```bash
+   mkdir RestDraft && tar -xzf RestDraft-linux-x64.tar.gz -C RestDraft
+   ./RestDraft/RestDraft
+   ```
+
+The `data` folder, `--data-dir` and `RESTDRAFT_DATA_DIR` work as described under [Your data](#your-data), with `/` in paths. A startup error is printed in the terminal, because there is no message box on Linux.
+
+To uninstall, delete the program folder (copy `data` first if you want to keep it) and the folder `~/.net/RestDraft`, where the program unpacks its native libraries on the first run.
+
+On WSL2 with WSLg, closing a window or a popup can lag by about a second. This comes from WSLg, not from the program.
+
 ## Your data
 
 All data is kept in a `data` folder:
@@ -100,6 +124,8 @@ You need the .NET 10 SDK.
 ```powershell
 .\scripts\build.ps1
 ```
+
+The Linux package is built on a Linux host (the CI Linux job does it): `pwsh ./scripts/build.ps1 -Runtimes linux-x64`, which needs `xvfb` for its smoke test. On Windows that runtime is skipped.
 
 The script restores packages, checks the licenses of all dependencies, builds with warnings as errors, runs the tests with a coverage gate, publishes `win-x64` as a single self-contained file, zips it to `dist/RestDraft-win-x64.zip`, writes `dist/SHA256SUMS.txt`, and starts the unzipped program once to check that it creates its `data` folder. Close the sample API before running it if you started it.
 

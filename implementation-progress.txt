@@ -10,8 +10,10 @@ Legend:    [x] done   [~] in progress   [ ] not started   [!] blocked
 CURRENT STAGE: M8 Release is done (2026-10-30): v0.1.0 is published on GitHub (tag v0.1.0 on 2d7fb38), the portability,
                Smart App Control and rename checks passed, and the SignPath application is sent. SignPath's answer is
                pending ("within the next few business days"). M7 Polish is closed (see "M7 closing checkpoint").
-NEXT STAGE:    M9 Linux verification (needs a Linux machine) and M10 Handling the SignPath outcome. M10 waits for the
-               SignPath answer and does not depend on M9, so either can start first.
+               M9 Linux verification is done (2026-10-31): all 13 checks passed on Ubuntu 24.04 under WSL2, and CI now has
+               a Linux job that builds, tests and packages a .tar.gz (merged in PR #1, main b5fea82).
+NEXT STAGE:    M10 Handling the SignPath outcome (waits for the SignPath answer). Linux release: README section (done),
+               then the decision how the tarball joins a release (see "LINUX VERIFICATION, M9").
 
 COMMIT CONVENTION (2026-10-27, plan M7 task 7)
     From M7 on, commit messages use Conventional Commits: type(scope): summary, for example
@@ -29,6 +31,13 @@ PLAN CHANGE (2026-10-23)
     - build.ps1 publishes win-x64 by default. -Runtimes win-x64,linux-x64 re-enables Linux.
     - CI is GitHub Actions (.github/workflows/ci.yml), Windows job only. No Linux job yet.
 
+
+PLAN CHANGE (2026-10-31)
+    Linux is no longer deferred. M9 verified the linux-x64 build, and CI got a Linux job:
+    - build.ps1 builds linux-x64 only on a Linux host, as RestDraft-linux-x64.tar.gz (directories 755, files 644, RestDraft
+      755), because a zip made on Windows cannot keep the executable bit. On Windows, linux-x64 is skipped with a warning.
+    - The Linux smoke test extracts the tarball and starts the app under Xvfb.
+    - CI job "linux" runs on ubuntu-24.04 (the version M9 was verified on; ubuntu-latest is 26.04 and has no libicu74).
 
 PLAN CHANGE (2026-10-25)
     Tabs may be unsaved. An unsaved tab is not linked to a collection. Save asks for a folder and a name,
@@ -765,19 +774,23 @@ Libraries installed: unzip libicu74 libfontconfig1 fonts-dejavu-core libx11-6 li
 [x] --data-dir and RESTDRAFT_DATA_DIR redirect the data folder
 [x] From M1: send request, create collection, restart, state kept
 [x] Fixes for issues found, Windows checks rerun (no code fixes needed; nothing to rerun)
-[x] Linux zip produced for release: dist\RestDraft-linux-x64.zip (43,919,239 bytes), the exact file verified above.
-    SHA-256 3bb1c907c68f88ca159b3459de87fc8453b14aa6f8b42a983f24895da0b4182b. dist\SHA256SUMS.txt regenerated on 2026-10-31
-    to list both zips; the win-x64 hash (43b242af...e11255) equals the published v0.1.0 asset. Not uploaded anywhere: whether
-    it goes onto v0.1.0 or waits for the next version, and the chmod +x README note or the .tar.gz, are decided at release time.
+[x] Linux package for release: RestDraft-linux-x64.tar.gz, built by the CI Linux job (PR #1, main b5fea82, 2026-10-31).
+    The zip that was verified by hand (dist\RestDraft-linux-x64.zip, 43,919,239 bytes, SHA-256 3bb1c907...0b4182b) is
+    superseded by it. Not attached to any release yet.
+[x] Linux CI job: build, all tests, tar.gz with the executable bit, smoke test of the extracted tarball under Xvfb
+[ ] Decide how Linux joins a release: add the tarball to v0.1.0 (this replaces that release's SHA256SUMS.txt) or wait for
+    the next version. The two checksum files (SHA256SUMS.txt from Windows, SHA256SUMS-linux-x64.txt from Linux) must be
+    merged into one when the release is assembled.
 Findings:
     - The Windows-made zip does not keep the executable bit: chmod +x RestDraft is needed after unzip. Not an app bug.
-      Fix: build the Linux package on an Ubuntu CI runner as .tar.gz (chmod 755), with a Linux CI job and a headless smoke
-      test (xvfb-run).
+      Fixed by the tar.gz built on Linux (above); no chmod is needed with it.
+    - The first Linux test run found two Linux-only test failures, fixed in PR #1: SqlScriptMigrationSource returned the
+      migration folders in the order the OS lists them (Windows sorts them, Linux does not; the app was not affected because
+      MigrationSetBuilder sorts by version), and a multipart test used the Windows path C:\data\input.txt.
     - About 1 s lag when a window or popup closes. Environment (WSLg/XWayland): gedit with GDK_BACKEND=x11 shows the same;
       LIBGL_ALWAYS_SOFTWARE=1 does not change it. Unconfirmed on a real Linux desktop.
-    - Native libraries unpack to ~/.net/RestDraft/<hash>. Mention in a Linux README section (with the libraries, chmod +x
-      and uninstall steps).
-    - A Linux-only build leaves SHA256SUMS.txt listing only the Linux zip; for a release build both runtimes in one run.
+    - Native libraries unpack to ~/.net/RestDraft/<hash>. Described in the README (Linux section, with the libraries and
+      the uninstall steps).
 
 
 [ ] M10 Handling the SignPath outcome
@@ -813,9 +826,11 @@ Findings:
 CI (GitHub Actions, .github/workflows/ci.yml)
 ---------------------------------------------
 Triggers:  push to main; pull requests into main; manual run.
-Job:       windows-latest, runs scripts/build.ps1 (restore, license check, build,
-           test, win-x64 publish, smoke test). Linux job deferred (plan section 8.1).
-Artifact:  RestDraft-win-x64 (RestClient-win-x64 until 2026-10-29), uploaded from main runs only.
+Jobs:      windows (windows-latest): scripts/build.ps1 (restore, license check, build, test, win-x64 publish, smoke test).
+           linux (ubuntu-24.04, since 2026-10-31): installs Xvfb and the app's libraries, then scripts/build.ps1
+           -Runtimes linux-x64 (same steps, plus the tar.gz and a smoke test of the extracted tarball under Xvfb).
+Artifacts: RestDraft-win-x64 (RestClient-win-x64 until 2026-10-29): zip and SHA256SUMS.txt.
+           RestDraft-linux-x64: tar.gz and SHA256SUMS-linux-x64.txt. Both uploaded from main runs only.
 Permissions: read-only token (contents: read).
 
 Results:
@@ -826,12 +841,16 @@ Results:
 [x] Run 39953965742, m0, commit 4fd9c6d (2026-10-23): success (before the
     license check and the main-only artifact step)
 
+[x] Run 41191720137, linux-ci (manual, 2026-10-31): success, Windows and Linux jobs. The first Linux run (41191484532)
+    failed on the two Linux-only tests above; the one before it on the libicu74 package of ubuntu-latest (26.04).
+[x] Pull request run: PR #1 (linux-ci into main), all checks passed. Merged as b5fea82; the main run succeeded and
+    uploaded RestDraft-linux-x64 (43.8 MB) for the first time.
+
 Open:
 [ ] Branch protection on main (requires the CI check to pass before merge)
-[ ] Pull request run not yet exercised (no PR opened yet)
 [ ] actions/checkout, setup-dotnet and upload-artifact (all @v4) run on Node 24
     with a Node 20 deprecation warning. Upgrade when newer majors are released.
-[ ] Linux CI job and linux-x64 publish (deferred to a later version)
+[ ] Linux release: add the tarball to a release (see M9)
 [ ] SignPath signing (separate setup; needs a released project first)
 
 
