@@ -1,15 +1,15 @@
-# SHA-256 checksums of the release zips. Dot-sourced by build.ps1 after the zips are written.
+# SHA-256 checksums of the release packages (.zip and .tar.gz). Dot-sourced by build.ps1 after the packages are written.
 # The file format is the one `sha256sum -c` reads: lowercase hash, two spaces, file name.
 
 function Write-Checksums {
     param(
-        [string[]] $ZipPaths,
+        [string[]] $PackagePaths,
         [string] $ChecksumPath
     )
 
-    $lines = foreach ($zipPath in ($ZipPaths | Sort-Object)) {
-        $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
-        "$hash  $(Split-Path -Leaf $zipPath)"
+    $lines = foreach ($packagePath in ($PackagePaths | Sort-Object)) {
+        $hash = (Get-FileHash -LiteralPath $packagePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        "$hash  $(Split-Path -Leaf $packagePath)"
     }
 
     # UTF-8 without a byte order mark and LF line ends, so sha256sum reads the file on any platform.
